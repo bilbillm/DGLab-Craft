@@ -1,7 +1,7 @@
 package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
-import com.lumoren.dglabcraft.network.WebSocketManager;
+import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -49,7 +49,7 @@ public class HeartbeatHandler {
                     // 第一跳
                     heartbeatPhase = 1;
                     double intensity = ModConfig.HEARTBEAT_INTENSITY.get() * (1.0 - healthRatio + 0.3);
-                    WebSocketManager.getInstance().sendStimulus("A", "pulse", Math.min(1.0, intensity), 100);
+                    WebSocketServerManager.getInstance().sendStimulus("A", "pulse", Math.min(1.0, intensity), 100);
                 }
             }
 
@@ -57,7 +57,7 @@ public class HeartbeatHandler {
                 // 第二跳 (比第一跳弱)
                 heartbeatPhase = 2;
                 double intensity = ModConfig.HEARTBEAT_INTENSITY.get() * (1.0 - healthRatio + 0.3) * 0.7;
-                WebSocketManager.getInstance().sendStimulus("A", "pulse", Math.min(1.0, intensity), 80);
+                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", Math.min(1.0, intensity), 80);
             }
 
             if (tickCounter % interval >= interval - 5) {
@@ -68,7 +68,7 @@ public class HeartbeatHandler {
         } else {
             // 血量恢复后停止心跳
             if (isHeartbeatActive) {
-                WebSocketManager.getInstance().stopStimulus("A");
+                WebSocketServerManager.getInstance().stopStimulus("A");
                 isHeartbeatActive = false;
                 heartbeatPhase = 0;
             }

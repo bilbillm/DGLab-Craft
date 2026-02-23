@@ -3,6 +3,11 @@ package com.lumoren.dglabcraft.config;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ModConfig {
+    // 全局设置
+    public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
+    public static final ForgeConfigSpec.ConfigValue<Integer> HUD_POSITION;
+
     // WebSocket 设置
     public static final ForgeConfigSpec.ConfigValue<String> WS_HOST;
     public static final ForgeConfigSpec.ConfigValue<Integer> WS_PORT;
@@ -30,6 +35,16 @@ public class ModConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+
+        // 全局设置
+        builder.push("general");
+        BASE_MAX_INTENSITY = builder.comment("A/B 通道全局基础强度上限")
+                .define("baseMaxIntensity", 100);
+        HUD_ENABLED = builder.comment("是否显示HUD (0=关闭, 1=开启)")
+                .define("hudEnabled", true);
+        HUD_POSITION = builder.comment("HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)")
+                .define("hudPosition", 0);
+        builder.pop();
 
         // WebSocket 配置分组
         builder.push("websocket");

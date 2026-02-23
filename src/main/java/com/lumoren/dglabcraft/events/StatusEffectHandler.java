@@ -1,7 +1,7 @@
 package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
-import com.lumoren.dglabcraft.network.WebSocketManager;
+import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
@@ -55,57 +55,57 @@ public class StatusEffectHandler {
                 int amplifier = effect.getAmplifier();
                 double intensity = (0.1 + amplifier * 0.05) * ModConfig.BUFF_INTENSITY.get();
                 // 使用低强度持续波形
-                WebSocketManager.getInstance().sendStimulus("B", "sine", intensity, 500);
+                WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 500);
             }
             // 抗性提升 - 轻微振动感
             else if (mobEffect == RESISTANCE) {
                 double intensity = 0.08 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "pulse", intensity, 300);
+                WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 300);
             }
             // 力量 - 轻微脉动
             else if (mobEffect == STRENGTH) {
                 double intensity = 0.06 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("A", "pulse", intensity, 400);
+                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 400);
             }
             // 速度 - 轻微脉动
             else if (mobEffect == SPEED) {
                 double intensity = 0.05 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "sine", intensity, 200);
+                WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 200);
             }
             // 跳跃提升 - 轻微刺激
             else if (mobEffect == JUMP_BOOST) {
                 double intensity = 0.07 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("A", "pulse", intensity, 300);
+                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 300);
             }
             // 防火 - 轻微温暖感
             else if (mobEffect == FIRE_RESISTANCE) {
                 double intensity = 0.04 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("A", "sine", intensity, 500);
+                WebSocketServerManager.getInstance().sendStimulus("A", "sine", intensity, 500);
             }
             // 夜视 - 轻微脉动
             else if (mobEffect == NIGHT_VISION) {
                 double intensity = 0.03 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "pulse", intensity, 300);
+                WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 300);
             }
             // 隐身 - 轻微脉动
             else if (mobEffect == INVISIBILITY) {
                 double intensity = 0.03 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "sine", intensity, 300);
+                WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 300);
             }
             // 饱和 - 轻微舒适感
             else if (mobEffect == SATURATION) {
                 double intensity = 0.04 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "sine", intensity, 200);
+                WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 200);
             }
             // 生命提升/吸收 - 轻微脉动
             else if (mobEffect == HEALTH_BOOST || mobEffect == ABSORPTION) {
                 double intensity = 0.05 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("A", "pulse", intensity, 400);
+                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 400);
             }
             // 发光 - 轻微脉动
             else if (mobEffect == GLOWING) {
                 double intensity = 0.03 * ModConfig.BUFF_INTENSITY.get();
-                WebSocketManager.getInstance().sendStimulus("B", "pulse", intensity, 200);
+                WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 200);
             }
         }
     }

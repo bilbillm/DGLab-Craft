@@ -1,7 +1,7 @@
 package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
-import com.lumoren.dglabcraft.network.WebSocketManager;
+import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
@@ -37,35 +37,35 @@ public class DamageHandler {
             double intensity = baseIntensity * ModConfig.FIRE_INTENSITY.get();
             waveType = "pulse";
             duration = 2000;
-            WebSocketManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
         }
         else if (source == DamageSource.FALL) {
             // 跌落 - 瞬间重击型波形
             double intensity = baseIntensity * ModConfig.FALL_INTENSITY.get();
             waveType = "square";
             duration = 500;
-            WebSocketManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
         }
         else if (source == DamageSource.DROWN) {
             // 溺水 - 缓慢增强、有压迫感
             double intensity = baseIntensity * ModConfig.DROWN_INTENSITY.get();
             waveType = "sine";
             duration = 3000;
-            WebSocketManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
         }
         else if (source == DamageSource.WITHER) {
             // 凋零 - 间歇性抽搐
             double intensity = baseIntensity * ModConfig.WITHER_INTENSITY.get();
             waveType = "pulse";
             duration = 800;
-            WebSocketManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
         }
         else if (source.getMsgId().contains("poison")) {
             // 中毒 - 间歇性抽搐
             double intensity = baseIntensity * ModConfig.POISON_INTENSITY.get();
             waveType = "pulse";
             duration = 600;
-            WebSocketManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
         }
     }
 
@@ -83,13 +83,13 @@ public class DamageHandler {
             float maxHealth = player.getMaxHealth();
             // 持续伤害 - 使用较低强度
             double intensity = 0.1 * ModConfig.FIRE_INTENSITY.get();
-            WebSocketManager.getInstance().sendStimulus("A", "pulse", intensity, 200);
+            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 200);
         }
 
         // 检查是否在水中/潜水
         if (player.isInWater() && player.getAirSupply() < 100) {
             double intensity = 0.15 * ModConfig.DROWN_INTENSITY.get();
-            WebSocketManager.getInstance().sendStimulus("B", "sine", intensity, 200);
+            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 200);
         }
     }
 }

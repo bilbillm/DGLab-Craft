@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.UUID;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -103,8 +104,9 @@ public class WebSocketServerManager {
                         appBMaxStrength = 100;
 
                         // 主动发送 bind 消息（格式必须正确）
-                        // {"type":"bind","clientId":"1234-123456789-12345-12345-01","targetId":"","message":"DGLabCraft"}
-                        conn.send("{\"type\":\"bind\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"\",\"message\":\"DGLabCraft\"}");
+                        // {"type":"bind","clientId":"<UUID>","targetId":"","message":"targetId"}
+                        String appId = UUID.randomUUID().toString();
+                        conn.send("{\"type\":\"bind\",\"clientId\":\"" + appId + "\",\"targetId\":\"\",\"message\":\"targetId\"}");
 
                         LOGGER.info("已发送 bind 消息给客户端");
 
@@ -199,44 +201,32 @@ public class WebSocketServerManager {
             String type = json.has("type") ? json.get("type").getAsString() : null;
 
             if ("bind".equals(type)) {
-                // 2. 提取 App 发来的 clientId
+                // 提取 message 字段，检查是否为 "DGLAB"
+                String msgContent = json.has("message") ? json.get("message").getAsString() : null;
                 String appClientId = json.has("clientId") ? json.get("clientId").getAsString() : null;
-                String appTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
+                String receivedTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
 
-                LOGGER.info("收到 bind: appClientId={}, appTargetId={}", appClientId, appTargetId);
+                LOGGER.info("收到 bind: appClientId={}, targetId={}, message={}", appClientId, receivedTargetId, msgContent);
 
-                // 3. 检查是否匹配
-                if (FIXED_CLIENT_ID.equals(appClientId) && sessionId.equals(appTargetId)) {
-                    // 4. 构造正确格式的响应
-                    // {"type":"bind","clientId":"<PC_ID>","targetId":"<appClientId>","statusCode":200,"message":"200"}
-                    com.google.gson.JsonObject response = new com.google.gson.JsonObject();
-                    response.addProperty("type", "bind");
-                    response.addProperty("clientId", sessionId);
-                    response.addProperty("targetId", appClientId);  // 使用 App 的 clientId
-                    response.addProperty("statusCode", 200);
-                    response.addProperty("message", "200");
+                // 检查 message 是否为 "DGLAB"
+                if ("DGLAB".equals(msgContent)) {
+                    // 返回 200 确认包
+                    // {"type":"bind","clientId":"<PC_ID>","targetId":"<appId>","message":"200","statusCode":200}
+                    connectedClient.send("{\"type\":\"bind\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + receivedTargetId + "\",\"message\":\"200\",\"statusCode\":200}");
 
-                    connectedClient.send(gson.toJson(response));
-
-                    // 5. 标记绑定成功
+                    // 标记绑定成功
                     connectedClientId = appClientId;
-                    targetId = appClientId;
+                    targetId = receivedTargetId;
                     isBound = true;
 
                     LOGGER.info("设备绑定成功: " + appClientId);
                 }
             } else if ("heartbeat".equals(type)) {
-                // 6. 心跳响应 - 同样格式
-                String appClientId = json.has("clientId") ? json.get("clientId").getAsString() : null;
+                // 心跳响应 - 必须包含正确的 targetId
+                String receivedTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
 
-                com.google.gson.JsonObject hbResponse = new com.google.gson.JsonObject();
-                hbResponse.addProperty("type", "heartbeat");
-                hbResponse.addProperty("clientId", sessionId);
-                hbResponse.addProperty("targetId", appClientId != null ? appClientId : "");
-                hbResponse.addProperty("statusCode", 200);
-                hbResponse.addProperty("message", "200");
-
-                connectedClient.send(gson.toJson(hbResponse));
+                // {"type":"heartbeat","clientId":"<PC_ID>","targetId":"<appId>","message":"200"}
+                connectedClient.send("{\"type\":\"heartbeat\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + receivedTargetId + "\",\"message\":\"200\"}");
                 LOGGER.info("心跳响应已发送");
             } else if ("msg".equals(type)) {
                 String msgContent = json.has("message") ? json.get("message").getAsString() : null;

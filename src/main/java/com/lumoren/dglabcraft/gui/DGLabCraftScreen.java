@@ -1,24 +1,22 @@
 package com.lumoren.dglabcraft.gui;
 
-import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import com.lumoren.dglabcraft.config.ModConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-import java.io.File;
-
 /**
- * DGLab Craft 设置面板
- * 显示连接状态和二维码按钮
+ * DGLab Craft 强度设置界面
+ * 使用自定义 Slider 实现
  */
 public class DGLabCraftScreen extends Screen {
 
-    private Button openQrButton;
+    private final Screen parent;
 
     public DGLabCraftScreen(Screen parent) {
-        super(Component.literal("DGLab Craft Settings"));
+        super(Component.literal("DGLab 联动设置"));
+        this.parent = parent;
     }
 
     @Override
@@ -26,26 +24,96 @@ public class DGLabCraftScreen extends Screen {
         super.init();
 
         int centerX = this.width / 2;
-        int buttonWidth = 280;
-        int buttonY = this.height / 2 + 20;
+        int leftX = centerX - 155;
+        int rightX = centerX + 5;
+        int startY = 70;
+        int spacing = 24;
 
-        // 创建打开二维码的按钮 (Minecraft 1.19.2 API)
-        this.openQrButton = new Button(
-            centerX - buttonWidth / 2,
-            buttonY,
-            buttonWidth,
-            20,
-            Component.translatable("button.dglabcraft.open_qr"),
-            (button) -> {
-                // 生成二维码图片
-                WebSocketServerManager.getInstance().generateQrUrl();
-                // 使用 openFile 打开本地图片（避免 URI 解析错误）
-                File qrFile = new File(Minecraft.getInstance().gameDirectory, "dglab-qrcode.png");
-                net.minecraft.Util.getPlatform().openFile(qrFile);
+        // ===== 左列滑块 (4个) =====
+
+        // 1. 全局强度上限
+        Slider baseMaxSlider = new Slider(
+            leftX, startY, 150, "全局强度上限: ",
+            0, 100, ModConfig.BASE_MAX_INTENSITY.get(), value -> {
+                ModConfig.BASE_MAX_INTENSITY.set((int) value);
             }
         );
+        this.addRenderableWidget(baseMaxSlider);
 
-        this.addRenderableWidget(this.openQrButton);
+        // 2. 火焰/岩浆伤害
+        Slider fireSlider = new Slider(
+            leftX, startY + spacing, 150, "火焰伤害: ",
+            0, 2.0f, ModConfig.FIRE_INTENSITY.get().floatValue(), value -> {
+                ModConfig.FIRE_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(fireSlider);
+
+        // 3. 跌落伤害
+        Slider fallSlider = new Slider(
+            leftX, startY + spacing * 2, 150, "跌落伤害: ",
+            0, 2.0f, ModConfig.FALL_INTENSITY.get().floatValue(), value -> {
+                ModConfig.FALL_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(fallSlider);
+
+        // 4. 溺水伤害
+        Slider drownSlider = new Slider(
+            leftX, startY + spacing * 3, 150, "溺水伤害: ",
+            0, 2.0f, ModConfig.DROWN_INTENSITY.get().floatValue(), value -> {
+                ModConfig.DROWN_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(drownSlider);
+
+        // ===== 右列滑块 (4个) =====
+
+        // 5. 中毒伤害
+        Slider poisonSlider = new Slider(
+            rightX, startY, 150, "中毒伤害: ",
+            0, 2.0f, ModConfig.POISON_INTENSITY.get().floatValue(), value -> {
+                ModConfig.POISON_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(poisonSlider);
+
+        // 6. 凋零伤害
+        Slider witherSlider = new Slider(
+            rightX, startY + spacing, 150, "凋零伤害: ",
+            0, 2.0f, ModConfig.WITHER_INTENSITY.get().floatValue(), value -> {
+                ModConfig.WITHER_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(witherSlider);
+
+        // 7. 心跳阈值
+        Slider heartbeatThresholdSlider = new Slider(
+            rightX, startY + spacing * 2, 150, "心跳阈值: ",
+            0, 10, ModConfig.HEARTBEAT_THRESHOLD.get().floatValue(), value -> {
+                ModConfig.HEARTBEAT_THRESHOLD.set((double) value);
+            }
+        );
+        this.addRenderableWidget(heartbeatThresholdSlider);
+
+        // 8. 心跳强度
+        Slider heartbeatIntensitySlider = new Slider(
+            rightX, startY + spacing * 3, 150, "心跳强度: ",
+            0, 2.0f, ModConfig.HEARTBEAT_INTENSITY.get().floatValue(), value -> {
+                ModConfig.HEARTBEAT_INTENSITY.set((double) value);
+            }
+        );
+        this.addRenderableWidget(heartbeatIntensitySlider);
+
+        // ===== 底部完成按钮 =====
+        Button doneButton = new Button(
+            centerX - 100, this.height - 30, 200, 20,
+            Component.literal("完成"),
+            (button) -> {
+                this.onClose();
+            }
+        );
+        this.addRenderableWidget(doneButton);
     }
 
     @Override
@@ -53,47 +121,9 @@ public class DGLabCraftScreen extends Screen {
         this.renderBackground(pPoseStack);
 
         int centerX = this.width / 2;
-        int startY = 40;
 
         // 标题
-        drawCenteredString(pPoseStack, this.font, "DGLab Craft Settings", centerX, startY, 0xFFFFFF);
-
-        // 获取服务器状态
-        WebSocketServerManager server = WebSocketServerManager.getInstance();
-
-        // 连接状态
-        boolean isConnected = server.isConnected();
-        String statusText = isConnected ? "已连接 (Connected)" : "等待连接 (Waiting for connection)";
-        int statusColor = isConnected ? 0x00FF00 : 0xFFFF00;
-        drawCenteredString(pPoseStack, this.font, statusText, centerX, startY + 30, statusColor);
-
-        // 如果已连接，显示客户端 ID
-        if (isConnected) {
-            String clientId = server.getConnectedClientId();
-            if (clientId != null) {
-                drawCenteredString(pPoseStack, this.font, "Device: " + clientId, centerX, startY + 50, 0xAAAAAA);
-            }
-        }
-
-        // 显示服务器信息
-        drawCenteredString(pPoseStack, this.font, "Server: " + server.getLocalIp() + ":" + server.getPort(),
-            centerX, startY + 80, 0xAAAAAA);
-
-        // 未连接时显示提示和按钮
-        if (!isConnected) {
-            // 提示文字
-            drawCenteredString(pPoseStack, this.font, "请点击下方按钮，在浏览器中扫码连接", centerX, this.height / 2 - 10, 0xAAAAAA);
-
-            // 按钮在 init() 中已添加
-        } else {
-            // 已连接时隐藏按钮
-            if (this.openQrButton != null) {
-                this.openQrButton.visible = false;
-            }
-        }
-
-        // 返回提示
-        drawCenteredString(pPoseStack, this.font, "Press ESC to close", centerX, this.height - 30, 0x888888);
+        drawCenteredString(pPoseStack, this.font, "DGLab 联动设置", centerX, 20, 0xFFFFFF);
 
         super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
     }
@@ -101,5 +131,10 @@ public class DGLabCraftScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
     }
 }
