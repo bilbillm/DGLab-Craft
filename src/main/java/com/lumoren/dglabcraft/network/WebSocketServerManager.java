@@ -378,78 +378,51 @@ public class WebSocketServerManager {
 
     /**
      * 发送波形数据 (带分块机制) - 严格遵守协议
-     * 执行时序: 1. clear -> 2. pulse (分块) -> 3. strength
+     * 根据 syncChannels 配置决定使用单通道或双通道同步模式
      *
      * @param channel 通道 "A" 或 "B"
      * @param waveId 波形 ID (对应文件名)
      * @param intensity 强度值
      */
     public void sendWaveformData(String channel, String waveId, double intensity) {
-        sendWaveformData(channel, waveId, intensity, false);
-    }
-
-    /**
-     * 发送波形数据 (内部方法)
-     *
-     * @param channel 通道 "A" 或 "B"
-     * @param waveId 波形 ID (对应文件名)
-     * @param intensity 强度值
-     * @param skipSync 是否跳过同步 (避免递归)
-     */
-    private void sendWaveformData(String channel, String waveId, double intensity, boolean skipSync) {
         if (connectedClient == null || !connectedClient.isOpen()) {
             return;
         }
 
+        // 同步模式：使用通道 ID 3 实现零延迟双通道同步
+        if (ModConfig.SYNC_CHANNELS.get()) {
+            sendWaveformDataDualChannel(waveId, intensity);
+            return;
+        }
+
+        // 普通模式：单通道发送 - 原有逻辑完全保留
+        sendWaveformDataSingleChannel(channel, waveId, intensity);
+    }
+
+    /**
+     * 单通道发送 (原有逻辑)
+     */
+    private void sendWaveformDataSingleChannel(String channel, String waveId, double intensity) {
         try {
-            // 通道转换: A=1, B=2 (数字用于 clear 和 strength)
+            // 通道转换: A=1, B=2
             int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
             String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
 
             int value = (int) intensity;
 
-            // ===== 第1步: 清空队列 =====
-            Map<String, String> clearMsg = new HashMap<>();
-            clearMsg.put("type", "msg");
-            clearMsg.put("message", "clear-" + channelNum);
-            clearMsg.put("clientId", sessionId);
-            clearMsg.put("targetId", targetId != null ? targetId : "");
-            connectedClient.send(gson.toJson(clearMsg));
-            LOGGER.info("发送清空命令: clear-{}", channelNum);
+            // 1. clear-<channelNum>
+            sendMessage("clear-" + channelNum);
 
-            // ===== 第2步: 分块发送波形 =====
-            // 获取波形并分块 (每块最大100个元素)
+            // 2. pulse-<A|B>:[...] (分块)
             var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
-
             for (List<String> chunk : chunks) {
-                // 将列表转换为 JSON 数组字符串
-                StringBuilder hexArray = new StringBuilder("[");
-                for (int i = 0; i < chunk.size(); i++) {
-                    if (i > 0) hexArray.append(", ");
-                    hexArray.append("\"").append(chunk.get(i)).append("\"");
-                }
-                hexArray.append("]");
-
-                // 构造 pulse-A:[...] 消息 (注意: 这里用字母 A/B)
-                Map<String, String> pulseMsg = new HashMap<>();
-                pulseMsg.put("type", "msg");
-                pulseMsg.put("message", "pulse-" + channelStr + ":" + hexArray.toString());
-                pulseMsg.put("clientId", sessionId);
-                pulseMsg.put("targetId", targetId != null ? targetId : "");
-                connectedClient.send(gson.toJson(pulseMsg));
-                LOGGER.info("发送波形分块: pulse-{}:{} ({} 块)", channelStr, hexArray, chunk.size());
+                sendPulseMessage(channelStr, chunk);
             }
 
-            // ===== 第3步: 发送强度 =====
-            Map<String, String> strengthMsg = new HashMap<>();
-            strengthMsg.put("type", "msg");
-            strengthMsg.put("message", "strength-" + channelNum + "+2+" + value);
-            strengthMsg.put("clientId", sessionId);
-            strengthMsg.put("targetId", targetId != null ? targetId : "");
-            connectedClient.send(gson.toJson(strengthMsg));
-            LOGGER.info("发送强度: strength-{}+2+{}", channelNum, value);
+            // 3. strength-<channelNum>+2+<value>
+            sendMessage("strength-" + channelNum + "+2+" + value);
 
-            // 更新通道状态
+            // 更新状态
             if (channelNum == 1) {
                 channelAIntensity = intensity;
                 channelAStatus = waveId;
@@ -458,15 +431,86 @@ public class WebSocketServerManager {
                 channelBStatus = waveId;
             }
 
-            // 通道同步 (只在非跳过同步模式时执行)
-            if (!skipSync && ModConfig.SYNC_CHANNELS.get()) {
-                String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
-                sendWaveformData(otherChannel, waveId, intensity, true);  // 跳过同步避免递归
-            }
-
         } catch (Exception e) {
             LOGGER.error("发送波形数据失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 双通道同步发送 - 使用通道 ID 3 实现零延迟
+     *
+     * @param waveId 波形 ID (对应文件名)
+     * @param intensity 强度值
+     */
+    private void sendWaveformDataDualChannel(String waveId, double intensity) {
+        try {
+            int value = (int) intensity;
+
+            // ===== 第1步: 一次性清空双通道 =====
+            sendMessage("clear-3");
+            LOGGER.info("发送清空命令: clear-3 (双通道)");
+
+            // ===== 第2步: 分别灌入 A/B 波形队列 =====
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+
+            // 先发送所有 A 通道波形块
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("A", chunk);
+            }
+            // 再发送所有 B 通道波形块
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("B", chunk);
+            }
+
+            // ===== 第3步: 瞬间同时施加强度 =====
+            // 注意: DGLab协议可能不支持 strength-3，需要分别发送到通道1和通道2
+            sendMessage("strength-1+2+" + value);
+            sendMessage("strength-2+2+" + value);
+            LOGGER.info("发送强度: strength-1+2+{} + strength-2+2+{} (双通道同步)", value, value);
+
+            // 更新通道状态
+            channelAIntensity = intensity;
+            channelAStatus = waveId;
+            channelBIntensity = intensity;
+            channelBStatus = waveId;
+
+        } catch (Exception e) {
+            LOGGER.error("发送双通道波形数据失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 发送消息辅助方法
+     */
+    private void sendMessage(String message) {
+        Map<String, String> msg = new HashMap<>();
+        msg.put("type", "msg");
+        msg.put("message", message);
+        msg.put("clientId", sessionId);
+        msg.put("targetId", targetId != null ? targetId : "");
+        connectedClient.send(gson.toJson(msg));
+    }
+
+    /**
+     * 发送波形消息辅助方法
+     */
+    private void sendPulseMessage(String channelStr, List<String> chunk) {
+        // 将列表转换为 JSON 数组字符串
+        StringBuilder hexArray = new StringBuilder("[");
+        for (int i = 0; i < chunk.size(); i++) {
+            if (i > 0) hexArray.append(", ");
+            hexArray.append("\"").append(chunk.get(i)).append("\"");
+        }
+        hexArray.append("]");
+
+        // 构造 pulse-A:[...] 消息
+        Map<String, String> pulseMsg = new HashMap<>();
+        pulseMsg.put("type", "msg");
+        pulseMsg.put("message", "pulse-" + channelStr + ":" + hexArray.toString());
+        pulseMsg.put("clientId", sessionId);
+        pulseMsg.put("targetId", targetId != null ? targetId : "");
+        connectedClient.send(gson.toJson(pulseMsg));
+        LOGGER.info("发送波形分块: pulse-{}:{}", channelStr, hexArray);
     }
 
     /**
