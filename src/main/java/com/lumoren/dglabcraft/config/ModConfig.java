@@ -7,6 +7,7 @@ public class ModConfig {
     public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY;
     public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
     public static final ForgeConfigSpec.ConfigValue<Integer> HUD_POSITION;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
 
     // WebSocket 设置
     public static final ForgeConfigSpec.ConfigValue<String> WS_HOST;
@@ -44,6 +45,8 @@ public class ModConfig {
                 .define("hudEnabled", true);
         HUD_POSITION = builder.comment("HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)")
                 .define("hudPosition", 0);
+        SYNC_CHANNELS = builder.comment("A/B 通道同步")
+                .define("syncChannels", true);
         builder.pop();
 
         // WebSocket 配置分组

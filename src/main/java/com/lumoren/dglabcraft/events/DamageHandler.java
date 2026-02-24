@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
@@ -11,85 +12,117 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 伤害事件处理
- * 处理火焰、岩浆、跌落、溺水、中毒、凋零等伤害
+ * 参考 CaiJi-ikun/DG_LAB 算法实现
+ *
+ * 强度计算公式: strength = max(1, damage * multiplier * 10)
+ * 数据包格式: strength-<channel>+<mode>+<value>
  */
 public class DamageHandler {
 
     @SubscribeEvent
     public void onLivingDamage(LivingDamageEvent event) {
+        // 只处理客户端玩家自身 - 使用 UUID 比较
+        Minecraft mc = Minecraft.getInstance();
+
         if (!(event.getEntity() instanceof Player)) return;
+        if (mc.player == null) return;
+
+        // 使用 UUID 比较来判断是否是同一个玩家
+        Player eventPlayer = (Player) event.getEntity();
+        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) {
+            return;  // 不是本地玩家
+        }
 
         Player player = (Player) event.getEntity();
         DamageSource source = event.getSource();
         float damage = event.getAmount();
 
-        // 计算基础强度: 伤害值 / 最大生命值 * 基础阈值
-        float maxHealth = player.getMaxHealth();
-        float baseIntensity = (damage / maxHealth) * 0.8f; // 0.8 是基础阈值
+        System.out.println("[DGLabCraft] 伤害来源: " + source.getMsgId() + ", 伤害值: " + damage);
 
-        String waveType = "constant";
-        String channel = "A";
-        int duration = 1000;
+        // 获取全局强度上限
+        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
 
-        // 根据伤害来源确定波形类型
+        // 根据伤害来源确定通道和波形
+        String channel;
+        String waveform;
+        double multiplier;
+
         if (source.isFire()) {
-            // 火焰/岩浆 - 持续高频波形
-            double intensity = baseIntensity * ModConfig.FIRE_INTENSITY.get();
-            waveType = "pulse";
-            duration = 2000;
-            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            // 火焰/岩浆 - A通道, 持续波形
+            channel = "A";
+            waveform = "pulse";
+            multiplier = ModConfig.FIRE_INTENSITY.get();
         }
         else if (source == DamageSource.FALL) {
-            // 跌落 - 瞬间重击型波形
-            double intensity = baseIntensity * ModConfig.FALL_INTENSITY.get();
-            waveType = "square";
-            duration = 500;
-            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            // 跌落 - A通道, 重击波形
+            channel = "A";
+            waveform = "square";
+            multiplier = ModConfig.FALL_INTENSITY.get();
         }
         else if (source == DamageSource.DROWN) {
-            // 溺水 - 缓慢增强、有压迫感
-            double intensity = baseIntensity * ModConfig.DROWN_INTENSITY.get();
-            waveType = "sine";
-            duration = 3000;
-            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            // 溺水 - B通道, 压迫波形
+            channel = "B";
+            waveform = "sine";
+            multiplier = ModConfig.DROWN_INTENSITY.get();
         }
         else if (source == DamageSource.WITHER) {
-            // 凋零 - 间歇性抽搐
-            double intensity = baseIntensity * ModConfig.WITHER_INTENSITY.get();
-            waveType = "pulse";
-            duration = 800;
-            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            // 凋零 - B通道, 间歇波形
+            channel = "B";
+            waveform = "pulse";
+            multiplier = ModConfig.WITHER_INTENSITY.get();
         }
         else if (source.getMsgId().contains("poison")) {
-            // 中毒 - 间歇性抽搐
-            double intensity = baseIntensity * ModConfig.POISON_INTENSITY.get();
-            waveType = "pulse";
-            duration = 600;
-            WebSocketServerManager.getInstance().sendStimulus(channel, waveType, intensity, duration);
+            // 中毒 - B通道, 间歇波形
+            channel = "B";
+            waveform = "pulse";
+            multiplier = ModConfig.POISON_INTENSITY.get();
         }
+        else {
+            // 其他伤害类型，默认A通道
+            channel = "A";
+            waveform = "pulse";
+            multiplier = 1.0;
+        }
+
+        // 计算强度: max(1, damage * multiplier * 10)
+        int strength = Math.max(1, (int)(damage * multiplier * 10));
+
+        // 应用全局上限
+        strength = Math.min(strength, maxIntensity);
+
+        System.out.println("[DGLabCraft] 计算强度: " + strength + ", 通道: " + channel);
+
+        // 发送刺激 - 使用新的数据驱动波形系统
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+        System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+        ws.sendWaveformData(channel, waveform, strength);
     }
 
     /**
-     * 监听玩家是否在火中或岩浆中
+     * 监听玩家持续状态（燃烧、溺水等）
      */
     @SubscribeEvent
     public void onLivingTick(LivingEvent.LivingTickEvent event) {
+        Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
+        if (mc.player == null || event.getEntity() != mc.player) return;
 
         Player player = (Player) event.getEntity();
+        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
 
         // 检查是否在火中
         if (player.isOnFire()) {
-            float maxHealth = player.getMaxHealth();
-            // 持续伤害 - 使用较低强度
-            double intensity = 0.1 * ModConfig.FIRE_INTENSITY.get();
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 200);
+            // 火焰持续伤害 - 较低强度
+            int strength = (int)(5.0 * ModConfig.FIRE_INTENSITY.get());
+            strength = Math.min(strength, maxIntensity);
+            WebSocketServerManager.getInstance().sendWaveformData("A", "burn", strength);
         }
 
-        // 检查是否在水中/潜水
+        // 检查是否在水中且空气不足
         if (player.isInWater() && player.getAirSupply() < 100) {
-            double intensity = 0.15 * ModConfig.DROWN_INTENSITY.get();
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 200);
+            int strength = (int)(8.0 * ModConfig.DROWN_INTENSITY.get());
+            strength = Math.min(strength, maxIntensity);
+            WebSocketServerManager.getInstance().sendWaveformData("B", "drown", strength);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
@@ -12,6 +13,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 环境反馈处理
+ * 参考 DG_LAB 算法实现
  * 处理生物群系、天气、特殊方块等环境因素
  */
 public class EnvironmentHandler {
@@ -23,18 +25,24 @@ public class EnvironmentHandler {
 
     @SubscribeEvent
     public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+        Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
+        if (mc.player == null) return;
+
+        // 使用 UUID 比较
+        Player eventPlayer = (Player) event.getEntity();
+        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
         Player player = (Player) event.getEntity();
-        if (player.level.isClientSide) {
-            handleClientEnvironment(player);
-        }
+        handleClientEnvironment(player);
     }
 
     private void handleClientEnvironment(Player player) {
         tickCounter++;
         // 每 10 tick 检查一次 (减少频繁调用)
         if (tickCounter % 10 != 0) return;
+
+        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
 
         // 检查维度 - 通过获取 level 的 dimension 类型
         DimensionType dimType = player.level.dimensionType();
@@ -48,9 +56,10 @@ public class EnvironmentHandler {
                 wasInNether = true;
                 wasInCold = false;
             }
-            double intensity = 0.2 * ModConfig.NETHER_INTENSITY.get();
+            int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
+            intensity = Math.min(intensity, maxIntensity);
             // 低频沉闷的波形
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 200);
+            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 0);
         } else {
             wasInNether = false;
         }
@@ -63,16 +72,17 @@ public class EnvironmentHandler {
                 if (!wasInCold) {
                     wasInCold = true;
                 }
-                double intensity = 0.15 * ModConfig.COLD_INTENSITY.get();
+                int intensity = (int)(8.0 * ModConfig.COLD_INTENSITY.get());
+                intensity = Math.min(intensity, maxIntensity);
                 // 高频细碎的麻木感
-                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 100);
+                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
             } else {
                 wasInCold = false;
             }
         }
 
         // 3. 检查玩家脚下的方块
-        checkPlayerFootBlock(player);
+        checkPlayerFootBlock(player, maxIntensity);
     }
 
     /**
@@ -99,13 +109,14 @@ public class EnvironmentHandler {
     /**
      * 检查玩家脚下的方块
      */
-    private void checkPlayerFootBlock(Player player) {
+    private void checkPlayerFootBlock(Player player, int maxIntensity) {
         Block feetBlock = player.level.getBlockState(player.blockPosition().below()).getBlock();
 
         // 细雪 - 高频麻木感
         if (feetBlock == Blocks.POWDER_SNOW) {
-            double intensity = 0.2 * ModConfig.COLD_INTENSITY.get();
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 100);
+            int intensity = (int)(10.0 * ModConfig.COLD_INTENSITY.get());
+            intensity = Math.min(intensity, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
             wasInSnow = true;
         } else {
             if (wasInSnow) {
@@ -117,74 +128,39 @@ public class EnvironmentHandler {
 
         // 仙人掌 - 持续刺痛
         if (feetBlock == Blocks.CACTUS) {
-            double intensity = 0.25;
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 200);
-        }
-
-        // 砂砾/沙子 (在水中) - 轻微压迫感
-        if ((feetBlock == Blocks.GRAVEL || feetBlock == Blocks.SAND) && player.isInWater()) {
-            double intensity = 0.1;
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 300);
+            int intensity = Math.min(15, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
         }
 
         // 甜蜜泥浆 - 轻微粘稠感
         if (feetBlock == Blocks.HONEY_BLOCK) {
-            double intensity = 0.08;
-            WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 200);
+            int intensity = Math.min(5, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 0);
         }
 
         // 粘液块 - 弹跳感
         if (feetBlock == Blocks.SLIME_BLOCK) {
-            double intensity = 0.1;
-            WebSocketServerManager.getInstance().sendStimulus("A", "square", intensity, 150);
-        }
-
-        // 蜘蛛网 - 轻微束缚感
-        if (feetBlock == Blocks.COBWEB) {
-            double intensity = 0.12;
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 150);
+            int intensity = Math.min(8, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("A", "square", intensity, 0);
         }
 
         // 下界传送门方块 - 空间扭曲感
         if (feetBlock == Blocks.NETHER_PORTAL) {
-            double intensity = 0.15;
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 100);
+            int intensity = Math.min(10, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
         }
 
         // 灵魂沙/灵魂土 - 低沉压迫感
         if (feetBlock == Blocks.SOUL_SAND || feetBlock == Blocks.SOUL_SOIL) {
-            double intensity = 0.18 * ModConfig.NETHER_INTENSITY.get();
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 300);
-        }
-
-        // 哭泣的黑曜石 - 轻微脉动
-        if (feetBlock == Blocks.CRYING_OBSIDIAN) {
-            double intensity = 0.1;
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 200);
-        }
-
-        // 附魔台附近 - 轻微酥麻感
-        if (feetBlock == Blocks.ENCHANTING_TABLE || feetBlock == Blocks.BOOKSHELF) {
-            double intensity = 0.07;
-            WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 250);
+            int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
+            intensity = Math.min(intensity, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 0);
         }
 
         // 终界传送门方块 - 空间传送感
         if (feetBlock == Blocks.END_PORTAL || feetBlock == Blocks.END_GATEWAY) {
-            double intensity = 0.2;
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 100);
-        }
-
-        // 苔石/石头 - 轻微粗糙感
-        if (feetBlock == Blocks.MOSSY_COBBLESTONE || feetBlock == Blocks.STONE) {
-            double intensity = 0.03;
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 400);
-        }
-
-        // 灯笼下 - 轻微温暖
-        if (player.level.getBlockState(player.blockPosition().above()).getBlock() == Blocks.LANTERN) {
-            double intensity = 0.06;
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 400);
+            int intensity = Math.min(12, maxIntensity);
+            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
         }
     }
 }

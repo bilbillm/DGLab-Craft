@@ -3,6 +3,8 @@ package com.lumoren.dglabcraft.network;
 import com.google.gson.Gson;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.util.QRCodeGenerator;
+import com.lumoren.dglabcraft.util.WaveformGenerator;
+import com.lumoren.dglabcraft.util.WaveformManager;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -15,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -58,7 +61,7 @@ public class WebSocketServerManager {
 
     private WebSocketServerManager() {
         // 使用固定的 sessionId（参考 DG_LAB）
-        sessionId = "1234-123456789-12345-12345-00";
+        sessionId = FIXED_CLIENT_ID;
         port = ModConfig.WS_PORT.get();
     }
 
@@ -280,6 +283,7 @@ public class WebSocketServerManager {
 
         try {
             int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
 
             // 根据波形类型决定模式
             int mode;
@@ -302,7 +306,24 @@ public class WebSocketServerManager {
                 channelBStatus = waveType;
             }
 
-            // 发送消息
+            // 发送波形配置 (让 App 显示对应的波形) - 使用官方波形 ID
+            if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
+                // 获取官方波形 ID (如 "ADamage", "BDamage", "pulse" 等)
+                String waveformId = WaveformGenerator.getOfficialWaveformId(waveType);
+
+                // 构造官方格式: pulse-A:[ADamage]
+                String waveformMessage = "pulse-" + channelStr + ":[" + waveformId + "]";
+
+                Map<String, String> waveformMsg = new HashMap<>();
+                waveformMsg.put("type", "msg");
+                waveformMsg.put("message", waveformMessage);
+                waveformMsg.put("clientId", sessionId);
+                waveformMsg.put("targetId", targetId != null ? targetId : "");
+                connectedClient.send(gson.toJson(waveformMsg));
+                LOGGER.info("发送波形配置: " + waveformMessage);
+            }
+
+            // 发送强度值
             Map<String, String> msg = new HashMap<>();
             msg.put("type", "msg");
             msg.put("message", "strength-" + channelNum + "+" + mode + "+" + value);
@@ -310,8 +331,129 @@ public class WebSocketServerManager {
             msg.put("targetId", targetId != null ? targetId : "");
 
             connectedClient.send(gson.toJson(msg));
+            LOGGER.info("发送强度: strength-" + channelNum + "+" + mode + "+" + value);
+
+            // 如果启用了通道同步，同时发送到另一个通道
+            if (ModConfig.SYNC_CHANNELS.get()) {
+                String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
+                int otherChannelNum = "A".equalsIgnoreCase(otherChannel) ? 1 : 2;
+                String otherChannelStr = "A".equalsIgnoreCase(otherChannel) ? "A" : "B";
+
+                // 更新另一个通道的状态
+                if (otherChannelNum == 1) {
+                    channelAIntensity = intensity;
+                    channelAStatus = waveType;
+                } else {
+                    channelBIntensity = intensity;
+                    channelBStatus = waveType;
+                }
+
+                // 发送波形配置到另一个通道 - 使用官方波形 ID
+                if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
+                    String waveformId = WaveformGenerator.getOfficialWaveformId(waveType);
+                    String waveformMessage = "pulse-" + otherChannelStr + ":[" + waveformId + "]";
+
+                    Map<String, String> otherWaveformMsg = new HashMap<>();
+                    otherWaveformMsg.put("type", "msg");
+                    otherWaveformMsg.put("message", waveformMessage);
+                    otherWaveformMsg.put("clientId", sessionId);
+                    otherWaveformMsg.put("targetId", targetId != null ? targetId : "");
+                    connectedClient.send(gson.toJson(otherWaveformMsg));
+                    LOGGER.info("同步发送波形配置: " + waveformMessage);
+                }
+
+                // 发送强度值到另一个通道
+                Map<String, String> otherMsg = new HashMap<>();
+                otherMsg.put("type", "msg");
+                otherMsg.put("message", "strength-" + otherChannelNum + "+" + mode + "+" + value);
+                otherMsg.put("clientId", sessionId);
+                otherMsg.put("targetId", targetId != null ? targetId : "");
+                connectedClient.send(gson.toJson(otherMsg));
+                LOGGER.info("同步发送强度: strength-" + otherChannelNum + "+" + mode + "+" + value);
+            }
         } catch (Exception e) {
             LOGGER.error("发送刺激失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 发送波形数据 (带分块机制) - 严格遵守协议
+     * 执行时序: 1. clear -> 2. pulse (分块) -> 3. strength
+     *
+     * @param channel 通道 "A" 或 "B"
+     * @param waveId 波形 ID (对应文件名)
+     * @param intensity 强度值
+     */
+    public void sendWaveformData(String channel, String waveId, double intensity) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        try {
+            // 通道转换: A=1, B=2 (数字用于 clear 和 strength)
+            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+
+            int value = (int) intensity;
+
+            // ===== 第1步: 清空队列 =====
+            Map<String, String> clearMsg = new HashMap<>();
+            clearMsg.put("type", "msg");
+            clearMsg.put("message", "clear-" + channelNum);
+            clearMsg.put("clientId", sessionId);
+            clearMsg.put("targetId", targetId != null ? targetId : "");
+            connectedClient.send(gson.toJson(clearMsg));
+            LOGGER.info("发送清空命令: clear-{}", channelNum);
+
+            // ===== 第2步: 分块发送波形 =====
+            // 获取波形并分块 (每块最大100个元素)
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+
+            for (List<String> chunk : chunks) {
+                // 将列表转换为 JSON 数组字符串
+                StringBuilder hexArray = new StringBuilder("[");
+                for (int i = 0; i < chunk.size(); i++) {
+                    if (i > 0) hexArray.append(", ");
+                    hexArray.append("\"").append(chunk.get(i)).append("\"");
+                }
+                hexArray.append("]");
+
+                // 构造 pulse-A:[...] 消息 (注意: 这里用字母 A/B)
+                Map<String, String> pulseMsg = new HashMap<>();
+                pulseMsg.put("type", "msg");
+                pulseMsg.put("message", "pulse-" + channelStr + ":" + hexArray.toString());
+                pulseMsg.put("clientId", sessionId);
+                pulseMsg.put("targetId", targetId != null ? targetId : "");
+                connectedClient.send(gson.toJson(pulseMsg));
+                LOGGER.info("发送波形分块: pulse-{}:{} ({} 块)", channelStr, hexArray, chunk.size());
+            }
+
+            // ===== 第3步: 发送强度 =====
+            Map<String, String> strengthMsg = new HashMap<>();
+            strengthMsg.put("type", "msg");
+            strengthMsg.put("message", "strength-" + channelNum + "+2+" + value);
+            strengthMsg.put("clientId", sessionId);
+            strengthMsg.put("targetId", targetId != null ? targetId : "");
+            connectedClient.send(gson.toJson(strengthMsg));
+            LOGGER.info("发送强度: strength-{}+2+{}", channelNum, value);
+
+            // 更新通道状态
+            if (channelNum == 1) {
+                channelAIntensity = intensity;
+                channelAStatus = waveId;
+            } else {
+                channelBIntensity = intensity;
+                channelBStatus = waveId;
+            }
+
+            // 通道同步
+            if (ModConfig.SYNC_CHANNELS.get()) {
+                String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
+                sendWaveformData(otherChannel, waveId, intensity);
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("发送波形数据失败: " + e.getMessage());
         }
     }
 

@@ -29,39 +29,52 @@ public class DGLabCraftScreen extends Screen {
         int startY = 70;
         int spacing = 24;
 
+        // ===== 顶部 A/B 通道同步切换按钮 =====
+        boolean syncEnabled = ModConfig.SYNC_CHANNELS.get();
+        Button syncButton = new Button(
+            centerX - 100, 35, 200, 20,
+            Component.literal("A/B 通道同步: " + (syncEnabled ? "开" : "关")),
+            (button) -> {
+                boolean newValue = !ModConfig.SYNC_CHANNELS.get();
+                ModConfig.SYNC_CHANNELS.set(newValue);
+                button.setMessage(Component.literal("A/B 通道同步: " + (newValue ? "开" : "关")));
+            }
+        );
+        this.addRenderableWidget(syncButton);
+
         // ===== 左列滑块 (4个) =====
 
-        // 1. 全局强度上限
+        // 1. 强度上限
         Slider baseMaxSlider = new Slider(
-            leftX, startY, 150, "全局强度上限: ",
+            leftX, startY, 150, "强度上限: ",
             0, 100, ModConfig.BASE_MAX_INTENSITY.get(), value -> {
                 ModConfig.BASE_MAX_INTENSITY.set((int) value);
             }
         );
         this.addRenderableWidget(baseMaxSlider);
 
-        // 2. 火焰/岩浆伤害
+        // 2. 火焰伤害倍率
         Slider fireSlider = new Slider(
-            leftX, startY + spacing, 150, "火焰伤害: ",
-            0, 2.0f, ModConfig.FIRE_INTENSITY.get().floatValue(), value -> {
+            leftX, startY + spacing, 150, "火焰伤害倍率: ×",
+            0.1f, 3.0f, ModConfig.FIRE_INTENSITY.get().floatValue(), value -> {
                 ModConfig.FIRE_INTENSITY.set((double) value);
             }
         );
         this.addRenderableWidget(fireSlider);
 
-        // 3. 跌落伤害
+        // 3. 跌落伤害倍率
         Slider fallSlider = new Slider(
-            leftX, startY + spacing * 2, 150, "跌落伤害: ",
-            0, 2.0f, ModConfig.FALL_INTENSITY.get().floatValue(), value -> {
+            leftX, startY + spacing * 2, 150, "跌落伤害倍率: ×",
+            0.1f, 3.0f, ModConfig.FALL_INTENSITY.get().floatValue(), value -> {
                 ModConfig.FALL_INTENSITY.set((double) value);
             }
         );
         this.addRenderableWidget(fallSlider);
 
-        // 4. 溺水伤害
+        // 4. 溺水伤害倍率
         Slider drownSlider = new Slider(
-            leftX, startY + spacing * 3, 150, "溺水伤害: ",
-            0, 2.0f, ModConfig.DROWN_INTENSITY.get().floatValue(), value -> {
+            leftX, startY + spacing * 3, 150, "溺水伤害倍率: ×",
+            0.1f, 3.0f, ModConfig.DROWN_INTENSITY.get().floatValue(), value -> {
                 ModConfig.DROWN_INTENSITY.set((double) value);
             }
         );
@@ -69,37 +82,37 @@ public class DGLabCraftScreen extends Screen {
 
         // ===== 右列滑块 (4个) =====
 
-        // 5. 中毒伤害
+        // 5. 中毒伤害倍率
         Slider poisonSlider = new Slider(
-            rightX, startY, 150, "中毒伤害: ",
-            0, 2.0f, ModConfig.POISON_INTENSITY.get().floatValue(), value -> {
+            rightX, startY, 150, "中毒伤害倍率: ×",
+            0.1f, 3.0f, ModConfig.POISON_INTENSITY.get().floatValue(), value -> {
                 ModConfig.POISON_INTENSITY.set((double) value);
             }
         );
         this.addRenderableWidget(poisonSlider);
 
-        // 6. 凋零伤害
+        // 6. 凋零伤害倍率
         Slider witherSlider = new Slider(
-            rightX, startY + spacing, 150, "凋零伤害: ",
-            0, 2.0f, ModConfig.WITHER_INTENSITY.get().floatValue(), value -> {
+            rightX, startY + spacing, 150, "凋零伤害倍率: ×",
+            0.1f, 3.0f, ModConfig.WITHER_INTENSITY.get().floatValue(), value -> {
                 ModConfig.WITHER_INTENSITY.set((double) value);
             }
         );
         this.addRenderableWidget(witherSlider);
 
-        // 7. 心跳阈值
+        // 7. 心响阈值
         Slider heartbeatThresholdSlider = new Slider(
-            rightX, startY + spacing * 2, 150, "心跳阈值: ",
+            rightX, startY + spacing * 2, 150, "心响阈值: ",
             0, 10, ModConfig.HEARTBEAT_THRESHOLD.get().floatValue(), value -> {
                 ModConfig.HEARTBEAT_THRESHOLD.set((double) value);
             }
         );
         this.addRenderableWidget(heartbeatThresholdSlider);
 
-        // 8. 心跳强度
+        // 8. 心跳强度倍率
         Slider heartbeatIntensitySlider = new Slider(
-            rightX, startY + spacing * 3, 150, "心跳强度: ",
-            0, 2.0f, ModConfig.HEARTBEAT_INTENSITY.get().floatValue(), value -> {
+            rightX, startY + spacing * 3, 150, "心跳强度倍率: ×",
+            0.1f, 3.0f, ModConfig.HEARTBEAT_INTENSITY.get().floatValue(), value -> {
                 ModConfig.HEARTBEAT_INTENSITY.set((double) value);
             }
         );

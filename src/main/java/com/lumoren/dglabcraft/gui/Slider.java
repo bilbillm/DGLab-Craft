@@ -107,7 +107,10 @@ public class Slider extends net.minecraft.client.gui.components.AbstractWidget {
 
         // 绘制标签和数值
         String valueStr;
-        if (maxValue <= 100 && minValue >= 0 && (maxValue - minValue) <= 100) {
+        if (minValue < 1.0f) {
+            // 浮点数范围（如 0.1-3.0），显示一位小数
+            valueStr = String.format("%.1f", currentValue);
+        } else if (maxValue <= 100 && minValue >= 0 && (maxValue - minValue) <= 100) {
             valueStr = String.valueOf(Math.round(currentValue));
         } else {
             valueStr = String.format("%.1f", currentValue);
