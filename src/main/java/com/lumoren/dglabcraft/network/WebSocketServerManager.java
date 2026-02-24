@@ -385,6 +385,18 @@ public class WebSocketServerManager {
      * @param intensity 强度值
      */
     public void sendWaveformData(String channel, String waveId, double intensity) {
+        sendWaveformData(channel, waveId, intensity, false);
+    }
+
+    /**
+     * 发送波形数据 (内部方法)
+     *
+     * @param channel 通道 "A" 或 "B"
+     * @param waveId 波形 ID (对应文件名)
+     * @param intensity 强度值
+     * @param skipSync 是否跳过同步 (避免递归)
+     */
+    private void sendWaveformData(String channel, String waveId, double intensity, boolean skipSync) {
         if (connectedClient == null || !connectedClient.isOpen()) {
             return;
         }
@@ -446,10 +458,10 @@ public class WebSocketServerManager {
                 channelBStatus = waveId;
             }
 
-            // 通道同步
-            if (ModConfig.SYNC_CHANNELS.get()) {
+            // 通道同步 (只在非跳过同步模式时执行)
+            if (!skipSync && ModConfig.SYNC_CHANNELS.get()) {
                 String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
-                sendWaveformData(otherChannel, waveId, intensity);
+                sendWaveformData(otherChannel, waveId, intensity, true);  // 跳过同步避免递归
             }
 
         } catch (Exception e) {
