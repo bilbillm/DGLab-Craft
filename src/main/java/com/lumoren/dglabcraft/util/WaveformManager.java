@@ -47,8 +47,11 @@ public class WaveformManager implements ResourceManagerReloadListener {
      */
     public void init(ResourceManager resourceManager) {
         if (initialized) {
+            LOGGER.info("波形管理器已初始化，跳过");
             return;
         }
+
+        LOGGER.info("开始初始化波形管理器...");
 
         Gson gson = new Gson();
         Type listType = new TypeToken<List<String>>(){}.getType();
@@ -57,17 +60,22 @@ public class WaveformManager implements ResourceManagerReloadListener {
         Map<ResourceLocation, Resource> resources = resourceManager.listResources("assets/dglabcraft/waveforms",
             path -> path.getPath().endsWith(".json"));
 
+        LOGGER.info("找到 {} 个波形资源文件", resources.size());
+
         for (Map.Entry<ResourceLocation, Resource> entry : resources.entrySet()) {
             try {
                 ResourceLocation path = entry.getKey();
                 String pathString = path.toString();
+                LOGGER.info("处理波形文件: {}", pathString);
 
                 // 提取文件名作为波形 ID (去除 .json 后缀)
                 String fileName = pathString.replace("assets/dglabcraft/waveforms/", "").replace(".json", "");
+                LOGGER.info("提取波形ID: {}", fileName);
 
                 // 读取资源
                 Resource resource = entry.getValue();
                 String jsonContent = new String(resource.open().readAllBytes());
+                LOGGER.info("JSON内容: {}", jsonContent);
                 List<String> waveformData = gson.fromJson(jsonContent, listType);
 
                 if (waveformData != null && !waveformData.isEmpty()) {
@@ -78,6 +86,9 @@ public class WaveformManager implements ResourceManagerReloadListener {
                 LOGGER.error("加载波形文件失败: {} - {}", entry.getKey(), e.getMessage());
             }
         }
+
+        // 输出所有已加载的波形
+        LOGGER.info("已加载波形列表: {}", waveformPool.keySet());
 
         // 确保默认波形存在
         if (!waveformPool.containsKey("default")) {
@@ -94,9 +105,10 @@ public class WaveformManager implements ResourceManagerReloadListener {
      * @return 波形 Hex 字符串列表，找不到返回默认波形
      */
     public List<String> getWaveform(String waveId) {
+        // 懒加载：如果未初始化，从 classpath 加载
         if (!initialized) {
-            LOGGER.warn("波形管理器未初始化，返回默认波形");
-            return DEFAULT_WAVEFORM;
+            LOGGER.info("懒加载波形管理器...");
+            initFromClasspath();
         }
 
         List<String> waveform = waveformPool.get(waveId);
@@ -105,6 +117,92 @@ public class WaveformManager implements ResourceManagerReloadListener {
             return waveformPool.getOrDefault("default", DEFAULT_WAVEFORM);
         }
         return waveform;
+    }
+
+    /**
+     * 从 classpath 直接加载波形文件
+     */
+    private void initFromClasspath() {
+        LOGGER.info("从 classpath 加载波形文件...");
+
+        Gson gson = new Gson();
+
+        // 波形文件名列表
+        String[] waveformFiles = {
+            "burn", "drown", "beat", "compress", "fast_pinch",
+            "tide", "heartbeat", "breath", "pinch_intensify",
+            "rhythm_step", "grain_friction", "bounce_gradual",
+            "wave_ripple", "rain_wash", "variable_speed",
+            "signal_light", "tease1", "tease2"
+        };
+
+        for (String fileName : waveformFiles) {
+            try {
+                // 从 classpath 加载
+                String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
+                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath);
+
+                if (is != null) {
+                    String jsonContent = new String(is.readAllBytes());
+                    List<String> waveformData = parseWaveformJson(jsonContent, gson);
+
+                    if (waveformData != null && !waveformData.isEmpty()) {
+                        waveformPool.put(fileName, waveformData);
+                        LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
+                    }
+                    is.close();
+                } else {
+                    LOGGER.warn("找不到资源: {}", resourcePath);
+                }
+            } catch (Exception e) {
+                LOGGER.error("加载波形文件失败: {} - {}", fileName, e.getMessage());
+            }
+        }
+
+        // 确保默认波形存在
+        if (!waveformPool.containsKey("default")) {
+            waveformPool.put("default", DEFAULT_WAVEFORM);
+        }
+
+        initialized = true;
+        LOGGER.info("波形管理器初始化完成 (classpath), 共加载 {} 个波形", waveformPool.size());
+    }
+
+    /**
+     * 解析波形 JSON，支持两种格式：
+     * 1. 简单数组: ["0a64...", ...]
+     * 2. 对象格式: { "data": ["0a64...", ...] }
+     */
+    private List<String> parseWaveformJson(String jsonContent, Gson gson) {
+        jsonContent = jsonContent.trim();
+
+        // 尝试解析为简单数组
+        if (jsonContent.startsWith("[")) {
+            Type listType = new TypeToken<List<String>>(){}.getType();
+            return gson.fromJson(jsonContent, listType);
+        }
+
+        // 尝试解析为对象，从 data 字段提取
+        if (jsonContent.startsWith("{")) {
+            java.lang.reflect.Type mapType = new com.google.gson.reflect.TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> map = gson.fromJson(jsonContent, mapType);
+
+            if (map.containsKey("data")) {
+                Object dataObj = map.get("data");
+                if (dataObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> dataList = (List<Object>) dataObj;
+                    List<String> result = new java.util.ArrayList<>();
+                    for (Object item : dataList) {
+                        result.add(item.toString());
+                    }
+                    return result;
+                }
+            }
+        }
+
+        LOGGER.warn("未知的 JSON 格式");
+        return null;
     }
 
     /**
@@ -133,8 +231,22 @@ public class WaveformManager implements ResourceManagerReloadListener {
      * 获取伤害源对应的波形 ID
      */
     public static String getWaveformIdForDamage(String damageSourceId) {
-        // 映射表: DamageSource msgId -> 波形文件名
-        return DAMAGE_WAVEFORM_MAP.getOrDefault(damageSourceId.toLowerCase(), "default");
+        String id = damageSourceId.toLowerCase();
+
+        // 先尝试完整匹配
+        if (DAMAGE_WAVEFORM_MAP.containsKey(id)) {
+            return DAMAGE_WAVEFORM_MAP.get(id);
+        }
+
+        // 处理复合伤害来源 (如 explosion.player -> explosion)
+        if (id.contains(".")) {
+            String baseType = id.split("\\.")[0];
+            if (DAMAGE_WAVEFORM_MAP.containsKey(baseType)) {
+                return DAMAGE_WAVEFORM_MAP.get(baseType);
+            }
+        }
+
+        return "default";
     }
 
     /**
@@ -143,60 +255,56 @@ public class WaveformManager implements ResourceManagerReloadListener {
     private static final Map<String, String> DAMAGE_WAVEFORM_MAP = new HashMap<>();
 
     static {
-        // 压缩/挤压
-        DAMAGE_WAVEFORM_MAP.put("in_wall", "compress");
-
-        // 仙人掌
+        // ===== 1. fast_pinch (锐器与穿刺) =====
         DAMAGE_WAVEFORM_MAP.put("cactus", "fast_pinch");
+        DAMAGE_WAVEFORM_MAP.put("sweet_berry_bush", "fast_pinch");
+        DAMAGE_WAVEFORM_MAP.put("arrow", "fast_pinch");
+        DAMAGE_WAVEFORM_MAP.put("trident", "fast_pinch");
+        DAMAGE_WAVEFORM_MAP.put("stalagmite", "fast_pinch");
 
-        // 火焰相关
+        // ===== 2. beat (钝器与撞击) =====
+        DAMAGE_WAVEFORM_MAP.put("fall", "beat");
+        DAMAGE_WAVEFORM_MAP.put("mob_attack", "beat");
+        DAMAGE_WAVEFORM_MAP.put("player_attack", "beat");
+        DAMAGE_WAVEFORM_MAP.put("fly_into_wall", "beat");
+        DAMAGE_WAVEFORM_MAP.put("explosion", "beat");
+        DAMAGE_WAVEFORM_MAP.put("explosion.player", "beat");
+        DAMAGE_WAVEFORM_MAP.put("fireworks", "beat");
+
+        // ===== 3. burn (高温与持续灼烧) =====
         DAMAGE_WAVEFORM_MAP.put("on_fire", "burn");
+        DAMAGE_WAVEFORM_MAP.put("onfire", "burn");
+        DAMAGE_WAVEFORM_MAP.put("onFire", "burn");
         DAMAGE_WAVEFORM_MAP.put("in_fire", "burn");
+        DAMAGE_WAVEFORM_MAP.put("infire", "burn");
+        DAMAGE_WAVEFORM_MAP.put("inFire", "burn");
         DAMAGE_WAVEFORM_MAP.put("lava", "burn");
         DAMAGE_WAVEFORM_MAP.put("hot_floor", "burn");
-        DAMAGE_WAVEFORM_MAP.put("fireball", "burn");
 
-        // 溺水
+        // ===== 4. compress (挤压与窒息) =====
+        DAMAGE_WAVEFORM_MAP.put("in_wall", "compress");
+        DAMAGE_WAVEFORM_MAP.put("cramming", "compress");
+        DAMAGE_WAVEFORM_MAP.put("falling_block", "compress");
+        DAMAGE_WAVEFORM_MAP.put("anvil", "compress");
+
+        // ===== 5. drown (环境异常与缺氧) =====
         DAMAGE_WAVEFORM_MAP.put("drown", "drown");
-        DAMAGE_WAVEFORM_MAP.put("in_water", "drown");
+        DAMAGE_WAVEFORM_MAP.put("drowning", "drown");
+        DAMAGE_WAVEFORM_MAP.put("freeze", "drown");
 
-        // 生物攻击
+        // ===== 6. tide (魔法与毒素) =====
+        DAMAGE_WAVEFORM_MAP.put("magic", "tide");
+        DAMAGE_WAVEFORM_MAP.put("wither", "witherEffect");
+        DAMAGE_WAVEFORM_MAP.put("dragon_breath", "tide");
+        DAMAGE_WAVEFORM_MAP.put("starve", "tide");
+
+        // ===== 其他兼容映射 =====
         DAMAGE_WAVEFORM_MAP.put("mob", "beat");
+        DAMAGE_WAVEFORM_MAP.put("mobattack", "beat");
+        DAMAGE_WAVEFORM_MAP.put("mobAttack", "beat");
         DAMAGE_WAVEFORM_MAP.put("player_attack", "beat");
-        DAMAGE_WAVEFORM_MAP.put("arrow", "beat");
-        DAMAGE_WAVEFORM_MAP.put("trident", "beat");
-
-        // 跌落
-        DAMAGE_WAVEFORM_MAP.put("fall", "beat");
-        DAMAGE_WAVEFORM_MAP.put("falling_block", "beat");
-
-        // 中毒/魔法
-        DAMAGE_WAVEFORM_MAP.put("poison", "beat");
-        DAMAGE_WAVEFORM_MAP.put("wither", "beat");
-        DAMAGE_WAVEFORM_MAP.put("magic", "beat");
-        DAMAGE_WAVEFORM_MAP.put("indirect_magic", "beat");
-
-        // 下界
-        DAMAGE_WAVEFORM_MAP.put("wither_spawn", "beat");
-        DAMAGE_WAVEFORM_MAP.put("dragon_breath", "beat");
-
-        // 爆炸
-        DAMAGE_WAVEFORM_MAP.put("explosion", "beat");
-        DAMAGE_WAVEFORM_MAP.put("bad_respawn_point", "beat");
-
-        // 灵魂沙/泥土
-        DAMAGE_WAVEFORM_MAP.put("soul_sand", "drown");
-        DAMAGE_WAVEFORM_MAP.put("soul_soil", "drown");
-
-        // 甜蜜泥块
-        DAMAGE_WAVEFORM_MAP.put("honey_block", "compress");
-
-        // 末地传送门
-        DAMAGE_WAVEFORM_MAP.put("end_portal", "compress");
-        DAMAGE_WAVEFORM_MAP.put("end_gateway", "compress");
-
-        // 下界传送门
-        DAMAGE_WAVEFORM_MAP.put("nether_portal", "compress");
+        DAMAGE_WAVEFORM_MAP.put("playerattack", "beat");
+        DAMAGE_WAVEFORM_MAP.put("indirect_magic", "tide");
     }
 
     @Override

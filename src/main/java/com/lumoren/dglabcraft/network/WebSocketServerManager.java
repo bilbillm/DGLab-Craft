@@ -306,17 +306,23 @@ public class WebSocketServerManager {
                 channelBStatus = waveType;
             }
 
-            // 发送波形配置 (让 App 显示对应的波形) - 使用官方波形 ID
+            // 发送波形配置 (让 App 显示对应的波形) - 使用 WaveformManager 获取实际波形数据
             if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
-                // 获取官方波形 ID (如 "ADamage", "BDamage", "pulse" 等)
-                String waveformId = WaveformGenerator.getOfficialWaveformId(waveType);
+                // 从 WaveformManager 获取实际波形数据
+                List<String> waveformData = WaveformManager.getInstance().getWaveform(waveType);
 
-                // 构造官方格式: pulse-A:[ADamage]
-                String waveformMessage = "pulse-" + channelStr + ":[" + waveformId + "]";
+                // 构造脉冲格式: pulse-A:[hex1,hex2,...]
+                StringBuilder waveformMessage = new StringBuilder();
+                waveformMessage.append("pulse-").append(channelStr).append(":[");
+                for (int i = 0; i < waveformData.size(); i++) {
+                    if (i > 0) waveformMessage.append(",");
+                    waveformMessage.append(waveformData.get(i));
+                }
+                waveformMessage.append("]");
 
                 Map<String, String> waveformMsg = new HashMap<>();
                 waveformMsg.put("type", "msg");
-                waveformMsg.put("message", waveformMessage);
+                waveformMsg.put("message", waveformMessage.toString());
                 waveformMsg.put("clientId", sessionId);
                 waveformMsg.put("targetId", targetId != null ? targetId : "");
                 connectedClient.send(gson.toJson(waveformMsg));
@@ -493,23 +499,26 @@ public class WebSocketServerManager {
 
     /**
      * 发送波形消息辅助方法
+     * 格式: pulse-A:["0A0A0A0A64646464", "1919181864646464"]
+     * 每个元素必须是 16 位大写十六进制字符串
      */
     private void sendPulseMessage(String channelStr, List<String> chunk) {
-        // 将列表转换为 JSON 数组字符串
+        // 将列表转换为 JSON 数组字符串 (紧凑格式，无空格)
         StringBuilder hexArray = new StringBuilder("[");
         for (int i = 0; i < chunk.size(); i++) {
-            if (i > 0) hexArray.append(", ");
-            hexArray.append("\"").append(chunk.get(i)).append("\"");
+            if (i > 0) hexArray.append(",");
+            // 转换为大写，确保 16 位
+            String hex = chunk.get(i).toUpperCase();
+            // 补齐到 16 位
+            while (hex.length() < 16) hex = "0" + hex;
+            // 截断超过 16 位的内容
+            if (hex.length() > 16) hex = hex.substring(0, 16);
+            hexArray.append("\"").append(hex).append("\"");
         }
         hexArray.append("]");
 
-        // 构造 pulse-A:[...] 消息
-        Map<String, String> pulseMsg = new HashMap<>();
-        pulseMsg.put("type", "msg");
-        pulseMsg.put("message", "pulse-" + channelStr + ":" + hexArray.toString());
-        pulseMsg.put("clientId", sessionId);
-        pulseMsg.put("targetId", targetId != null ? targetId : "");
-        connectedClient.send(gson.toJson(pulseMsg));
+        // 发送消息: pulse-A:[...]
+        sendMessage("pulse-" + channelStr + ":" + hexArray.toString());
         LOGGER.info("发送波形分块: pulse-{}:{}", channelStr, hexArray);
     }
 

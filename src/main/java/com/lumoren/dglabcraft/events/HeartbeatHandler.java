@@ -43,7 +43,7 @@ public class HeartbeatHandler {
         if (healthHalfHearts <= threshold * 2 && threshold > 0) {
             // 血量越低，心跳越快
             float healthRatio = health / maxHealth;
-            int baseInterval = 30; // 基础间隔 (tick)
+            int baseInterval = 40; // 基础间隔 (2秒 = 40 ticks)
             int minInterval = 8;   // 最小间隔
             int interval = Math.max(minInterval, (int) (baseInterval * (healthRatio + 0.1f)));
 
@@ -55,7 +55,7 @@ public class HeartbeatHandler {
                     double baseIntensity = ModConfig.HEARTBEAT_INTENSITY.get() * 20; // 基础强度
                     int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
                     intensity = Math.max(1, Math.min(intensity, maxIntensity));
-                    WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
+                    WebSocketServerManager.getInstance().sendStimulus("A", "heartbeat", intensity, 0);
                 }
             }
 
@@ -65,7 +65,7 @@ public class HeartbeatHandler {
                 double baseIntensity = ModConfig.HEARTBEAT_INTENSITY.get() * 20 * 0.7;
                 int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
                 intensity = Math.max(1, Math.min(intensity, maxIntensity));
-                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
+                WebSocketServerManager.getInstance().sendStimulus("A", "heartbeat", intensity, 0);
             }
 
             if (tickCounter % interval >= interval - 5) {

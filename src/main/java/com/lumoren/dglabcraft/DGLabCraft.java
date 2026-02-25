@@ -42,6 +42,8 @@ public class DGLabCraft
     {
         // 启动 WebSocket 服务器
         WebSocketServerManager.getInstance().start();
+
+        // 波形管理器使用懒加载，首次使用时自动初始化
     }
 
     /**

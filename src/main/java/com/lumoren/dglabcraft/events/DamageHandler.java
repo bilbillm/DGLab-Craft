@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
@@ -42,45 +43,41 @@ public class DamageHandler {
         // 获取全局强度上限
         int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
 
-        // 根据伤害来源确定通道和波形
+        // 使用 WaveformManager 进行伤害到波形的映射
+        String waveform = WaveformManager.getWaveformIdForDamage(source.getMsgId());
+
+        // 根据伤害来源确定通道
         String channel;
-        String waveform;
         double multiplier;
 
         if (source.isFire()) {
-            // 火焰/岩浆 - A通道, 持续波形
+            // 火焰/岩浆 - A通道
             channel = "A";
-            waveform = "pulse";
             multiplier = ModConfig.FIRE_INTENSITY.get();
         }
         else if (source == DamageSource.FALL) {
-            // 跌落 - A通道, 重击波形
+            // 跌落 - A通道
             channel = "A";
-            waveform = "square";
             multiplier = ModConfig.FALL_INTENSITY.get();
         }
         else if (source == DamageSource.DROWN) {
-            // 溺水 - B通道, 压迫波形
+            // 溺水 - B通道
             channel = "B";
-            waveform = "sine";
             multiplier = ModConfig.DROWN_INTENSITY.get();
         }
         else if (source == DamageSource.WITHER) {
-            // 凋零 - B通道, 间歇波形
+            // 凋零 - B通道
             channel = "B";
-            waveform = "pulse";
             multiplier = ModConfig.WITHER_INTENSITY.get();
         }
         else if (source.getMsgId().contains("poison")) {
-            // 中毒 - B通道, 间歇波形
+            // 中毒 - B通道
             channel = "B";
-            waveform = "pulse";
             multiplier = ModConfig.POISON_INTENSITY.get();
         }
         else {
             // 其他伤害类型，默认A通道
             channel = "A";
-            waveform = "pulse";
             multiplier = 1.0;
         }
 
@@ -100,29 +97,11 @@ public class DamageHandler {
 
     /**
      * 监听玩家持续状态（燃烧、溺水等）
+     * 注：不再在 tick 中持续发送波形，只依赖 LivingDamageEvent 处理实际伤害
+     * 这样可以避免在状态持续期间不间断发送波形
      */
     @SubscribeEvent
     public void onLivingTick(LivingEvent.LivingTickEvent event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null || event.getEntity() != mc.player) return;
-
-        Player player = (Player) event.getEntity();
-        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
-
-        // 检查是否在火中
-        if (player.isOnFire()) {
-            // 火焰持续伤害 - 较低强度
-            int strength = (int)(5.0 * ModConfig.FIRE_INTENSITY.get());
-            strength = Math.min(strength, maxIntensity);
-            WebSocketServerManager.getInstance().sendWaveformData("A", "burn", strength);
-        }
-
-        // 检查是否在水中且空气不足
-        if (player.isInWater() && player.getAirSupply() < 100) {
-            int strength = (int)(8.0 * ModConfig.DROWN_INTENSITY.get());
-            strength = Math.min(strength, maxIntensity);
-            WebSocketServerManager.getInstance().sendWaveformData("B", "drown", strength);
-        }
+        // 已移除持续触发逻辑，只通过 LivingDamageEvent 处理实际伤害
     }
 }
