@@ -67,6 +67,8 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
             ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
+            // 更新 FadeManager
+            FadeManager.updateDamage(strengthA, strengthB);
         } else {
             // 非同步模式：只用 A 通道
             int appMaxStrength = ws.getAppAMaxStrength();
@@ -79,6 +81,8 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
             ws.sendWaveformData("A", waveform, strength);
+            // 更新 FadeManager（A通道用strength，B通道用0）
+            FadeManager.updateDamage(strength, 0);
         }
     }
 

@@ -67,25 +67,28 @@ public class EnvironmentHandler {
             }
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
+                int intensityA, intensityB;
                 if (ModConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    int intensityA = (int)(maxIntensityA * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    int intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("breath", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    int intensity = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
-                    intensity = Math.min(intensity, maxIntensityB);
-                    ws.sendWaveformData("B", "breath", intensity);
+                    intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    intensityA = 0;
+                    ws.sendWaveformData("B", "breath", intensityB);
                 }
+                // 更新 FadeManager
+                FadeManager.updateEnvironment(intensityA, intensityB);
             }
         } else {
             if (wasInNether) {
-                // 离开下界时停止波形
-                ws.stopStimulus("A");
-                ws.stopStimulus("B");
+                // 离开下界时通知 FadeManager 开始渐变
+                FadeManager.stopEnvironment();
             }
             wasInNether = false;
         }
@@ -100,25 +103,28 @@ public class EnvironmentHandler {
             }
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
+                int intensityA, intensityB;
                 if (ModConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    int intensityA = (int)(maxIntensityA * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * ModConfig.END_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    int intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("tide", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    int intensity = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
-                    intensity = Math.min(intensity, maxIntensityB);
-                    ws.sendWaveformData("B", "tide", intensity);
+                    intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    intensityA = 0;
+                    ws.sendWaveformData("B", "tide", intensityB);
                 }
+                // 更新 FadeManager
+                FadeManager.updateEnvironment(intensityA, intensityB);
             }
         } else {
             if (wasInEnd) {
-                // 离开终界时停止波形
-                ws.stopStimulus("A");
-                ws.stopStimulus("B");
+                // 离开终界时通知 FadeManager 开始渐变
+                FadeManager.stopEnvironment();
             }
             wasInEnd = false;
         }
@@ -136,6 +142,8 @@ public class EnvironmentHandler {
                     int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
                     intensity = Math.min(intensity, maxIntensityA);
                     ws.sendWaveformData("A", "fast_pinch", intensity);
+                    // 细雪只用 A 通道，更新 FadeManager
+                    FadeManager.updateEnvironment(intensity, 0);
                 }
             } else {
                 wasInCold = false;
@@ -171,14 +179,16 @@ public class EnvironmentHandler {
                 int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
                 intensity = Math.min(intensity, maxIntensityA);
                 ws.sendWaveformData("A", "fast_pinch", intensity);
+                // 细雪只用 A 通道，更新 FadeManager
+                FadeManager.updateEnvironment(intensity, 0);
             }
             wasInSnow = true;
         } else {
             if (wasInSnow) {
-                // 离开细雪时发送停止信号
-                ws.stopStimulus("A");
-                wasInSnow = false;
+                // 离开细雪时通知 FadeManager 开始渐变
+                FadeManager.stopEnvironment();
             }
+            wasInSnow = false;
         }
 
         // 注：仙人掌伤害已由 DamageHandler 处理，此处不再重复发送
@@ -191,27 +201,30 @@ public class EnvironmentHandler {
             }
             // 每 30 tick (1.5秒) 发送一次 pinch_intensify 波形
             if (tickCounter % 30 == 0) {
+                int intensityA, intensityB;
                 if (ModConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    int intensityA = (int)(maxIntensityA * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    int intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("pinch_intensify", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    int intensity = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
-                    intensity = Math.min(intensity, maxIntensityB);
-                    ws.sendWaveformData("B", "pinch_intensify", intensity);
+                    intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    intensityA = 0;
+                    ws.sendWaveformData("B", "pinch_intensify", intensityB);
                 }
+                // 更新 FadeManager
+                FadeManager.updateEnvironment(intensityA, intensityB);
             }
         } else {
             if (wasInNetherPortal) {
-                // 离开下界传送门时停止波形
-                ws.stopStimulus("A");
-                ws.stopStimulus("B");
-                wasInNetherPortal = false;
+                // 离开下界传送门时通知 FadeManager 开始渐变
+                FadeManager.stopEnvironment();
             }
+            wasInNetherPortal = false;
         }
     }
 }

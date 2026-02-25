@@ -3,6 +3,7 @@ package com.lumoren.dglabcraft;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
+import com.lumoren.dglabcraft.events.FadeManager;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.events.StatusEffectHandler;
 import com.lumoren.dglabcraft.gui.MainScreen;
@@ -37,6 +38,7 @@ public class DGLabCraft
         MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
         MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
         MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
+        MinecraftForge.EVENT_BUS.register(FadeManager.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

@@ -15,8 +15,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class HeartbeatHandler {
 
     private int tickCounter = 0;
-    private boolean isHeartbeatActive = false;
-    private int heartbeatPhase = 0; // 0: off, 1: first beat, 2: pause
+    private boolean wasHeartbeatActive = false;
 
     // 静态变量，存储当前玩家的最大生命值（供UI使用）
     private static float currentMaxHealth = 20.0f;
@@ -82,22 +81,24 @@ public class HeartbeatHandler {
                     int intensityB = (int)(maxIntensityB * percentage * multiplier);
                     intensityB = Math.max(1, Math.min(intensityB, maxIntensityB));
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
+                    // 更新 FadeManager
+                    FadeManager.updateHeartbeat(intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     int intensity = (int)(maxIntensityB * percentage * multiplier);
                     intensity = Math.max(1, Math.min(intensity, maxIntensityB));
                     ws.sendWaveformData("B", "heartbeat", intensity);
+                    // 更新 FadeManager（B通道用intensity，A通道用0）
+                    FadeManager.updateHeartbeat(0, intensity);
                 }
             }
 
-            isHeartbeatActive = true;
+            wasHeartbeatActive = true;
         } else {
-            // 血量恢复后停止心跳 - 停止双通道
-            if (isHeartbeatActive) {
-                ws.stopStimulus("A");
-                ws.stopStimulus("B");
-                isHeartbeatActive = false;
-                heartbeatPhase = 0;
+            // 血量恢复后通知 FadeManager 开始渐变
+            if (wasHeartbeatActive) {
+                FadeManager.stopHeartbeat();
+                wasHeartbeatActive = false;
             }
         }
     }
