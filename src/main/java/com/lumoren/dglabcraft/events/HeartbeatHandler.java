@@ -18,6 +18,16 @@ public class HeartbeatHandler {
     private boolean isHeartbeatActive = false;
     private int heartbeatPhase = 0; // 0: off, 1: first beat, 2: pause
 
+    // 静态变量，存储当前玩家的最大生命值（供UI使用）
+    private static float currentMaxHealth = 20.0f;
+
+    /**
+     * 获取当前玩家的最大生命值
+     */
+    public static float getCurrentMaxHealth() {
+        return currentMaxHealth;
+    }
+
     @SubscribeEvent
     public void onPlayerTick(LivingEvent.LivingTickEvent event) {
         Minecraft mc = Minecraft.getInstance();
@@ -35,8 +45,12 @@ public class HeartbeatHandler {
         // 获取玩家当前血量
         float health = player.getHealth();
         float maxHealth = player.getMaxHealth();
-        int healthHalfHearts = (int) (health / 0.5f); // 转换为半心
-        int threshold = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
+        // 存储当前玩家的最大生命值，供UI使用
+        currentMaxHealth = maxHealth;
+        // 获取阈值百分比 (0-100)
+        int thresholdPercent = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
+        // 计算触发阈值：maxHealth * 百分比，向上取整
+        int thresholdHealth = (int) Math.ceil(maxHealth * thresholdPercent / 100.0);
 
         // 获取 WebSocket 管理器
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
@@ -47,8 +61,8 @@ public class HeartbeatHandler {
         int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
         int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
-        // 检查是否低于阈值 (默认 6 = 3 颗心)
-        if (healthHalfHearts <= threshold * 2 && threshold > 0) {
+        // 检查是否低于阈值 (百分比触发)
+        if (health <= thresholdHealth && thresholdPercent > 0) {
             // 血量越低，心跳越快
             float healthRatio = health / maxHealth;
             int interval = 40; // 固定间隔 (2秒 = 40 ticks)

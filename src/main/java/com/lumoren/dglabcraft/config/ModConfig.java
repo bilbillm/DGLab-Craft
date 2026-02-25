@@ -106,7 +106,7 @@ public class ModConfig {
         BASE_MAX_INTENSITY = builder.comment("A/B 通道全局基础强度上限 (保留)")
                 .define("baseMaxIntensity", 100);
         MAX_INTENSITY_PERCENTAGE = builder.comment("全局强度上限百分比 (0-100)")
-                .define("maxIntensityPercentage", 50.0);
+                .define("maxIntensityPercentage", 100.0);
         HUD_ENABLED = builder.comment("是否显示HUD")
                 .define("hudEnabled", true);
         HUD_POSITION = builder.comment("HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)")
@@ -211,8 +211,8 @@ public class ModConfig {
 
         // ===== 心跳设置 =====
         builder.push("heartbeat");
-        HEARTBEAT_THRESHOLD = builder.comment("触发心跳的血量阈值 (格子数)")
-                .define("threshold", 6.0);
+        HEARTBEAT_THRESHOLD = builder.comment("触发心跳的血量阈值 (生命值百分比 0-100)")
+                .define("threshold", 30.0);
         HEARTBEAT_MULTIPLIER = builder.comment("心跳强度倍率")
                 .define("multiplier", 1.0);
         builder.pop();

@@ -1,6 +1,7 @@
 package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -26,9 +27,12 @@ public class DGLabCraftScreen extends Screen {
     // 实时更新标签
     private SettingsList.LabelEntry appStrengthLabel;
     private SettingsList.LabelEntry effectiveStrengthLabel;
+    private SettingsList.LabelEntry heartbeatThresholdLabel;
     // 上一次的值，用于检测变化
     private int lastAppStrengthA = -1;
     private int lastAppStrengthB = -1;
+    private int lastPercentage = -1;
+    private int lastHeartbeatThreshold = -1;
     private boolean lastConnected = false;
 
     public DGLabCraftScreen(Screen parent) {
@@ -99,6 +103,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 记录初始状态
         this.lastConnected = isConnected;
+        this.lastPercentage = ModConfig.MAX_INTENSITY_PERCENTAGE.get().intValue();
         if (isConnected) {
             this.lastAppStrengthA = ws.getAppAMaxStrength();
             this.lastAppStrengthB = ws.getAppBMaxStrength();
@@ -131,11 +136,17 @@ public class DGLabCraftScreen extends Screen {
         // 心跳阈值 + 心跳倍率
         Slider thresholdSlider = new Slider(
             0, 0, 190, 20, Component.literal("心跳阈值: "),
-            1, 20, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "♥", value -> {
+            0, 100, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "%", value -> {
                 ModConfig.HEARTBEAT_THRESHOLD.set(value);
                 ModConfig.save();
             }
         );
+
+        // 心跳触发阈值显示
+        float maxHealth = HeartbeatHandler.getCurrentMaxHealth();
+        int thresholdPercent = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
+        int triggerHealth = (int) Math.ceil(maxHealth * thresholdPercent / 100.0);
+        this.heartbeatThresholdLabel = new SettingsList.LabelEntry("心跳触发: ≤ " + triggerHealth + " 生命值");
 
         Slider heartbeatSlider = new Slider(
             0, 0, 190, 20, Component.literal("心跳倍率: "),
@@ -146,6 +157,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         this.list.addEntry(new SettingsList.RowEntry(thresholdSlider, heartbeatSlider));
+        this.list.addEntry(this.heartbeatThresholdLabel);
 
         // ===== 锐器与穿刺倍率 (fast_pinch) =====
         this.list.addEntry(new SettingsList.HeaderEntry("锐器与穿刺倍率 (fast_pinch)"));
@@ -440,11 +452,11 @@ public class DGLabCraftScreen extends Screen {
      */
     private void resetToDefaults() {
         // 全局
-        ModConfig.MAX_INTENSITY_PERCENTAGE.set(50.0);
+        ModConfig.MAX_INTENSITY_PERCENTAGE.set(100.0);
         ModConfig.SYNC_CHANNELS.set(true);
 
         // 心跳
-        ModConfig.HEARTBEAT_THRESHOLD.set(6.0);
+        ModConfig.HEARTBEAT_THRESHOLD.set(30.0);
         ModConfig.HEARTBEAT_MULTIPLIER.set(1.0);
 
         // 锐器与穿刺
@@ -550,6 +562,29 @@ public class DGLabCraftScreen extends Screen {
                 int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(currentAppStrengthB);
                 this.effectiveStrengthLabel.setText("实际强度上限: A: " + effectiveMaxA + ", B: " + effectiveMaxB);
             }
+        }
+
+        // 检测百分比变化
+        int currentPercentage = ModConfig.MAX_INTENSITY_PERCENTAGE.get().intValue();
+        if (currentPercentage != this.lastPercentage) {
+            this.lastPercentage = currentPercentage;
+            if (isConnected) {
+                int appStrengthA = ws.getAppAMaxStrength();
+                int appStrengthB = ws.getAppBMaxStrength();
+                int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(appStrengthA);
+                int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(appStrengthB);
+                this.effectiveStrengthLabel.setText("实际强度上限: A: " + effectiveMaxA + ", B: " + effectiveMaxB);
+            }
+        }
+
+        // 检测心跳阈值变化
+        int currentThresholdPercent = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
+        if (currentThresholdPercent != this.lastHeartbeatThreshold) {
+            this.lastHeartbeatThreshold = currentThresholdPercent;
+            // 更新心跳触发阈值显示
+            float maxHealth = HeartbeatHandler.getCurrentMaxHealth();
+            int triggerHealth = (int) Math.ceil(maxHealth * currentThresholdPercent / 100.0);
+            this.heartbeatThresholdLabel.setText("心跳触发: ≤ " + triggerHealth + " 生命值");
         }
     }
 

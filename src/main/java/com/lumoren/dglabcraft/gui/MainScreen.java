@@ -22,6 +22,7 @@ public class MainScreen extends Screen {
     private Button waveformButton;
     private Button hudToggleButton;
     private Button hudPositionButton;
+    private Button closeButton;
 
     @Override
     protected void init() {
@@ -72,14 +73,16 @@ public class MainScreen extends Screen {
         );
         this.addRenderableWidget(this.waveformButton);
 
-        // HUD 开关按钮 + HUD 位置切换按钮（双列并排）
-        int halfWidth = buttonWidth / 2 - 2;
+        // HUD 开关按钮 + HUD 位置切换按钮 + 关闭界面按钮（三列并排，总宽度200与上方按钮对齐）
+        int btnWidth = 66;  // 66*3 + 1*2 = 200
+        int btnGap = 1;     // 间距
+        int startX = centerX - buttonWidth / 2;
         boolean hudEnabled = ModConfig.HUD_ENABLED.get();
         String hudText = hudEnabled ? "HUD: 开启" : "HUD: 关闭";
         this.hudToggleButton = new Button(
-            centerX - buttonWidth / 2,
+            startX,
             startY + spacing * 3,
-            halfWidth,
+            btnWidth,
             buttonHeight,
             Component.literal(hudText),
             (button) -> {
@@ -95,9 +98,9 @@ public class MainScreen extends Screen {
         int currentPos = ModConfig.HUD_POSITION.get();
         String posText = "位置: " + getPositionText(currentPos);
         this.hudPositionButton = new Button(
-            centerX - 2,
+            startX + btnWidth + btnGap,
             startY + spacing * 3,
-            halfWidth,
+            btnWidth,
             buttonHeight,
             Component.literal(posText),
             (button) -> {
@@ -108,6 +111,17 @@ public class MainScreen extends Screen {
             }
         );
         this.addRenderableWidget(this.hudPositionButton);
+
+        // 关闭界面按钮
+        this.closeButton = new Button(
+            startX + (btnWidth + btnGap) * 2,
+            startY + spacing * 3,
+            btnWidth,
+            buttonHeight,
+            Component.literal("关闭界面"),
+            (button) -> this.onClose()
+        );
+        this.addRenderableWidget(this.closeButton);
     }
 
     /**
