@@ -63,24 +63,28 @@ public class HeartbeatHandler {
 
         // 检查是否低于阈值 (百分比触发)
         if (health <= thresholdHealth && thresholdPercent > 0) {
-            // 血量越低，心跳越快
-            float healthRatio = health / maxHealth;
             int interval = 40; // 固定间隔 (2秒 = 40 ticks)
 
             // 心跳模式: 单次跳动
             if (tickCounter % interval == 0) {
-                double baseIntensity = ModConfig.HEARTBEAT_MULTIPLIER.get() * 20; // 基础强度
+                // 计算百分比: 20% + (血量距离/阈值血量) * 80%
+                // 血量=阈值时: 20%, 血量=0时: 100%
+                double percentage = 0.2 + (double)(thresholdHealth - health) / thresholdHealth * 0.8;
+                percentage = Math.max(0.2, Math.min(1.0, percentage));
+
+                // 获取心跳倍率
+                double multiplier = ModConfig.HEARTBEAT_MULTIPLIER.get();
 
                 if (ModConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    int intensityA = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    int intensityA = (int)(maxIntensityA * percentage * multiplier);
                     intensityA = Math.max(1, Math.min(intensityA, maxIntensityA));
-                    int intensityB = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    int intensityB = (int)(maxIntensityB * percentage * multiplier);
                     intensityB = Math.max(1, Math.min(intensityB, maxIntensityB));
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    int intensity = (int)(maxIntensityB * percentage * multiplier);
                     intensity = Math.max(1, Math.min(intensity, maxIntensityB));
                     ws.sendWaveformData("B", "heartbeat", intensity);
                 }
