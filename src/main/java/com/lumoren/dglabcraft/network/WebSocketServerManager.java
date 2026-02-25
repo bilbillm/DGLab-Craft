@@ -39,8 +39,11 @@ public class WebSocketServerManager {
     // 当前连接的客户端
     private WebSocket connectedClient;
     private String connectedClientId = null;  // App 的 clientId
-    private String targetId = null;  // 我们的 targetId
+    private String targetId = null;  // 我们的 targetId（等于 onOpen 中生成的 clientId）
     private boolean isBound = false; // 是否已收到 DGLab App 的绑定消息
+
+    // 保存我们在 onOpen 中生成的 clientId
+    private String generatedClientId = null;
 
     // 设备端发来的强度设置
     private int appAStrength = 0;
@@ -106,12 +109,15 @@ public class WebSocketServerManager {
                         appAMaxStrength = 100;
                         appBMaxStrength = 100;
 
-                        // 主动发送 bind 消息（格式必须正确）
+                        // 主动发送 bind 消息（参考 DG_LAB）
                         // {"type":"bind","clientId":"<UUID>","targetId":"","message":"targetId"}
-                        String appId = UUID.randomUUID().toString();
-                        conn.send("{\"type\":\"bind\",\"clientId\":\"" + appId + "\",\"targetId\":\"\",\"message\":\"targetId\"}");
+                        generatedClientId = UUID.randomUUID().toString();
+                        conn.send("{\"type\":\"bind\",\"clientId\":\"" + generatedClientId + "\",\"targetId\":\"\",\"message\":\"targetId\"}");
 
-                        LOGGER.info("已发送 bind 消息给客户端");
+                        // 保存生成的 clientId 作为我们的 targetId
+                        targetId = generatedClientId;
+
+                        LOGGER.info("已发送 bind 消息给客户端: clientId=" + generatedClientId);
 
                         // 启动心跳定时器
                         startHeartbeat(conn);
@@ -136,6 +142,7 @@ public class WebSocketServerManager {
                         connectedClientId = null;
                         isBound = false;
                         targetId = null;
+                        generatedClientId = null;
                     }
                 }
 
@@ -204,32 +211,45 @@ public class WebSocketServerManager {
             String type = json.has("type") ? json.get("type").getAsString() : null;
 
             if ("bind".equals(type)) {
-                // 提取 message 字段，检查是否为 "DGLAB"
+                // 提取字段
                 String msgContent = json.has("message") ? json.get("message").getAsString() : null;
                 String appClientId = json.has("clientId") ? json.get("clientId").getAsString() : null;
                 String receivedTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
 
                 LOGGER.info("收到 bind: appClientId={}, targetId={}, message={}", appClientId, receivedTargetId, msgContent);
 
-                // 检查 message 是否为 "DGLAB"
-                if ("DGLAB".equals(msgContent)) {
+                // 参考 DG_LAB 的验证逻辑：
+                // 1. message = "DGLAB"
+                // 2. type = "bind"
+                // 3. clientId = FIXED_CLIENT_ID
+                // 4. targetId = 我们生成的 clientId (generatedClientId)
+                if ("DGLAB".equals(msgContent)
+                        && FIXED_CLIENT_ID.equals(appClientId)
+                        && generatedClientId != null
+                        && generatedClientId.equals(receivedTargetId)) {
+
                     // 返回 200 确认包
                     // {"type":"bind","clientId":"<PC_ID>","targetId":"<appId>","message":"200","statusCode":200}
-                    connectedClient.send("{\"type\":\"bind\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + receivedTargetId + "\",\"message\":\"200\",\"statusCode\":200}");
+                    connectedClient.send("{\"type\":\"bind\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + appClientId + "\",\"message\":\"200\",\"statusCode\":200}");
 
                     // 标记绑定成功
                     connectedClientId = appClientId;
-                    targetId = receivedTargetId;
                     isBound = true;
 
                     LOGGER.info("设备绑定成功: " + appClientId);
+                } else {
+                    LOGGER.warn("bind 验证失败: message={}, clientId={}, targetId={}, expected targetId={}",
+                            msgContent, appClientId, receivedTargetId, generatedClientId);
                 }
             } else if ("heartbeat".equals(type)) {
                 // 心跳响应 - 必须包含正确的 targetId
                 String receivedTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
 
                 // {"type":"heartbeat","clientId":"<PC_ID>","targetId":"<appId>","message":"200"}
-                connectedClient.send("{\"type\":\"heartbeat\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + receivedTargetId + "\",\"message\":\"200\"}");
+                // 注意：这里 receivedTargetId 应该是我们在 onOpen 中发送给 APP 的 UUID
+                // 如果没有收到有效的 targetId，使用之前绑定的 targetId
+                String responseTargetId = (receivedTargetId != null && !receivedTargetId.isEmpty()) ? receivedTargetId : targetId;
+                connectedClient.send("{\"type\":\"heartbeat\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + responseTargetId + "\",\"message\":\"200\"}");
                 LOGGER.info("心跳响应已发送");
             } else if ("msg".equals(type)) {
                 String msgContent = json.has("message") ? json.get("message").getAsString() : null;
@@ -560,6 +580,44 @@ public class WebSocketServerManager {
     }
 
     /**
+     * 只发送强度（不发送波形），用于渐变效果
+     * @param channel 通道 "A" 或 "B"
+     * @param intensity 强度值
+     */
+    public void sendStrengthOnly(String channel, int intensity) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        try {
+            int channelNum = "A".equals(channel) ? 1 : 2;
+            sendMessage("strength-" + channelNum + "+2+" + intensity);
+            LOGGER.info("发送渐变强度: 通道{} = {}", channel, intensity);
+        } catch (Exception e) {
+            LOGGER.error("发送强度失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 发送双通道强度（不发送波形），用于渐变效果
+     * @param intensityA A通道强度值
+     * @param intensityB B通道强度值
+     */
+    public void sendDualChannelStrengthOnly(int intensityA, int intensityB) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        try {
+            sendMessage("strength-1+2+" + intensityA);
+            sendMessage("strength-2+2+" + intensityB);
+            LOGGER.info("发送双通道渐变强度: A={}, B={}", intensityA, intensityB);
+        } catch (Exception e) {
+            LOGGER.error("发送双通道强度失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 发送消息辅助方法
      */
     private void sendMessage(String message) {
@@ -597,7 +655,7 @@ public class WebSocketServerManager {
     }
 
     /**
-     * 停止刺激
+     * 停止刺激 - 发送强度为0的消息
      */
     public void stopStimulus(String channel) {
         int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
@@ -610,14 +668,10 @@ public class WebSocketServerManager {
             channelBStatus = "Idle";
         }
 
-        // 发送清除命令
+        // 发送强度为0的消息（而不是clear命令）
         if (connectedClient != null && connectedClient.isOpen()) {
-            Map<String, String> msg = new HashMap<>();
-            msg.put("type", "msg");
-            msg.put("message", "clear-" + channelNum);
-            msg.put("clientId", sessionId);
-            msg.put("targetId", targetId != null ? targetId : "");
-            connectedClient.send(gson.toJson(msg));
+            sendMessage("strength-" + channelNum + "+2+0");
+            LOGGER.info("发送停止刺激(归零): strength-" + channelNum + "+2+0");
         }
     }
 
@@ -652,9 +706,12 @@ public class WebSocketServerManager {
      * 生成二维码 URL（参考 DG_LAB 格式）
      */
     public String generateQrUrl() {
+        // 重新获取本机 IP 地址（网络可能已变化）
+        String currentLocalIp = getLocalIpAddress();
+
         // 使用 dungeon-lab.com 格式（参考 DG_LAB）
         String url = String.format("https://www.dungeon-lab.com/app-download.php#DGLAB-SOCKET#ws://%s:%d/%s",
-            localIp, port, FIXED_CLIENT_ID);
+            currentLocalIp, port, FIXED_CLIENT_ID);
 
         // 生成二维码图片
         QRCodeGenerator.generateQRCode(url);
@@ -672,8 +729,12 @@ public class WebSocketServerManager {
                 for (InetAddress addr : Collections.list(ni.getInetAddresses())) {
                     if (addr instanceof java.net.Inet4Address) {
                         String ip = addr.getHostAddress();
-                        // 排除 127.x.x.x 和 169.254.x.x
-                        if (!ip.startsWith("127.") && !ip.startsWith("169.")) {
+                        // 只返回局域网IP: 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+                        if (ip.startsWith("10.") ||
+                            (ip.startsWith("172.") &&
+                             Integer.parseInt(ip.split("\\.")[1]) >= 16 &&
+                             Integer.parseInt(ip.split("\\.")[1]) <= 31) ||
+                            ip.startsWith("192.168.")) {
                             return ip;
                         }
                     }

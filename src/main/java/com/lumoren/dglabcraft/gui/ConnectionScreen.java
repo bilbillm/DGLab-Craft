@@ -132,6 +132,6 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        return false;
+        return true;
     }
 }

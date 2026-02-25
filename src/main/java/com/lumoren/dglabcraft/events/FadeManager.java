@@ -42,6 +42,8 @@ public class FadeManager {
     private static final int FADE_DELAY = 40;
     // 渐变时间（2秒 = 40 tick）
     private static final int FADE_DURATION = 40;
+    // 渐变发送间隔（0.5秒 = 10 tick）
+    private static final int FADE_SEND_INTERVAL = 10;
 
     @SubscribeEvent
     public static void onPlayerTick(LivingEvent.LivingTickEvent event) {
@@ -101,9 +103,20 @@ public class FadeManager {
     }
 
     /**
-     * 发送心跳渐变强度
+     * 发送心跳渐变强度（只发送强度，不发送波形）
+     * 每 FADE_SEND_INTERVAL tick 发送一次
      */
     private static void sendHeartbeatFade(WebSocketServerManager ws, int elapsed) {
+        // 渐变结束时不发送渐变强度，由stopStimulus处理归零
+        if (elapsed >= FADE_DELAY + FADE_DURATION) {
+            return;
+        }
+
+        // 每 FADE_SEND_INTERVAL tick 发送一次（渐变开始时立即发送，之后每0.5秒发送一次）
+        if (elapsed % FADE_SEND_INTERVAL != 0) {
+            return;
+        }
+
         int fadeProgress = elapsed - FADE_DELAY;
         double fadeFactor = 1.0 - (double) fadeProgress / FADE_DURATION;
 
@@ -112,9 +125,9 @@ public class FadeManager {
 
         if (intensityA > 0 || intensityB > 0) {
             if (ModConfig.SYNC_CHANNELS.get()) {
-                ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
+                ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
-                ws.sendWaveformData("B", "heartbeat", intensityB);
+                ws.sendStrengthOnly("B", intensityB);
             }
         }
     }
@@ -160,8 +173,19 @@ public class FadeManager {
 
     /**
      * 发送环境渐变强度
+     * 每 FADE_SEND_INTERVAL tick 发送一次
      */
     private static void sendEnvironmentFade(WebSocketServerManager ws, int elapsed) {
+        // 渐变结束时不发送渐变强度，由stopStimulus处理归零
+        if (elapsed >= FADE_DELAY + FADE_DURATION) {
+            return;
+        }
+
+        // 每 FADE_SEND_INTERVAL tick 发送一次（渐变开始时立即发送，之后每0.5秒发送一次）
+        if (elapsed % FADE_SEND_INTERVAL != 0) {
+            return;
+        }
+
         int fadeProgress = elapsed - FADE_DELAY;
         double fadeFactor = 1.0 - (double) fadeProgress / FADE_DURATION;
 
@@ -170,9 +194,9 @@ public class FadeManager {
 
         if (intensityA > 0 || intensityB > 0) {
             if (ModConfig.SYNC_CHANNELS.get()) {
-                ws.sendWaveformDataDualChannelWithDifferentIntensity("environment", intensityA, intensityB);
+                ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
-                ws.sendWaveformData("B", "environment", intensityB);
+                ws.sendStrengthOnly("B", intensityB);
             }
         }
     }
@@ -217,9 +241,20 @@ public class FadeManager {
     }
 
     /**
-     * 发送伤害渐变强度
+     * 发送伤害渐变强度（只发送强度，不发送波形）
+     * 每 FADE_SEND_INTERVAL tick 发送一次
      */
     private static void sendDamageFade(WebSocketServerManager ws, int elapsed) {
+        // 渐变结束时不发送渐变强度，由stopStimulus处理归零
+        if (elapsed >= FADE_DELAY + FADE_DURATION) {
+            return;
+        }
+
+        // 每 FADE_SEND_INTERVAL tick 发送一次（渐变开始时立即发送，之后每0.5秒发送一次）
+        if (elapsed % FADE_SEND_INTERVAL != 0) {
+            return;
+        }
+
         int fadeProgress = elapsed - FADE_DELAY;
         double fadeFactor = 1.0 - (double) fadeProgress / FADE_DURATION;
 
@@ -228,9 +263,9 @@ public class FadeManager {
 
         if (intensityA > 0 || intensityB > 0) {
             if (ModConfig.SYNC_CHANNELS.get()) {
-                ws.sendWaveformDataDualChannelWithDifferentIntensity("damage", intensityA, intensityB);
+                ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
-                ws.sendWaveformData("A", "damage", intensityA);
+                ws.sendStrengthOnly("A", intensityA);
             }
         }
     }
@@ -249,10 +284,17 @@ public class FadeManager {
     }
 
     /**
-     * 停止心跳状态
+     * 停止心跳状态，开始渐变
      */
     public static void stopHeartbeat() {
+        // 如果已经在渐变中，不需要重复处理
+        if (isHeartbeatFading) {
+            isHeartbeatActive = false;
+            return;
+        }
+        // 开始渐变：设置 isHeartbeatFading = true，保持 lastHeartbeatTick 不变
         isHeartbeatActive = false;
+        isHeartbeatFading = true;
     }
 
     /**
@@ -267,10 +309,17 @@ public class FadeManager {
     }
 
     /**
-     * 停止环境状态
+     * 停止环境状态，开始渐变
      */
     public static void stopEnvironment() {
+        // 如果已经在渐变中，不需要重复处理
+        if (isEnvironmentFading) {
+            isEnvironmentActive = false;
+            return;
+        }
+        // 开始渐变：设置 isEnvironmentFading = true，保持 lastEnvironmentTick 不变
         isEnvironmentActive = false;
+        isEnvironmentFading = true;
     }
 
     /**
@@ -285,10 +334,17 @@ public class FadeManager {
     }
 
     /**
-     * 停止伤害状态
+     * 停止伤害状态，开始渐变
      */
     public static void stopDamage() {
+        // 如果已经在渐变中，不需要重复处理
+        if (isDamageFading) {
+            isDamageActive = false;
+            return;
+        }
+        // 开始渐变：设置 isDamageFading = true，保持 lastDamageTick 不变
         isDamageActive = false;
+        isDamageFading = true;
     }
 
     /**
