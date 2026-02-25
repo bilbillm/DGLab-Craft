@@ -4,6 +4,8 @@
 ![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
+> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
+
 DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件转换为物理反馈发送到 DGLab 设备。
 
 ## 功能特点
