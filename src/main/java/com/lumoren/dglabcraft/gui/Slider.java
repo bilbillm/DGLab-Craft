@@ -1,125 +1,143 @@
 package com.lumoren.dglabcraft.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 
 /**
- * 自定义滑动条组件 - 原版风格
+ * 自定义滑动条组件 - 使用 Minecraft 原版 AbstractSliderButton
+ * 严格对齐游戏设置中的 FOV 滑块样式
  */
-public class Slider extends net.minecraft.client.gui.components.AbstractWidget {
-    private final float minValue;
-    private final float maxValue;
-    private float currentValue;
-    private final String prefix;
-    private final OnSliderChange callback;
-    private boolean isDragging = false;
+public class Slider extends AbstractSliderButton {
 
-    public interface OnSliderChange {
-        void onChange(float value);
-    }
+    private final double minValue;
+    private final double maxValue;
+    private final double stepSize;
+    private final String suffix;
+    private final String prefixText;  // 保存原始前缀文本
+    private final java.util.function.Consumer<Double> onValueChangeComplete;  // 释放鼠标时回调（保存配置）
 
-    public Slider(int x, int y, int width, String prefix, float minValue, float maxValue, float currentValue, OnSliderChange callback) {
-        super(x, y, width, 20, Component.literal(prefix));
+    /**
+     * 构造函数
+     *
+     * @param x                       组件 x 坐标
+     * @param y                       组件 y 坐标
+     * @param width                   组件宽度
+     * @param height                  组件高度（通常为 20）
+     * @param prefix                  前缀文本（如 "火焰伤害倍率: "）
+     * @param minValue                最小值
+     * @param maxValue                最大值
+     * @param currentValue            当前值
+     * @param stepSize                步长（例如 0.1 或 1.0）
+     * @param suffix                  后缀文本（如 "x" 或 "%"）
+     * @param onValueChangeComplete   释放鼠标时的回调（用于保存配置）
+     */
+    public Slider(int x, int y, int width, int height, Component prefix,
+                  double minValue, double maxValue, double currentValue,
+                  double stepSize, String suffix, java.util.function.Consumer<Double> onValueChangeComplete) {
+        super(x, y, width, height, prefix, mapToInternalStatic(minValue, maxValue, currentValue));
         this.minValue = minValue;
         this.maxValue = maxValue;
-        this.currentValue = currentValue;
-        this.prefix = prefix;
-        this.callback = callback;
+        this.stepSize = stepSize;
+        this.suffix = suffix;
+        this.prefixText = prefix.getString();  // 保存原始前缀文本
+        this.onValueChangeComplete = onValueChangeComplete;
+
+        this.updateMessage();
     }
 
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        if (mouseX >= this.x && mouseX < this.x + this.width &&
-            mouseY >= this.y && mouseY < this.y + this.height) {
-            updateValue(mouseX);
-            isDragging = true;
+    /**
+     * 将外部实际值映射到内部 0.0-1.0 区间（静态方法）
+     */
+    private static double mapToInternalStatic(double minValue, double maxValue, double actualValue) {
+        if (maxValue <= minValue) {
+            return 0.0;
         }
+        return (actualValue - minValue) / (maxValue - minValue);
     }
 
+    /**
+     * 将外部实际值映射到内部 0.0-1.0 区间（实例方法）
+     */
+    private double mapToInternal(double actualValue) {
+        return mapToInternalStatic(minValue, maxValue, actualValue);
+    }
+
+    /**
+     * 将内部 0.0-1.0 区间值映射回外部实际值
+     */
+    private double mapToExternal(double internalValue) {
+        if (maxValue <= minValue) {
+            return minValue;
+        }
+        double rawValue = minValue + (maxValue - minValue) * internalValue;
+
+        // 应用步长约束
+        if (stepSize > 0) {
+            rawValue = Math.round(rawValue / stepSize) * stepSize;
+        }
+
+        // 限制在范围内
+        return Math.max(minValue, Math.min(maxValue, rawValue));
+    }
+
+    /**
+     * 获取当前的实际值
+     */
+    public double getValue() {
+        return mapToExternal(this.value);
+    }
+
+    /**
+     * 设置当前值
+     */
+    public void setValue(double value) {
+        this.value = mapToInternal(value);
+        this.updateMessage();
+    }
+
+    /**
+     * 更新滑块显示的文本
+     * 格式: [前缀]: [当前值][后缀]
+     */
+    @Override
+    protected void updateMessage() {
+        double actualValue = this.getValue();
+
+        // 处理数值显示精度
+        String valueStr;
+        if (stepSize < 1.0) {
+            // 浮点数范围（如 0.1-3.0），显示一位小数
+            valueStr = String.format("%.1f", actualValue);
+        } else {
+            // 整数范围，不显示小数位
+            valueStr = String.valueOf((int) Math.round(actualValue));
+        }
+
+        // 使用保存的原始前缀文本构建显示文本
+        Component fullMessage = Component.literal(prefixText + valueStr + suffix);
+        this.setMessage(fullMessage);
+    }
+
+    /**
+     * 当滑块被拖动时调用
+     * 仅更新显示文本，不保存配置
+     */
+    @Override
+    protected void applyValue() {
+        // 拖动时只更新显示文本，不触发回调
+        // 配置保存在 onRelease 中处理
+    }
+
+    /**
+     * 当滑块释放时调用
+     * 触发回调保存配置
+     */
     @Override
     public void onRelease(double mouseX, double mouseY) {
-        isDragging = false;
-    }
-
-    @Override
-    public void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        if (isDragging) {
-            updateValue(mouseX);
+        super.onRelease(mouseX, mouseY);
+        double actualValue = this.getValue();
+        if (onValueChangeComplete != null) {
+            onValueChangeComplete.accept(actualValue);
         }
-    }
-
-    private void updateValue(double mouseX) {
-        float percent = (float) ((mouseX - this.x) / this.width);
-        percent = Math.max(0, Math.min(1, percent));
-        currentValue = minValue + (maxValue - minValue) * percent;
-        if (callback != null) {
-            callback.onChange(currentValue);
-        }
-    }
-
-    public void setValue(float value) {
-        this.currentValue = value;
-    }
-
-    public float getValue() {
-        return currentValue;
-    }
-
-    @Override
-    public void updateNarration(NarrationElementOutput pNarrationElementOutput) {
-        // 不需要旁白功能
-    }
-
-    @Override
-    public void renderButton(PoseStack pPoseStack, int mouseX, int mouseY, float partialTick) {
-        Minecraft mc = Minecraft.getInstance();
-        boolean hovered = mouseX >= this.x && mouseY >= this.y &&
-                         mouseX < this.x + this.width && mouseY < this.y + this.height;
-
-        this.isHovered = hovered;
-
-        // 绘制背景 - 使用更接近原版的颜色
-        int bgColor = hovered ? 0xFF3D3D3D : 0xFF252525;
-        fill(pPoseStack, this.x, this.y, this.x + this.width, this.y + this.height, bgColor);
-
-        // 绘制边框
-        int borderColor = hovered ? 0xFFFFAA00 : 0xFF707070;
-        fill(pPoseStack, this.x, this.y, this.x + this.width, this.y + 1, borderColor);
-        fill(pPoseStack, this.x, this.y + this.height - 1, this.x + this.width, this.y + this.height, borderColor);
-        fill(pPoseStack, this.x, this.y, this.x + 1, this.y + this.height, borderColor);
-        fill(pPoseStack, this.x + this.width - 1, this.y, this.x + this.width, this.y + this.height, borderColor);
-
-        // 绘制滑块轨道
-        int trackY = this.y + this.height / 2 - 2;
-        int trackHeight = 4;
-        fill(pPoseStack, this.x + 4, trackY, this.x + this.width - 4, trackY + trackHeight, 0xFF505050);
-
-        // 绘制滑块
-        float percent = (currentValue - minValue) / (maxValue - minValue);
-        int sliderWidth = 8;
-        int sliderX = (int) (this.x + 4 + (this.width - 8) * percent);
-
-        // 滑块颜色 - 悬停时更亮
-        int sliderColor = hovered ? 0xFF55AAFF : 0xFF00AAFF;
-        fill(pPoseStack, sliderX - sliderWidth/2, this.y + 2, sliderX + sliderWidth/2, this.y + this.height - 2, sliderColor);
-
-        // 绘制标签和数值
-        String valueStr;
-        if (minValue < 1.0f) {
-            // 浮点数范围（如 0.1-3.0），显示一位小数
-            valueStr = String.format("%.1f", currentValue);
-        } else if (maxValue <= 100 && minValue >= 0 && (maxValue - minValue) <= 100) {
-            valueStr = String.valueOf(Math.round(currentValue));
-        } else {
-            valueStr = String.format("%.1f", currentValue);
-        }
-        String displayText = prefix + valueStr;
-
-        // 绘制文字（居中）
-        int textWidth = mc.font.width(displayText);
-        int textX = this.x + (this.width - textWidth) / 2;
-        mc.font.draw(pPoseStack, displayText, textX, this.y + 5, 0xFFFFFF);
     }
 }

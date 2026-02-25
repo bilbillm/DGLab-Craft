@@ -2,20 +2,29 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * DGLab Craft 强度设置界面
- * 使用自定义 Slider 实现
+ * DGLab Craft 设置界面 - 使用原版 ContainerObjectSelectionList
  */
 public class DGLabCraftScreen extends Screen {
 
     private final Screen parent;
+    private SettingsList list;
+    private Button doneButton;
+    private Button resetButton;
 
     public DGLabCraftScreen(Screen parent) {
-        super(Component.literal("DGLab 联动设置"));
+        super(Component.literal("DGLab 强度与倍率设置"));
         this.parent = parent;
     }
 
@@ -23,121 +32,194 @@ public class DGLabCraftScreen extends Screen {
     protected void init() {
         super.init();
 
-        int centerX = this.width / 2;
-        int leftX = centerX - 155;
-        int rightX = centerX + 5;
-        int startY = 70;
-        int spacing = 24;
+        // 创建滚动列表
+        this.list = new SettingsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
+        this.addWidget(this.list);
 
-        // ===== 顶部 A/B 通道同步切换按钮 =====
-        boolean syncEnabled = ModConfig.SYNC_CHANNELS.get();
+        // 构建设置项
+        buildSettings();
+
+        // 底部按钮
+        int buttonWidth = 100;
+        int buttonHeight = 20;
+        int bottomY = this.height - 30;
+        int centerX = this.width / 2;
+
+        // 完成按钮 - 居中偏左
+        this.doneButton = new Button(
+            centerX - buttonWidth - 5, bottomY, buttonWidth, buttonHeight,
+            Component.literal("完成"),
+            (button) -> this.onClose()
+        );
+        this.addRenderableWidget(doneButton);
+
+        // 重置按钮 - 居中偏右
+        this.resetButton = new Button(
+            centerX + 5, bottomY, buttonWidth, buttonHeight,
+            Component.literal("重置为默认"),
+            (button) -> resetToDefaults()
+        );
+        this.addRenderableWidget(resetButton);
+    }
+
+    /**
+     * 构建所有设置项
+     */
+    private void buildSettings() {
+        // ===== 通用设置 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("通用设置"));
+
+        // 强度上限 + A/B通道同步
+        Slider maxIntensitySlider = new Slider(
+            0, 0, 190, 20, Component.literal("强度上限: "),
+            0, 100, ModConfig.BASE_MAX_INTENSITY.get(), 1.0, "%", value -> {
+                ModConfig.BASE_MAX_INTENSITY.set(value.intValue());
+                ModConfig.save();
+            }
+        );
+
         Button syncButton = new Button(
-            centerX - 100, 35, 200, 20,
-            Component.literal("A/B 通道同步: " + (syncEnabled ? "开" : "关")),
+            0, 0, 190, 20,
+            Component.literal("A/B 通道同步: " + (ModConfig.SYNC_CHANNELS.get() ? "开" : "关")),
             (button) -> {
                 boolean newValue = !ModConfig.SYNC_CHANNELS.get();
                 ModConfig.SYNC_CHANNELS.set(newValue);
+                ModConfig.save();
                 button.setMessage(Component.literal("A/B 通道同步: " + (newValue ? "开" : "关")));
             }
         );
-        this.addRenderableWidget(syncButton);
 
-        // ===== 左列滑块 (4个) =====
+        this.list.addEntry(new SettingsList.RowEntry(maxIntensitySlider, syncButton));
 
-        // 1. 强度上限
-        Slider baseMaxSlider = new Slider(
-            leftX, startY, 150, "强度上限: ",
-            0, 100, ModConfig.BASE_MAX_INTENSITY.get(), value -> {
-                ModConfig.BASE_MAX_INTENSITY.set((int) value);
-            }
-        );
-        this.addRenderableWidget(baseMaxSlider);
+        // ===== 伤害倍率 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("伤害倍率"));
 
-        // 2. 火焰伤害倍率
+        // 火焰伤害 + 跌落伤害
         Slider fireSlider = new Slider(
-            leftX, startY + spacing, 150, "火焰伤害倍率: ×",
-            0.1f, 3.0f, ModConfig.FIRE_INTENSITY.get().floatValue(), value -> {
-                ModConfig.FIRE_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("火焰伤害: "),
+            0.1, 3.0, ModConfig.FIRE_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.FIRE_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(fireSlider);
 
-        // 3. 跌落伤害倍率
         Slider fallSlider = new Slider(
-            leftX, startY + spacing * 2, 150, "跌落伤害倍率: ×",
-            0.1f, 3.0f, ModConfig.FALL_INTENSITY.get().floatValue(), value -> {
-                ModConfig.FALL_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("跌落伤害: "),
+            0.1, 3.0, ModConfig.FALL_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.FALL_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(fallSlider);
 
-        // 4. 溺水伤害倍率
+        this.list.addEntry(new SettingsList.RowEntry(fireSlider, fallSlider));
+
+        // 溺水伤害 + 中毒伤害
         Slider drownSlider = new Slider(
-            leftX, startY + spacing * 3, 150, "溺水伤害倍率: ×",
-            0.1f, 3.0f, ModConfig.DROWN_INTENSITY.get().floatValue(), value -> {
-                ModConfig.DROWN_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("溺水伤害: "),
+            0.1, 3.0, ModConfig.DROWN_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.DROWN_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(drownSlider);
 
-        // ===== 右列滑块 (4个) =====
-
-        // 5. 中毒伤害倍率
         Slider poisonSlider = new Slider(
-            rightX, startY, 150, "中毒伤害倍率: ×",
-            0.1f, 3.0f, ModConfig.POISON_INTENSITY.get().floatValue(), value -> {
-                ModConfig.POISON_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("中毒伤害: "),
+            0.1, 3.0, ModConfig.POISON_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.POISON_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(poisonSlider);
 
-        // 6. 凋零伤害倍率
+        this.list.addEntry(new SettingsList.RowEntry(drownSlider, poisonSlider));
+
+        // 凋零伤害 + (空位)
         Slider witherSlider = new Slider(
-            rightX, startY + spacing, 150, "凋零伤害倍率: ×",
-            0.1f, 3.0f, ModConfig.WITHER_INTENSITY.get().floatValue(), value -> {
-                ModConfig.WITHER_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("凋零伤害: "),
+            0.1, 3.0, ModConfig.WITHER_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.WITHER_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(witherSlider);
 
-        // 7. 心响阈值
-        Slider heartbeatThresholdSlider = new Slider(
-            rightX, startY + spacing * 2, 150, "心响阈值: ",
-            0, 10, ModConfig.HEARTBEAT_THRESHOLD.get().floatValue(), value -> {
-                ModConfig.HEARTBEAT_THRESHOLD.set((double) value);
+        this.list.addEntry(new SettingsList.RowEntry(witherSlider, null));
+
+        // ===== 环境倍率 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("环境倍率"));
+
+        // 寒冷环境 + 下界环境
+        Slider coldSlider = new Slider(
+            0, 0, 190, 20, Component.literal("寒冷环境: "),
+            0.1, 3.0, ModConfig.COLD_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.COLD_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(heartbeatThresholdSlider);
 
-        // 8. 心跳强度倍率
+        Slider netherSlider = new Slider(
+            0, 0, 190, 20, Component.literal("下界环境: "),
+            0.1, 3.0, ModConfig.NETHER_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.NETHER_INTENSITY.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(coldSlider, netherSlider));
+
+        // ===== 心跳设置 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("心跳设置"));
+
+        // 心响阈值 + 心跳强度
+        Slider thresholdSlider = new Slider(
+            0, 0, 190, 20, Component.literal("心响阈值: "),
+            0, 10, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "", value -> {
+                ModConfig.HEARTBEAT_THRESHOLD.set(value);
+                ModConfig.save();
+            }
+        );
+
         Slider heartbeatIntensitySlider = new Slider(
-            rightX, startY + spacing * 3, 150, "心跳强度倍率: ×",
-            0.1f, 3.0f, ModConfig.HEARTBEAT_INTENSITY.get().floatValue(), value -> {
-                ModConfig.HEARTBEAT_INTENSITY.set((double) value);
+            0, 0, 190, 20, Component.literal("心跳强度: "),
+            0.1, 3.0, ModConfig.HEARTBEAT_INTENSITY.get(), 0.1, "x", value -> {
+                ModConfig.HEARTBEAT_INTENSITY.set(value);
+                ModConfig.save();
             }
         );
-        this.addRenderableWidget(heartbeatIntensitySlider);
 
-        // ===== 底部完成按钮 =====
-        Button doneButton = new Button(
-            centerX - 100, this.height - 30, 200, 20,
-            Component.literal("完成"),
-            (button) -> {
-                this.onClose();
-            }
-        );
-        this.addRenderableWidget(doneButton);
+        this.list.addEntry(new SettingsList.RowEntry(thresholdSlider, heartbeatIntensitySlider));
+    }
+
+    /**
+     * 重置为默认值
+     */
+    private void resetToDefaults() {
+        ModConfig.BASE_MAX_INTENSITY.set(100);
+        ModConfig.SYNC_CHANNELS.set(true);
+        ModConfig.FIRE_INTENSITY.set(1.0);
+        ModConfig.FALL_INTENSITY.set(1.0);
+        ModConfig.DROWN_INTENSITY.set(1.0);
+        ModConfig.POISON_INTENSITY.set(1.0);
+        ModConfig.WITHER_INTENSITY.set(1.0);
+        ModConfig.COLD_INTENSITY.set(1.0);
+        ModConfig.NETHER_INTENSITY.set(1.0);
+        ModConfig.HEARTBEAT_THRESHOLD.set(6.0);
+        ModConfig.HEARTBEAT_INTENSITY.set(1.0);
+        ModConfig.save();
+
+        // 重新初始化界面以反映新值（使用 rebuildWidgets 清除旧 widgets）
+        this.rebuildWidgets();
     }
 
     @Override
     public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(pPoseStack);
 
-        int centerX = this.width / 2;
+        // 渲染列表（原版泥土背景、阴影、滚动条由列表自动处理）
+        this.list.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
 
-        // 标题
-        drawCenteredString(pPoseStack, this.font, "DGLab 联动设置", centerX, 20, 0xFFFFFF);
+        // 渲染标题
+        drawCenteredString(pPoseStack, this.font, "DGLab 强度与倍率设置", this.width / 2, 20, 0xFFFFFF);
 
+        // 渲染底部按钮
         super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
     }
 
@@ -149,5 +231,136 @@ public class DGLabCraftScreen extends Screen {
     @Override
     public void onClose() {
         this.minecraft.setScreen(this.parent);
+    }
+
+    // ========== 内部类：滚动列表 ==========
+
+    /**
+     * 设置列表 - 继承自 ContainerObjectSelectionList
+     */
+    static class SettingsList extends ContainerObjectSelectionList<SettingsList.Entry> {
+
+        public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
+            super(minecraft, width, height, top, bottom, itemHeight);
+            this.setRenderBackground(true);
+            this.setRenderTopAndBottom(true);
+        }
+
+        @Override
+        protected int getScrollbarPosition() {
+            return this.width - 10;
+        }
+
+        @Override
+        public int getRowWidth() {
+            return 400;
+        }
+
+        @Override
+        protected boolean isSelectedItem(int pIndex) {
+            return false;
+        }
+
+        /**
+         * 公开的添加条目方法
+         */
+        public int addEntry(Entry entry) {
+            return super.addEntry(entry);
+        }
+
+        // ========== SettingsList 的内部类 ==========
+
+        /**
+         * 设置项基类
+         */
+        abstract static class Entry extends ContainerObjectSelectionList.Entry<SettingsList.Entry> {
+            protected final net.minecraft.client.Minecraft minecraft;
+
+            protected Entry() {
+                this.minecraft = net.minecraft.client.Minecraft.getInstance();
+            }
+        }
+
+        /**
+         * 标题条目 - 用于显示分类标题
+         */
+        static class HeaderEntry extends Entry {
+            private final String title;
+
+            public HeaderEntry(String title) {
+                super();
+                this.title = title;
+            }
+
+            @Override
+            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+                // 渲染深色背景条
+                net.minecraft.client.gui.GuiComponent.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
+
+                // 渲染居中标题文本（带阴影）
+                int textWidth = this.minecraft.font.width(this.title);
+                this.minecraft.font.drawShadow(poseStack, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
+            }
+
+            @Override
+            public List<? extends GuiEventListener> children() {
+                return List.of();
+            }
+
+            @Override
+            public List<? extends NarratableEntry> narratables() {
+                return List.of();
+            }
+        }
+
+        /**
+         * 行条目 - 用于显示设置项，支持双列两个 Widget
+         */
+        static class RowEntry extends Entry {
+            private final AbstractWidget leftWidget;
+            private final AbstractWidget rightWidget;
+            private final List<AbstractWidget> widgets;
+
+            public RowEntry(AbstractWidget left, AbstractWidget right) {
+                super();
+                this.leftWidget = left;
+                this.rightWidget = right;
+                this.widgets = new ArrayList<>();
+                if (leftWidget != null) widgets.add(leftWidget);
+                if (rightWidget != null) widgets.add(rightWidget);
+            }
+
+            @Override
+            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+                int gap = 15;
+                int widgetWidth = (entryWidth - gap - 20) / 2;
+
+                // 渲染左侧 Widget
+                if (leftWidget != null) {
+                    leftWidget.x = left + 10;
+                    leftWidget.y = top + 2;
+                    leftWidget.setWidth(widgetWidth);
+                    leftWidget.render(poseStack, mouseX, mouseY, partialTick);
+                }
+
+                // 渲染右侧 Widget
+                if (rightWidget != null) {
+                    rightWidget.x = left + 10 + widgetWidth + gap;
+                    rightWidget.y = top + 2;
+                    rightWidget.setWidth(widgetWidth);
+                    rightWidget.render(poseStack, mouseX, mouseY, partialTick);
+                }
+            }
+
+            @Override
+            public List<? extends GuiEventListener> children() {
+                return widgets;
+            }
+
+            @Override
+            public List<? extends NarratableEntry> narratables() {
+                return widgets;
+            }
+        }
     }
 }

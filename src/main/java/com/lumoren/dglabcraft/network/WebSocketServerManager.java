@@ -354,14 +354,23 @@ public class WebSocketServerManager {
                     channelBStatus = waveType;
                 }
 
-                // 发送波形配置到另一个通道 - 使用官方波形 ID
+                // 发送波形配置到另一个通道 - 使用实际波形数据
                 if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
-                    String waveformId = WaveformGenerator.getOfficialWaveformId(waveType);
-                    String waveformMessage = "pulse-" + otherChannelStr + ":[" + waveformId + "]";
+                    // 从 WaveformManager 获取实际波形数据
+                    List<String> waveformData = WaveformManager.getInstance().getWaveform(waveType);
+
+                    // 构造脉冲格式: pulse-B:[hex1,hex2,...]
+                    StringBuilder waveformMessage = new StringBuilder();
+                    waveformMessage.append("pulse-").append(otherChannelStr).append(":[");
+                    for (int i = 0; i < waveformData.size(); i++) {
+                        if (i > 0) waveformMessage.append(",");
+                        waveformMessage.append(waveformData.get(i));
+                    }
+                    waveformMessage.append("]");
 
                     Map<String, String> otherWaveformMsg = new HashMap<>();
                     otherWaveformMsg.put("type", "msg");
-                    otherWaveformMsg.put("message", waveformMessage);
+                    otherWaveformMsg.put("message", waveformMessage.toString());
                     otherWaveformMsg.put("clientId", sessionId);
                     otherWaveformMsg.put("targetId", targetId != null ? targetId : "");
                     connectedClient.send(gson.toJson(otherWaveformMsg));

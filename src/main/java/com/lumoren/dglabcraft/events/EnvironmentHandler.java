@@ -21,7 +21,9 @@ public class EnvironmentHandler {
     private int tickCounter = 0;
     private boolean wasInSnow = false;
     private boolean wasInNether = false;
+    private boolean wasInEnd = false;
     private boolean wasInCold = false;
+    private boolean wasInNetherPortal = false;
 
     @SubscribeEvent
     public void onPlayerTick(LivingEvent.LivingTickEvent event) {
@@ -50,73 +52,103 @@ public class EnvironmentHandler {
         boolean isNetherDimension = dimType != null &&
             dimType.toString().toLowerCase().contains("nether");
 
-        // 1. 下界环境反馈
+        // 1. 下界环境反馈 - 每40tick发送一次 breath 波形，AB通道同步
         if (isNetherDimension) {
             if (!wasInNether) {
                 wasInNether = true;
                 wasInCold = false;
             }
-            int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
-            intensity = Math.min(intensity, maxIntensity);
-            // 低频沉闷的波形
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 0);
+            // 每 40 tick (2秒) 发送一次
+            if (tickCounter % 40 == 0) {
+                int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
+                intensity = Math.min(intensity, maxIntensity);
+                // A通道发送 breath 波形
+                WebSocketServerManager.getInstance().sendWaveformData("A", "breath", intensity);
+                // B通道同步发送 breath 波形
+                WebSocketServerManager.getInstance().sendWaveformData("B", "breath", intensity);
+            }
         } else {
+            if (wasInNether) {
+                // 离开下界时停止波形
+                WebSocketServerManager.getInstance().stopStimulus("A");
+                WebSocketServerManager.getInstance().stopStimulus("B");
+            }
             wasInNether = false;
         }
 
-        // 2. 寒冷环境检测 (通过雪/冰方块判断)
+        // 1.5 终界环境反馈 - 每40tick发送一次 tide 波形，AB通道同步
+        DimensionType dimTypeEnd = player.level.dimensionType();
+        boolean isEndDimension = dimTypeEnd != null &&
+            dimTypeEnd.toString().toLowerCase().contains("end");
+        if (isEndDimension) {
+            if (!wasInEnd) {
+                wasInEnd = true;
+            }
+            // 每 40 tick (2秒) 发送一次
+            if (tickCounter % 40 == 0) {
+                int intensity = Math.min(10, maxIntensity);
+                // A通道发送 tide 波形
+                WebSocketServerManager.getInstance().sendWaveformData("A", "tide", intensity);
+                // B通道同步发送 tide 波形
+                WebSocketServerManager.getInstance().sendWaveformData("B", "tide", intensity);
+            }
+        } else {
+            if (wasInEnd) {
+                // 离开终界时停止波形
+                WebSocketServerManager.getInstance().stopStimulus("A");
+                WebSocketServerManager.getInstance().stopStimulus("B");
+            }
+            wasInEnd = false;
+        }
+
+        // 2. 寒冷环境检测 (通过玩家是否接触细雪方块判断)
         if (!isNetherDimension) {
-            // 检查附近是否有雪或冰
-            boolean hasSnowNearby = hasSnowBlockNearby(player);
-            if (hasSnowNearby) {
+            // 检查玩家是否接触到细雪方块
+            boolean touchingSnow = isTouchingBlock(player, Blocks.POWDER_SNOW);
+            if (touchingSnow) {
                 if (!wasInCold) {
                     wasInCold = true;
                 }
-                int intensity = (int)(8.0 * ModConfig.COLD_INTENSITY.get());
-                intensity = Math.min(intensity, maxIntensity);
-                // 高频细碎的麻木感
-                WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
+                // 每1.5秒发送一次
+                if (tickCounter % 30 == 0) {
+                    int intensity = (int)(8.0 * ModConfig.COLD_INTENSITY.get());
+                    intensity = Math.min(intensity, maxIntensity);
+                    WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
+                }
             } else {
                 wasInCold = false;
             }
         }
 
         // 3. 检查玩家脚下的方块
-        checkPlayerFootBlock(player, maxIntensity);
+        checkPlayerFootBlock(player, maxIntensity, tickCounter);
     }
 
     /**
-     * 检查附近是否有雪/冰方块
+     * 检查玩家是否直接接触指定方块（只检查脚部和身体位置）
      */
-    private boolean hasSnowBlockNearby(Player player) {
+    private boolean isTouchingBlock(Player player, Block targetBlock) {
         BlockPos pos = player.blockPosition();
-        // 检查脚下和周围的方块
-        for (int x = -2; x <= 2; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -2; z <= 2; z++) {
-                    Block block = player.level.getBlockState(pos.offset(x, y, z)).getBlock();
-                    if (block == Blocks.SNOW || block == Blocks.SNOW_BLOCK ||
-                        block == Blocks.ICE || block == Blocks.PACKED_ICE ||
-                        block == Blocks.FROSTED_ICE || block == Blocks.POWDER_SNOW) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        // 只检查玩家当前所在的方块和脚下方块
+        Block blockAtFeet = player.level.getBlockState(pos.below()).getBlock();
+        Block blockAtBody = player.level.getBlockState(pos).getBlock();
+        return blockAtFeet == targetBlock || blockAtBody == targetBlock;
     }
 
     /**
      * 检查玩家脚下的方块
      */
-    private void checkPlayerFootBlock(Player player, int maxIntensity) {
+    private void checkPlayerFootBlock(Player player, int maxIntensity, int tickCounter) {
         Block feetBlock = player.level.getBlockState(player.blockPosition().below()).getBlock();
 
-        // 细雪 - 高频麻木感
+        // 细雪 - 每1.5秒发送一次 fast_pinch 波形
         if (feetBlock == Blocks.POWDER_SNOW) {
-            int intensity = (int)(10.0 * ModConfig.COLD_INTENSITY.get());
-            intensity = Math.min(intensity, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
+            // 每 30 tick (1.5秒) 发送一次
+            if (tickCounter % 30 == 0) {
+                int intensity = (int)(10.0 * ModConfig.COLD_INTENSITY.get());
+                intensity = Math.min(intensity, maxIntensity);
+                WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
+            }
             wasInSnow = true;
         } else {
             if (wasInSnow) {
@@ -126,41 +158,29 @@ public class EnvironmentHandler {
             }
         }
 
-        // 仙人掌 - 持续刺痛
-        if (feetBlock == Blocks.CACTUS) {
-            int intensity = Math.min(15, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
-        }
+        // 注：仙人掌伤害已由 DamageHandler 处理，此处不再重复发送
 
-        // 甜蜜泥浆 - 轻微粘稠感
-        if (feetBlock == Blocks.HONEY_BLOCK) {
-            int intensity = Math.min(5, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("B", "pulse", intensity, 0);
-        }
-
-        // 粘液块 - 弹跳感
-        if (feetBlock == Blocks.SLIME_BLOCK) {
-            int intensity = Math.min(8, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("A", "square", intensity, 0);
-        }
-
-        // 下界传送门方块 - 空间扭曲感
-        if (feetBlock == Blocks.NETHER_PORTAL) {
-            int intensity = Math.min(10, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
-        }
-
-        // 灵魂沙/灵魂土 - 低沉压迫感
-        if (feetBlock == Blocks.SOUL_SAND || feetBlock == Blocks.SOUL_SOIL) {
-            int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
-            intensity = Math.min(intensity, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("B", "sine", intensity, 0);
-        }
-
-        // 终界传送门方块 - 空间传送感
-        if (feetBlock == Blocks.END_PORTAL || feetBlock == Blocks.END_GATEWAY) {
-            int intensity = Math.min(12, maxIntensity);
-            WebSocketServerManager.getInstance().sendStimulus("A", "pulse", intensity, 0);
+        // 下界传送门方块 - 检测玩家身体位置是否在传送门内部
+        boolean inNetherPortal = isTouchingBlock(player, Blocks.NETHER_PORTAL);
+        if (inNetherPortal) {
+            if (!wasInNetherPortal) {
+                wasInNetherPortal = true;
+            }
+            // 每 30 tick (1.5秒) 发送一次 pinch_intensify 波形
+            if (tickCounter % 30 == 0) {
+                int intensity = Math.min(10, maxIntensity);
+                // A通道发送 pinch_intensify 波形
+                WebSocketServerManager.getInstance().sendWaveformData("A", "pinch_intensify", intensity);
+                // B通道同步发送 pinch_intensify 波形
+                WebSocketServerManager.getInstance().sendWaveformData("B", "pinch_intensify", intensity);
+            }
+        } else {
+            if (wasInNetherPortal) {
+                // 离开下界传送门时停止波形
+                WebSocketServerManager.getInstance().stopStimulus("A");
+                WebSocketServerManager.getInstance().stopStimulus("B");
+                wasInNetherPortal = false;
+            }
         }
     }
 }

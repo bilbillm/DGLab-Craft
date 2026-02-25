@@ -1,8 +1,31 @@
 package com.lumoren.dglabcraft.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ModConfig {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static ForgeConfigSpec configSpec;
+
+    /**
+     * 显式保存配置到文件
+     */
+    public static void save() {
+        if (configSpec != null) {
+            configSpec.save();
+            LOGGER.info("配置已保存到文件");
+        }
+    }
+
+    /**
+     * 设置配置规格引用（用于保存）
+     */
+    public static void setConfigSpec(ForgeConfigSpec spec) {
+        configSpec = spec;
+    }
+
     // 全局设置
     public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY;
     public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
@@ -96,5 +119,6 @@ public class ModConfig {
         builder.pop();
 
         SPEC = builder.build();
+        setConfigSpec(SPEC);
     }
 }

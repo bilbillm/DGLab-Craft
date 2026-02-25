@@ -1,9 +1,10 @@
 {
   "description": "QuickSqueeze - 快速按捏",
   "name_cn": "快速按捏",
-  "frame_count": 3,
+  "frame_count": 4,
   "data": [
     "0a0a0a0a00000000",
+    "0a0a0a0a64646464",
     "0a0a0a0a64646464",
     "0000000000000000"
   ]

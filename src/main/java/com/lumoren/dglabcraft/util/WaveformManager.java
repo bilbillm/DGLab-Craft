@@ -257,44 +257,40 @@ public class WaveformManager implements ResourceManagerReloadListener {
     static {
         // ===== 1. fast_pinch (锐器与穿刺) =====
         DAMAGE_WAVEFORM_MAP.put("cactus", "fast_pinch");
-        DAMAGE_WAVEFORM_MAP.put("sweet_berry_bush", "fast_pinch");
+        DAMAGE_WAVEFORM_MAP.put("sweetberrybush", "fast_pinch");
         DAMAGE_WAVEFORM_MAP.put("arrow", "fast_pinch");
         DAMAGE_WAVEFORM_MAP.put("trident", "fast_pinch");
         DAMAGE_WAVEFORM_MAP.put("stalagmite", "fast_pinch");
 
-        // ===== 2. beat (钝器与撞击) =====
+        // ===== 2. beat (钝器与撞击) ===== ok
         DAMAGE_WAVEFORM_MAP.put("fall", "beat");
         DAMAGE_WAVEFORM_MAP.put("mob_attack", "beat");
         DAMAGE_WAVEFORM_MAP.put("player_attack", "beat");
-        DAMAGE_WAVEFORM_MAP.put("fly_into_wall", "beat");
+        DAMAGE_WAVEFORM_MAP.put("flyintowall", "beat");
         DAMAGE_WAVEFORM_MAP.put("explosion", "beat");
         DAMAGE_WAVEFORM_MAP.put("explosion.player", "beat");
         DAMAGE_WAVEFORM_MAP.put("fireworks", "beat");
 
-        // ===== 3. burn (高温与持续灼烧) =====
-        DAMAGE_WAVEFORM_MAP.put("on_fire", "burn");
+        // ===== 3. burn (高温与持续灼烧) ===== ok
         DAMAGE_WAVEFORM_MAP.put("onfire", "burn");
-        DAMAGE_WAVEFORM_MAP.put("onFire", "burn");
-        DAMAGE_WAVEFORM_MAP.put("in_fire", "burn");
         DAMAGE_WAVEFORM_MAP.put("infire", "burn");
-        DAMAGE_WAVEFORM_MAP.put("inFire", "burn");
         DAMAGE_WAVEFORM_MAP.put("lava", "burn");
-        DAMAGE_WAVEFORM_MAP.put("hot_floor", "burn");
+        DAMAGE_WAVEFORM_MAP.put("hotfloor", "burn");
 
-        // ===== 4. compress (挤压与窒息) =====
-        DAMAGE_WAVEFORM_MAP.put("in_wall", "compress");
+        // ===== 4. compress (挤压与窒息) ===== ok
+        DAMAGE_WAVEFORM_MAP.put("inwall", "compress");
         DAMAGE_WAVEFORM_MAP.put("cramming", "compress");
         DAMAGE_WAVEFORM_MAP.put("falling_block", "compress");
         DAMAGE_WAVEFORM_MAP.put("anvil", "compress");
 
-        // ===== 5. drown (环境异常与缺氧) =====
+        // ===== 5. drown (环境异常与缺氧) ===== ok
         DAMAGE_WAVEFORM_MAP.put("drown", "drown");
         DAMAGE_WAVEFORM_MAP.put("drowning", "drown");
         DAMAGE_WAVEFORM_MAP.put("freeze", "drown");
 
-        // ===== 6. tide (魔法与毒素) =====
+        // ===== 6. tide (魔法与毒素) ===== ok
         DAMAGE_WAVEFORM_MAP.put("magic", "tide");
-        DAMAGE_WAVEFORM_MAP.put("wither", "witherEffect");
+        DAMAGE_WAVEFORM_MAP.put("wither", "tide");
         DAMAGE_WAVEFORM_MAP.put("dragon_breath", "tide");
         DAMAGE_WAVEFORM_MAP.put("starve", "tide");
 

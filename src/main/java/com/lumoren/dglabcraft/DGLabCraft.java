@@ -1,5 +1,6 @@
 package com.lumoren.dglabcraft;
 
+import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
