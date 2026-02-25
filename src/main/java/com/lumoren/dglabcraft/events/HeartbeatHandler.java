@@ -47,7 +47,7 @@ public class HeartbeatHandler {
 
             // 心跳模式: 单次跳动
             if (tickCounter % interval == 0) {
-                double baseIntensity = ModConfig.HEARTBEAT_INTENSITY.get() * 20; // 基础强度
+                double baseIntensity = ModConfig.HEARTBEAT_MULTIPLIER.get() * 20; // 基础强度
                 int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
                 intensity = Math.max(1, Math.min(intensity, maxIntensity));
                 WebSocketServerManager.getInstance().sendWaveformData("A", "heartbeat", intensity);

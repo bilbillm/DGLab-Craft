@@ -66,12 +66,12 @@ public class DGLabCraftScreen extends Screen {
      * 构建所有设置项
      */
     private void buildSettings() {
-        // ===== 通用设置 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("通用设置"));
+        // ===== 通用与心跳设置 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("通用与心跳设置"));
 
         // 强度上限 + A/B通道同步
         Slider maxIntensitySlider = new Slider(
-            0, 0, 190, 20, Component.literal("强度上限: "),
+            0, 0, 190, 20, Component.literal("全局强度上限: "),
             0, 100, ModConfig.BASE_MAX_INTENSITY.get(), 1.0, "%", value -> {
                 ModConfig.BASE_MAX_INTENSITY.set(value.intValue());
                 ModConfig.save();
@@ -91,121 +91,373 @@ public class DGLabCraftScreen extends Screen {
 
         this.list.addEntry(new SettingsList.RowEntry(maxIntensitySlider, syncButton));
 
-        // ===== 伤害倍率 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("伤害倍率"));
-
-        // 火焰伤害 + 跌落伤害
-        Slider fireSlider = new Slider(
-            0, 0, 190, 20, Component.literal("火焰伤害: "),
-            0.1, 3.0, ModConfig.FIRE_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.FIRE_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        Slider fallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("跌落伤害: "),
-            0.1, 3.0, ModConfig.FALL_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.FALL_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        this.list.addEntry(new SettingsList.RowEntry(fireSlider, fallSlider));
-
-        // 溺水伤害 + 中毒伤害
-        Slider drownSlider = new Slider(
-            0, 0, 190, 20, Component.literal("溺水伤害: "),
-            0.1, 3.0, ModConfig.DROWN_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.DROWN_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        Slider poisonSlider = new Slider(
-            0, 0, 190, 20, Component.literal("中毒伤害: "),
-            0.1, 3.0, ModConfig.POISON_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.POISON_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        this.list.addEntry(new SettingsList.RowEntry(drownSlider, poisonSlider));
-
-        // 凋零伤害 + (空位)
-        Slider witherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("凋零伤害: "),
-            0.1, 3.0, ModConfig.WITHER_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.WITHER_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        this.list.addEntry(new SettingsList.RowEntry(witherSlider, null));
-
-        // ===== 环境倍率 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("环境倍率"));
-
-        // 寒冷环境 + 下界环境
-        Slider coldSlider = new Slider(
-            0, 0, 190, 20, Component.literal("寒冷环境: "),
-            0.1, 3.0, ModConfig.COLD_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.COLD_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        Slider netherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("下界环境: "),
-            0.1, 3.0, ModConfig.NETHER_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.NETHER_INTENSITY.set(value);
-                ModConfig.save();
-            }
-        );
-
-        this.list.addEntry(new SettingsList.RowEntry(coldSlider, netherSlider));
-
-        // ===== 心跳设置 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("心跳设置"));
-
-        // 心响阈值 + 心跳强度
+        // 心跳阈值 + 心跳倍率
         Slider thresholdSlider = new Slider(
-            0, 0, 190, 20, Component.literal("心响阈值: "),
-            0, 10, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "", value -> {
+            0, 0, 190, 20, Component.literal("心跳阈值: "),
+            1, 20, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "♥", value -> {
                 ModConfig.HEARTBEAT_THRESHOLD.set(value);
                 ModConfig.save();
             }
         );
 
-        Slider heartbeatIntensitySlider = new Slider(
-            0, 0, 190, 20, Component.literal("心跳强度: "),
-            0.1, 3.0, ModConfig.HEARTBEAT_INTENSITY.get(), 0.1, "x", value -> {
-                ModConfig.HEARTBEAT_INTENSITY.set(value);
+        Slider heartbeatSlider = new Slider(
+            0, 0, 190, 20, Component.literal("心跳倍率: "),
+            0.1, 3.0, ModConfig.HEARTBEAT_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.HEARTBEAT_MULTIPLIER.set(value);
                 ModConfig.save();
             }
         );
 
-        this.list.addEntry(new SettingsList.RowEntry(thresholdSlider, heartbeatIntensitySlider));
+        this.list.addEntry(new SettingsList.RowEntry(thresholdSlider, heartbeatSlider));
+
+        // ===== 锐器与穿刺倍率 (fast_pinch) =====
+        this.list.addEntry(new SettingsList.HeaderEntry("锐器与穿刺倍率 (fast_pinch)"));
+
+        // 仙人掌 + 甜浆果丛
+        Slider cactusSlider = new Slider(
+            0, 0, 190, 20, Component.literal("仙人掌: "),
+            0.1, 3.0, ModConfig.CACTUS_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.CACTUS_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider sweetberrySlider = new Slider(
+            0, 0, 190, 20, Component.literal("甜浆果丛: "),
+            0.1, 3.0, ModConfig.SWEETBERRY_BUSH_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.SWEETBERRY_BUSH_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(cactusSlider, sweetberrySlider));
+
+        // 弓箭 + 三叉戟
+        Slider arrowSlider = new Slider(
+            0, 0, 190, 20, Component.literal("弓箭: "),
+            0.1, 3.0, ModConfig.ARROW_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.ARROW_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider tridentSlider = new Slider(
+            0, 0, 190, 20, Component.literal("三叉戟: "),
+            0.1, 3.0, ModConfig.TRIDENT_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.TRIDENT_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(arrowSlider, tridentSlider));
+
+        // 钟乳石 + (空)
+        Slider stalagmiteSlider = new Slider(
+            0, 0, 190, 20, Component.literal("钟乳石: "),
+            0.1, 3.0, ModConfig.STALAGMITE_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.STALAGMITE_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(stalagmiteSlider, null));
+
+        // ===== 钝器与撞击倍率 (beat) =====
+        this.list.addEntry(new SettingsList.HeaderEntry("钝器与撞击倍率 (beat)"));
+
+        // 跌落 + 生物攻击
+        Slider fallSlider = new Slider(
+            0, 0, 190, 20, Component.literal("跌落: "),
+            0.1, 3.0, ModConfig.FALL_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.FALL_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider mobAttackSlider = new Slider(
+            0, 0, 190, 20, Component.literal("生物攻击: "),
+            0.1, 3.0, ModConfig.MOB_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.MOB_ATTACK_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(fallSlider, mobAttackSlider));
+
+        // 玩家攻击 + 撞墙
+        Slider playerAttackSlider = new Slider(
+            0, 0, 190, 20, Component.literal("玩家攻击: "),
+            0.1, 3.0, ModConfig.PLAYER_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.PLAYER_ATTACK_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider flyIntoWallSlider = new Slider(
+            0, 0, 190, 20, Component.literal("撞墙: "),
+            0.1, 3.0, ModConfig.FLY_INTO_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.FLY_INTO_WALL_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(playerAttackSlider, flyIntoWallSlider));
+
+        // 爆炸 + 烟花
+        Slider explosionSlider = new Slider(
+            0, 0, 190, 20, Component.literal("爆炸: "),
+            0.1, 3.0, ModConfig.EXPLOSION_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.EXPLOSION_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider fireworksSlider = new Slider(
+            0, 0, 190, 20, Component.literal("烟花: "),
+            0.1, 3.0, ModConfig.FIREWORKS_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.FIREWORKS_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(explosionSlider, fireworksSlider));
+
+        // ===== 高温与灼烧倍率 (burn) =====
+        this.list.addEntry(new SettingsList.HeaderEntry("高温与灼烧倍率 (burn)"));
+
+        // 着火 + 火中
+        Slider onFireSlider = new Slider(
+            0, 0, 190, 20, Component.literal("着火: "),
+            0.1, 3.0, ModConfig.ON_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.ON_FIRE_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider inFireSlider = new Slider(
+            0, 0, 190, 20, Component.literal("火中: "),
+            0.1, 3.0, ModConfig.IN_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.IN_FIRE_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(onFireSlider, inFireSlider));
+
+        // 岩浆 + 烫脚
+        Slider lavaSlider = new Slider(
+            0, 0, 190, 20, Component.literal("岩浆: "),
+            0.1, 3.0, ModConfig.LAVA_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.LAVA_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider hotFloorSlider = new Slider(
+            0, 0, 190, 20, Component.literal("烫脚: "),
+            0.1, 3.0, ModConfig.HOT_FLOOR_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.HOT_FLOOR_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(lavaSlider, hotFloorSlider));
+
+        // ===== 挤压与砸击倍率 (compress) =====
+        this.list.addEntry(new SettingsList.HeaderEntry("挤压与砸击倍率 (compress)"));
+
+        // 墙内窒息 + 实体挤压
+        Slider inWallSlider = new Slider(
+            0, 0, 190, 20, Component.literal("墙内窒息: "),
+            0.1, 3.0, ModConfig.IN_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.IN_WALL_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider crammingSlider = new Slider(
+            0, 0, 190, 20, Component.literal("实体挤压: "),
+            0.1, 3.0, ModConfig.CRAMMING_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.CRAMMING_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(inWallSlider, crammingSlider));
+
+        // 坠落方块 + 铁砧
+        Slider fallingBlockSlider = new Slider(
+            0, 0, 190, 20, Component.literal("坠落方块: "),
+            0.1, 3.0, ModConfig.FALLING_BLOCK_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.FALLING_BLOCK_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider anvilSlider = new Slider(
+            0, 0, 190, 20, Component.literal("铁砧: "),
+            0.1, 3.0, ModConfig.ANVIL_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.ANVIL_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(fallingBlockSlider, anvilSlider));
+
+        // ===== 异常状态与缺氧倍率 (drown & tide) =====
+        this.list.addEntry(new SettingsList.HeaderEntry("异常状态与缺氧倍率 (drown & tide)"));
+
+        // 溺水 + 细雪冰冻
+        Slider drownSlider = new Slider(
+            0, 0, 190, 20, Component.literal("溺水: "),
+            0.1, 3.0, ModConfig.DROWN_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.DROWN_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider freezeSlider = new Slider(
+            0, 0, 190, 20, Component.literal("细雪冰冻: "),
+            0.1, 3.0, ModConfig.FREEZE_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.FREEZE_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(drownSlider, freezeSlider));
+
+        // 魔法 + 凋零
+        Slider magicSlider = new Slider(
+            0, 0, 190, 20, Component.literal("魔法: "),
+            0.1, 3.0, ModConfig.MAGIC_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.MAGIC_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider witherSlider = new Slider(
+            0, 0, 190, 20, Component.literal("凋零: "),
+            0.1, 3.0, ModConfig.WITHER_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.WITHER_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(magicSlider, witherSlider));
+
+        // 龙息 + 饥饿
+        Slider dragonBreathSlider = new Slider(
+            0, 0, 190, 20, Component.literal("龙息: "),
+            0.1, 3.0, ModConfig.DRAGON_BREATH_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.DRAGON_BREATH_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider starveSlider = new Slider(
+            0, 0, 190, 20, Component.literal("饥饿: "),
+            0.1, 3.0, ModConfig.STARVE_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.STARVE_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(dragonBreathSlider, starveSlider));
+
+        // ===== 环境维度反馈倍率 =====
+        this.list.addEntry(new SettingsList.HeaderEntry("环境维度反馈倍率"));
+
+        // 下界 + 末地
+        Slider netherSlider = new Slider(
+            0, 0, 190, 20, Component.literal("下界: "),
+            0.1, 3.0, ModConfig.NETHER_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.NETHER_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        Slider endSlider = new Slider(
+            0, 0, 190, 20, Component.literal("末地: "),
+            0.1, 3.0, ModConfig.END_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.END_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(netherSlider, endSlider));
+
+        // 传送门 + (空)
+        Slider portalSlider = new Slider(
+            0, 0, 190, 20, Component.literal("传送门: "),
+            0.1, 3.0, ModConfig.PORTAL_MULTIPLIER.get(), 0.1, "x", value -> {
+                ModConfig.PORTAL_MULTIPLIER.set(value);
+                ModConfig.save();
+            }
+        );
+
+        this.list.addEntry(new SettingsList.RowEntry(portalSlider, null));
     }
 
     /**
      * 重置为默认值
      */
     private void resetToDefaults() {
+        // 全局
         ModConfig.BASE_MAX_INTENSITY.set(100);
         ModConfig.SYNC_CHANNELS.set(true);
-        ModConfig.FIRE_INTENSITY.set(1.0);
-        ModConfig.FALL_INTENSITY.set(1.0);
-        ModConfig.DROWN_INTENSITY.set(1.0);
-        ModConfig.POISON_INTENSITY.set(1.0);
-        ModConfig.WITHER_INTENSITY.set(1.0);
-        ModConfig.COLD_INTENSITY.set(1.0);
-        ModConfig.NETHER_INTENSITY.set(1.0);
+
+        // 心跳
         ModConfig.HEARTBEAT_THRESHOLD.set(6.0);
-        ModConfig.HEARTBEAT_INTENSITY.set(1.0);
+        ModConfig.HEARTBEAT_MULTIPLIER.set(1.0);
+
+        // 锐器与穿刺
+        ModConfig.CACTUS_MULTIPLIER.set(1.0);
+        ModConfig.SWEETBERRY_BUSH_MULTIPLIER.set(1.0);
+        ModConfig.ARROW_MULTIPLIER.set(1.0);
+        ModConfig.TRIDENT_MULTIPLIER.set(1.0);
+        ModConfig.STALAGMITE_MULTIPLIER.set(1.0);
+
+        // 钝器与撞击
+        ModConfig.FALL_MULTIPLIER.set(1.0);
+        ModConfig.MOB_ATTACK_MULTIPLIER.set(1.0);
+        ModConfig.PLAYER_ATTACK_MULTIPLIER.set(1.0);
+        ModConfig.FLY_INTO_WALL_MULTIPLIER.set(1.0);
+        ModConfig.EXPLOSION_MULTIPLIER.set(1.0);
+        ModConfig.FIREWORKS_MULTIPLIER.set(1.0);
+
+        // 高温与灼烧
+        ModConfig.ON_FIRE_MULTIPLIER.set(1.0);
+        ModConfig.IN_FIRE_MULTIPLIER.set(1.0);
+        ModConfig.LAVA_MULTIPLIER.set(1.0);
+        ModConfig.HOT_FLOOR_MULTIPLIER.set(1.0);
+
+        // 挤压与窒息
+        ModConfig.IN_WALL_MULTIPLIER.set(1.0);
+        ModConfig.CRAMMING_MULTIPLIER.set(1.0);
+        ModConfig.FALLING_BLOCK_MULTIPLIER.set(1.0);
+        ModConfig.ANVIL_MULTIPLIER.set(1.0);
+
+        // 环境与缺氧
+        ModConfig.DROWN_MULTIPLIER.set(1.0);
+        ModConfig.FREEZE_MULTIPLIER.set(1.0);
+
+        // 魔法与毒素
+        ModConfig.MAGIC_MULTIPLIER.set(1.0);
+        ModConfig.WITHER_MULTIPLIER.set(1.0);
+        ModConfig.DRAGON_BREATH_MULTIPLIER.set(1.0);
+        ModConfig.STARVE_MULTIPLIER.set(1.0);
+
+        // 环境维度
+        ModConfig.NETHER_MULTIPLIER.set(1.0);
+        ModConfig.END_MULTIPLIER.set(1.0);
+        ModConfig.PORTAL_MULTIPLIER.set(1.0);
+
+        // Buff
+        ModConfig.BUFF_MULTIPLIER.set(1.0);
+
         ModConfig.save();
 
-        // 重新初始化界面以反映新值（使用 rebuildWidgets 清除旧 widgets）
+        // 重新初始化界面以反映新值
         this.rebuildWidgets();
     }
 

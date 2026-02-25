@@ -60,7 +60,7 @@ public class EnvironmentHandler {
             }
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
-                int intensity = (int)(10.0 * ModConfig.NETHER_INTENSITY.get());
+                int intensity = (int)(10.0 * ModConfig.NETHER_MULTIPLIER.get());
                 intensity = Math.min(intensity, maxIntensity);
                 // A通道发送 breath 波形
                 WebSocketServerManager.getInstance().sendWaveformData("A", "breath", intensity);
@@ -111,7 +111,7 @@ public class EnvironmentHandler {
                 }
                 // 每1.5秒发送一次
                 if (tickCounter % 30 == 0) {
-                    int intensity = (int)(8.0 * ModConfig.COLD_INTENSITY.get());
+                    int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
                     intensity = Math.min(intensity, maxIntensity);
                     WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
                 }
@@ -145,7 +145,7 @@ public class EnvironmentHandler {
         if (feetBlock == Blocks.POWDER_SNOW) {
             // 每 30 tick (1.5秒) 发送一次
             if (tickCounter % 30 == 0) {
-                int intensity = (int)(10.0 * ModConfig.COLD_INTENSITY.get());
+                int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
                 intensity = Math.min(intensity, maxIntensity);
                 WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
             }
