@@ -37,7 +37,15 @@ public class HeartbeatHandler {
         float maxHealth = player.getMaxHealth();
         int healthHalfHearts = (int) (health / 0.5f); // 转换为半心
         int threshold = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
-        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
+
+        // 获取 WebSocket 管理器
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+
+        // 计算 A/B 通道实际强度上限
+        int appMaxStrengthA = ws.getAppAMaxStrength();
+        int appMaxStrengthB = ws.getAppBMaxStrength();
+        int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
+        int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
         // 检查是否低于阈值 (默认 6 = 3 颗心)
         if (healthHalfHearts <= threshold * 2 && threshold > 0) {
@@ -48,17 +56,28 @@ public class HeartbeatHandler {
             // 心跳模式: 单次跳动
             if (tickCounter % interval == 0) {
                 double baseIntensity = ModConfig.HEARTBEAT_MULTIPLIER.get() * 20; // 基础强度
-                int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
-                intensity = Math.max(1, Math.min(intensity, maxIntensity));
-                WebSocketServerManager.getInstance().sendWaveformData("A", "heartbeat", intensity);
+
+                if (ModConfig.SYNC_CHANNELS.get()) {
+                    // 同步模式：分别用 A/B 通道上限计算
+                    int intensityA = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    intensityA = Math.max(1, Math.min(intensityA, maxIntensityA));
+                    int intensityB = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    intensityB = Math.max(1, Math.min(intensityB, maxIntensityB));
+                    ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
+                } else {
+                    // 非同步模式：只用 B 通道
+                    int intensity = (int)(baseIntensity * (1.0 - healthRatio + 0.3));
+                    intensity = Math.max(1, Math.min(intensity, maxIntensityB));
+                    ws.sendWaveformData("B", "heartbeat", intensity);
+                }
             }
 
             isHeartbeatActive = true;
         } else {
             // 血量恢复后停止心跳 - 停止双通道
             if (isHeartbeatActive) {
-                WebSocketServerManager.getInstance().stopStimulus("A");
-                WebSocketServerManager.getInstance().stopStimulus("B");
+                ws.stopStimulus("A");
+                ws.stopStimulus("B");
                 isHeartbeatActive = false;
                 heartbeatPhase = 0;
             }

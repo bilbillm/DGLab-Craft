@@ -245,15 +245,32 @@ public class WebSocketServerManager {
 
     /**
      * 解析强度消息
-     * 格式: strength-<通道>+<模式>+<值>
-     * 通道: 1=A, 2=B
-     * 模式: 0=减少, 1=增加, 2=设置
+     * 支持格式:
+     * 1. 双通道格式: strength-0+0+<A通道上限>+<B通道上限> (如 strength-0+0+30+10)
+     *    - 第一个数字 0 表示同时设置A和B
+     *    - 第三个数字 = A通道强度上限
+     *    - 第四个数字 = B通道强度上限
+     * 2. 旧格式: strength-<通道>+<模式>+<值> (如 strength-1+2+50)
      */
     private void parseStrengthMessage(String msg) {
         if (msg.startsWith("strength-")) {
-            // 解析格式: strength-1+2+50
             String[] parts = msg.substring(9).split("\\+");
-            if (parts.length >= 3) {
+            if (parts.length >= 4) {
+                // 新格式: strength-0+0+A+B
+                try {
+                    int channel = Integer.parseInt(parts[0]);
+                    int mode = Integer.parseInt(parts[1]);
+                    int strengthA = Integer.parseInt(parts[2]);
+                    int strengthB = Integer.parseInt(parts[3]);
+
+                    appAMaxStrength = strengthA;
+                    appBMaxStrength = strengthB;
+                    LOGGER.info("收到强度设置(双通道): A通道上限={}, B通道上限={}", strengthA, strengthB);
+                } catch (NumberFormatException e) {
+                    LOGGER.error("解析强度值失败(双通道): " + msg);
+                }
+            } else if (parts.length >= 3) {
+                // 旧格式: strength-1+2+50
                 try {
                     int channel = Integer.parseInt(parts[0]);
                     int mode = Integer.parseInt(parts[1]);
@@ -264,9 +281,9 @@ public class WebSocketServerManager {
                     } else if (channel == 2) {
                         appBMaxStrength = value;
                     }
-                    LOGGER.info("收到强度设置: 通道{}, 模式{}, 值{}", channel, mode, value);
+                    LOGGER.info("收到强度设置(旧格式): 通道{}, 模式{}, 值{}", channel, mode, value);
                 } catch (NumberFormatException e) {
-                    LOGGER.error("解析强度值失败: " + msg);
+                    LOGGER.error("解析强度值失败(旧格式): " + msg);
                 }
             }
         }
@@ -491,6 +508,54 @@ public class WebSocketServerManager {
 
         } catch (Exception e) {
             LOGGER.error("发送双通道波形数据失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 双通道同步发送 - 各自使用不同强度
+     *
+     * @param waveId 波形 ID
+     * @param intensityA A 通道强度
+     * @param intensityB B 通道强度
+     */
+    public void sendWaveformDataDualChannelWithDifferentIntensity(String waveId, double intensityA, double intensityB) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        try {
+            int valueA = (int) intensityA;
+            int valueB = (int) intensityB;
+
+            // ===== 第1步: 一次性清空双通道 =====
+            sendMessage("clear-3");
+            LOGGER.info("发送清空命令: clear-3 (双通道不同强度)");
+
+            // ===== 第2步: 分别灌入 A/B 波形队列 =====
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+
+            // 先发送所有 A 通道波形块
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("A", chunk);
+            }
+            // 再发送所有 B 通道波形块
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("B", chunk);
+            }
+
+            // ===== 第3步: 瞬间同时施加强度 (各自不同) =====
+            sendMessage("strength-1+2+" + valueA);
+            sendMessage("strength-2+2+" + valueB);
+            LOGGER.info("发送强度: strength-1+2+{} + strength-2+2+{} (双通道不同强度)", valueA, valueB);
+
+            // 更新通道状态
+            channelAIntensity = intensityA;
+            channelAStatus = waveId;
+            channelBIntensity = intensityB;
+            channelBStatus = waveId;
+
+        } catch (Exception e) {
+            LOGGER.error("发送双通道不同强度波形数据失败: " + e.getMessage());
         }
     }
 

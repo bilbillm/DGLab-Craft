@@ -21,6 +21,7 @@ public class MainScreen extends Screen {
     private Button connectionButton;
     private Button waveformButton;
     private Button hudToggleButton;
+    private Button hudPositionButton;
 
     @Override
     protected void init() {
@@ -58,35 +59,68 @@ public class MainScreen extends Screen {
         );
         this.addRenderableWidget(this.connectionButton);
 
-        // 波形设置按钮
+        // 波形设置按钮 (敬请期待)
         this.waveformButton = new Button(
             centerX - buttonWidth / 2,
             startY + spacing * 2,
             buttonWidth,
             buttonHeight,
-            Component.literal("波形设置"),
+            Component.literal("波形设置 (敬请期待)"),
             (button) -> {
                 // TODO: 波形设置界面
             }
         );
         this.addRenderableWidget(this.waveformButton);
 
-        // HUD 开关按钮
+        // HUD 开关按钮 + HUD 位置切换按钮（双列并排）
+        int halfWidth = buttonWidth / 2 - 2;
         boolean hudEnabled = ModConfig.HUD_ENABLED.get();
         String hudText = hudEnabled ? "HUD: 开启" : "HUD: 关闭";
         this.hudToggleButton = new Button(
             centerX - buttonWidth / 2,
             startY + spacing * 3,
-            buttonWidth,
+            halfWidth,
             buttonHeight,
             Component.literal(hudText),
             (button) -> {
                 boolean newState = !ModConfig.HUD_ENABLED.get();
                 ModConfig.HUD_ENABLED.set(newState);
+                ModConfig.save();
                 button.setMessage(Component.literal(newState ? "HUD: 开启" : "HUD: 关闭"));
             }
         );
         this.addRenderableWidget(this.hudToggleButton);
+
+        // HUD 位置切换按钮
+        int currentPos = ModConfig.HUD_POSITION.get();
+        String posText = "位置: " + getPositionText(currentPos);
+        this.hudPositionButton = new Button(
+            centerX - 2,
+            startY + spacing * 3,
+            halfWidth,
+            buttonHeight,
+            Component.literal(posText),
+            (button) -> {
+                int newPos = (ModConfig.HUD_POSITION.get() + 1) % 4;
+                ModConfig.HUD_POSITION.set(newPos);
+                ModConfig.save();
+                button.setMessage(Component.literal("位置: " + getPositionText(newPos)));
+            }
+        );
+        this.addRenderableWidget(this.hudPositionButton);
+    }
+
+    /**
+     * 获取 HUD 位置对应的中文文本
+     */
+    private String getPositionText(int pos) {
+        switch (pos) {
+            case 0: return "左上";
+            case 1: return "右上";
+            case 2: return "左下";
+            case 3: return "右下";
+            default: return "未知";
+        }
     }
 
     @Override
@@ -122,7 +156,7 @@ public class MainScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        return false;
+        return true;
     }
 
     @Override

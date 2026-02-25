@@ -44,7 +44,14 @@ public class EnvironmentHandler {
         // 每 10 tick 检查一次 (减少频繁调用)
         if (tickCounter % 10 != 0) return;
 
-        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
+        // 获取 WebSocket 管理器
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+
+        // 计算 A/B 通道实际强度上限
+        int appMaxStrengthA = ws.getAppAMaxStrength();
+        int appMaxStrengthB = ws.getAppBMaxStrength();
+        int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
+        int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
         // 检查维度 - 通过获取 level 的 dimension 类型
         DimensionType dimType = player.level.dimensionType();
@@ -60,18 +67,25 @@ public class EnvironmentHandler {
             }
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
-                int intensity = (int)(10.0 * ModConfig.NETHER_MULTIPLIER.get());
-                intensity = Math.min(intensity, maxIntensity);
-                // A通道发送 breath 波形
-                WebSocketServerManager.getInstance().sendWaveformData("A", "breath", intensity);
-                // B通道同步发送 breath 波形
-                WebSocketServerManager.getInstance().sendWaveformData("B", "breath", intensity);
+                if (ModConfig.SYNC_CHANNELS.get()) {
+                    // 同步模式：分别用 A/B 通道上限计算
+                    int intensityA = (int)(maxIntensityA * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityA = Math.min(intensityA, maxIntensityA);
+                    int intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    ws.sendWaveformDataDualChannelWithDifferentIntensity("breath", intensityA, intensityB);
+                } else {
+                    // 非同步模式：只用 B 通道
+                    int intensity = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensity = Math.min(intensity, maxIntensityB);
+                    ws.sendWaveformData("B", "breath", intensity);
+                }
             }
         } else {
             if (wasInNether) {
                 // 离开下界时停止波形
-                WebSocketServerManager.getInstance().stopStimulus("A");
-                WebSocketServerManager.getInstance().stopStimulus("B");
+                ws.stopStimulus("A");
+                ws.stopStimulus("B");
             }
             wasInNether = false;
         }
@@ -86,17 +100,25 @@ public class EnvironmentHandler {
             }
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
-                int intensity = Math.min(10, maxIntensity);
-                // A通道发送 tide 波形
-                WebSocketServerManager.getInstance().sendWaveformData("A", "tide", intensity);
-                // B通道同步发送 tide 波形
-                WebSocketServerManager.getInstance().sendWaveformData("B", "tide", intensity);
+                if (ModConfig.SYNC_CHANNELS.get()) {
+                    // 同步模式：分别用 A/B 通道上限计算
+                    int intensityA = (int)(maxIntensityA * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityA = Math.min(intensityA, maxIntensityA);
+                    int intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    ws.sendWaveformDataDualChannelWithDifferentIntensity("tide", intensityA, intensityB);
+                } else {
+                    // 非同步模式：只用 B 通道
+                    int intensity = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensity = Math.min(intensity, maxIntensityB);
+                    ws.sendWaveformData("B", "tide", intensity);
+                }
             }
         } else {
             if (wasInEnd) {
                 // 离开终界时停止波形
-                WebSocketServerManager.getInstance().stopStimulus("A");
-                WebSocketServerManager.getInstance().stopStimulus("B");
+                ws.stopStimulus("A");
+                ws.stopStimulus("B");
             }
             wasInEnd = false;
         }
@@ -112,8 +134,8 @@ public class EnvironmentHandler {
                 // 每1.5秒发送一次
                 if (tickCounter % 30 == 0) {
                     int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensity = Math.min(intensity, maxIntensity);
-                    WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
+                    intensity = Math.min(intensity, maxIntensityA);
+                    ws.sendWaveformData("A", "fast_pinch", intensity);
                 }
             } else {
                 wasInCold = false;
@@ -121,7 +143,7 @@ public class EnvironmentHandler {
         }
 
         // 3. 检查玩家脚下的方块
-        checkPlayerFootBlock(player, maxIntensity, tickCounter);
+        checkPlayerFootBlock(player, maxIntensityA, maxIntensityB, tickCounter);
     }
 
     /**
@@ -138,7 +160,8 @@ public class EnvironmentHandler {
     /**
      * 检查玩家脚下的方块
      */
-    private void checkPlayerFootBlock(Player player, int maxIntensity, int tickCounter) {
+    private void checkPlayerFootBlock(Player player, int maxIntensityA, int maxIntensityB, int tickCounter) {
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
         Block feetBlock = player.level.getBlockState(player.blockPosition().below()).getBlock();
 
         // 细雪 - 每1.5秒发送一次 fast_pinch 波形
@@ -146,14 +169,14 @@ public class EnvironmentHandler {
             // 每 30 tick (1.5秒) 发送一次
             if (tickCounter % 30 == 0) {
                 int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                intensity = Math.min(intensity, maxIntensity);
-                WebSocketServerManager.getInstance().sendWaveformData("A", "fast_pinch", intensity);
+                intensity = Math.min(intensity, maxIntensityA);
+                ws.sendWaveformData("A", "fast_pinch", intensity);
             }
             wasInSnow = true;
         } else {
             if (wasInSnow) {
                 // 离开细雪时发送停止信号
-                WebSocketServerManager.getInstance().stopStimulus("A");
+                ws.stopStimulus("A");
                 wasInSnow = false;
             }
         }
@@ -168,17 +191,25 @@ public class EnvironmentHandler {
             }
             // 每 30 tick (1.5秒) 发送一次 pinch_intensify 波形
             if (tickCounter % 30 == 0) {
-                int intensity = Math.min(10, maxIntensity);
-                // A通道发送 pinch_intensify 波形
-                WebSocketServerManager.getInstance().sendWaveformData("A", "pinch_intensify", intensity);
-                // B通道同步发送 pinch_intensify 波形
-                WebSocketServerManager.getInstance().sendWaveformData("B", "pinch_intensify", intensity);
+                if (ModConfig.SYNC_CHANNELS.get()) {
+                    // 同步模式：分别用 A/B 通道上限计算
+                    int intensityA = (int)(maxIntensityA * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityA = Math.min(intensityA, maxIntensityA);
+                    int intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    ws.sendWaveformDataDualChannelWithDifferentIntensity("pinch_intensify", intensityA, intensityB);
+                } else {
+                    // 非同步模式：只用 B 通道
+                    int intensity = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensity = Math.min(intensity, maxIntensityB);
+                    ws.sendWaveformData("B", "pinch_intensify", intensity);
+                }
             }
         } else {
             if (wasInNetherPortal) {
                 // 离开下界传送门时停止波形
-                WebSocketServerManager.getInstance().stopStimulus("A");
-                WebSocketServerManager.getInstance().stopStimulus("B");
+                ws.stopStimulus("A");
+                ws.stopStimulus("B");
                 wasInNetherPortal = false;
             }
         }

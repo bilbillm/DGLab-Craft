@@ -21,7 +21,7 @@ public class DamageHandler {
         Minecraft mc = Minecraft.getInstance();
 
         if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         // UUID 比较判断是否是本地玩家
         Player eventPlayer = (Player) event.getEntity();
@@ -29,32 +29,57 @@ public class DamageHandler {
             return;
         }
 
+        Player player = eventPlayer;
+
         DamageSource source = event.getSource();
         float damage = event.getAmount();
         String msgId = source.getMsgId();
 
         System.out.println("[DGLabCraft] 伤害来源: " + msgId + ", 伤害值: " + damage);
 
-        // 获取全局强度上限
-        int maxIntensity = ModConfig.BASE_MAX_INTENSITY.get();
+        // 获取 WebSocket 管理器
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+
+        // 获取玩家最大生命值
+        float maxHealth = player.getMaxHealth();
 
         // 获取波形
         String waveform = WaveformManager.getWaveformIdForDamage(msgId);
 
-        // 根据伤害来源确定通道和倍率
-        String channel = "A";
+        // 获取倍率
         double multiplier = getMultiplierForDamage(msgId);
+        float healthRatio = damage / maxHealth;
 
-        // 计算强度: max(1, damage * multiplier * 10)
-        int strength = Math.max(1, (int)(damage * multiplier * 10));
-        strength = Math.min(strength, maxIntensity);
+        // 同步模式：分别计算 A/B 通道强度
+        if (ModConfig.SYNC_CHANNELS.get()) {
+            int appMaxStrengthA = ws.getAppAMaxStrength();
+            int appMaxStrengthB = ws.getAppBMaxStrength();
+            int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
+            int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
-        System.out.println("[DGLabCraft] 计算强度: " + strength + ", 通道: " + channel);
+            int strengthA = (int)(effectiveMaxA * healthRatio * 2 * multiplier);
+            strengthA = Math.max(1, Math.min(strengthA, effectiveMaxA));
 
-        // 发送刺激
-        WebSocketServerManager ws = WebSocketServerManager.getInstance();
-        System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
-        ws.sendWaveformData(channel, waveform, strength);
+            int strengthB = (int)(effectiveMaxB * healthRatio * 2 * multiplier);
+            strengthB = Math.max(1, Math.min(strengthB, effectiveMaxB));
+
+            System.out.println("[DGLabCraft] 计算强度: A=" + strengthA + "(上限" + effectiveMaxA + "), B=" + strengthB + "(上限" + effectiveMaxB + ")");
+            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+
+            ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
+        } else {
+            // 非同步模式：只用 A 通道
+            int appMaxStrength = ws.getAppAMaxStrength();
+            int effectiveMaxIntensity = ModConfig.getEffectiveMaxIntensity(appMaxStrength);
+
+            int strength = (int)(effectiveMaxIntensity * healthRatio * 2 * multiplier);
+            strength = Math.max(1, Math.min(strength, effectiveMaxIntensity));
+
+            System.out.println("[DGLabCraft] 计算强度: " + strength + ", 有效上限: " + effectiveMaxIntensity + ", 通道: A");
+            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+
+            ws.sendWaveformData("A", waveform, strength);
+        }
     }
 
     /**

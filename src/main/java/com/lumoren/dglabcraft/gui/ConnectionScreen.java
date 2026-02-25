@@ -16,11 +16,14 @@ import java.io.File;
  */
 public class ConnectionScreen extends Screen {
 
+    private final Screen parent;
     private Button refreshQrButton;
     private Button openQrButton;
+    private Button doneButton;
 
     public ConnectionScreen(Screen parent) {
         super(Component.literal("连接设置"));
+        this.parent = parent;
     }
 
     @Override
@@ -59,6 +62,22 @@ public class ConnectionScreen extends Screen {
             }
         );
         this.addRenderableWidget(this.openQrButton);
+
+        // 完成按钮
+        this.doneButton = new Button(
+            centerX - buttonWidth / 2,
+            this.height - 40,
+            buttonWidth,
+            20,
+            Component.literal("完成"),
+            (button) -> this.onClose()
+        );
+        this.addRenderableWidget(this.doneButton);
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
     }
 
     @Override

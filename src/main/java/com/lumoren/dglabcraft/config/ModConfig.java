@@ -26,8 +26,18 @@ public class ModConfig {
         configSpec = spec;
     }
 
+    /**
+     * 计算实际强度上限
+     * 公式: appMaxStrength × MAX_INTENSITY_PERCENTAGE / 100
+     */
+    public static int getEffectiveMaxIntensity(int appMaxStrength) {
+        int percentage = MAX_INTENSITY_PERCENTAGE.get().intValue();
+        return appMaxStrength * percentage / 100;
+    }
+
     // ========== 全局设置 ==========
-    public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY;
+    public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY; // 保留用于兼容，实际使用动态计算
+    public static final ForgeConfigSpec.ConfigValue<Double> MAX_INTENSITY_PERCENTAGE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
     public static final ForgeConfigSpec.ConfigValue<Integer> HUD_POSITION;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
@@ -93,8 +103,10 @@ public class ModConfig {
 
         // ===== 全局设置 =====
         builder.push("general");
-        BASE_MAX_INTENSITY = builder.comment("A/B 通道全局基础强度上限")
+        BASE_MAX_INTENSITY = builder.comment("A/B 通道全局基础强度上限 (保留)")
                 .define("baseMaxIntensity", 100);
+        MAX_INTENSITY_PERCENTAGE = builder.comment("全局强度上限百分比 (0-100)")
+                .define("maxIntensityPercentage", 50.0);
         HUD_ENABLED = builder.comment("是否显示HUD")
                 .define("hudEnabled", true);
         HUD_POSITION = builder.comment("HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)")
@@ -189,12 +201,12 @@ public class ModConfig {
 
         // ===== 环境维度 =====
         builder.push("environment");
-        NETHER_MULTIPLIER = builder.comment("下界环境倍率")
-                .define("nether", 1.0);
-        END_MULTIPLIER = builder.comment("末地环境倍率")
-                .define("end", 1.0);
-        PORTAL_MULTIPLIER = builder.comment("传送门倍率")
-                .define("portal", 1.0);
+        NETHER_MULTIPLIER = builder.comment("下界环境强度上限百分比 (0-100)")
+                .define("nether", 20.0);
+        END_MULTIPLIER = builder.comment("末地环境强度上限百分比 (0-100)")
+                .define("end", 20.0);
+        PORTAL_MULTIPLIER = builder.comment("传送门强度上限百分比 (0-100)")
+                .define("portal", 20.0);
         builder.pop();
 
         // ===== 心跳设置 =====
