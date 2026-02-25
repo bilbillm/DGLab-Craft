@@ -2,7 +2,7 @@
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
 ![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
-![License](https://img.shields.io/badge/License-MIT-blue)
+![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件转换为物理反馈发送到 DGLab 设备。
 
