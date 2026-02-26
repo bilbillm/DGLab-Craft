@@ -1,5 +1,7 @@
 # DGLab Craft
 
+[English Version](./README_EN.md)
+
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
 ![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
