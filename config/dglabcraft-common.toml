@@ -1,0 +1,101 @@
+
+[general]
+	#A/B 通道全局基础强度上限 (保留)
+	baseMaxIntensity = 100
+	#全局强度上限百分比 (0-100)
+	maxIntensityPercentage = 100.0
+	#是否显示HUD
+	hudEnabled = true
+	#HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)
+	hudPosition = 0
+	#A/B 通道同步
+	syncChannels = true
+
+[websocket]
+	#WebSocket 服务器地址
+	host = "localhost"
+	#WebSocket 服务器端口
+	port = 8877
+	#是否启用 WebSocket 连接
+	enabled = true
+
+[fast_pinch]
+	#仙人掌伤害倍率
+	cactus = 1.0
+	#甜浆果丛伤害倍率
+	sweetberrybush = 1.0
+	#弓箭伤害倍率
+	arrow = 1.0
+	#三叉戟伤害倍率
+	trident = 1.0
+	#钟乳石伤害倍率
+	stalagmite = 1.0
+
+[beat]
+	#跌落伤害倍率
+	fall = 1.0
+	#生物攻击伤害倍率
+	mobAttack = 1.0
+	#玩家攻击伤害倍率
+	playerAttack = 1.0
+	#撞墙动能伤害倍率
+	flyIntoWall = 1.0
+	#爆炸伤害倍率
+	explosion = 1.0
+	#烟花伤害倍率
+	fireworks = 1.0
+
+[burn]
+	#着火伤害倍率
+	onFire = 1.0
+	#火中伤害倍率
+	inFire = 1.0
+	#岩浆伤害倍率
+	lava = 1.0
+	#岩浆块烫脚倍率
+	hotFloor = 1.0
+
+[compress]
+	#墙内窒息倍率
+	inWall = 1.0
+	#实体挤压倍率
+	cramming = 1.0
+	#坠落方块倍率
+	fallingBlock = 1.0
+	#铁砧砸击倍率
+	anvil = 1.0
+
+[drown]
+	#溺水伤害倍率
+	drown = 1.0
+	#细雪冰冻倍率
+	freeze = 1.0
+
+[tide]
+	#魔法伤害倍率
+	magic = 1.0
+	#凋零效果倍率
+	wither = 1.0
+	#龙息伤害倍率
+	dragonBreath = 1.0
+	#饥饿伤害倍率
+	starve = 1.0
+
+[environment]
+	#下界环境强度上限百分比 (0-100)
+	nether = 20.0
+	#末地环境强度上限百分比 (0-100)
+	end = 20.0
+	#传送门强度上限百分比 (0-100)
+	portal = 20.0
+
+[heartbeat]
+	#触发心跳的血量阈值 (生命值百分比 0-100)
+	threshold = 30.0
+	#心跳强度倍率
+	multiplier = 1.0
+
+[buff]
+	#增益效果强度倍率
+	buff = 1.0
+

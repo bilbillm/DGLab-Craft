@@ -26,7 +26,7 @@ minecraft {
     // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
     //
     // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://github.com/ParchmentMC/Parchment/wiki/Getting-Started
+    // Additional setup is needed to use their mappings: https://www.parchmentmc.org/docs/getting-started
     //
     // Use non-default mappings at your own risk. They may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
@@ -76,6 +76,7 @@ minecraft {
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
+
 
             mods {
                 "${mod_id}" {
@@ -133,11 +134,15 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // WebSocket 服务器库
-    implementation 'org.java-websocket:Java-WebSocket:1.5.4'
+    // 供开发环境使用的依赖
+    minecraftLibrary 'org.java-websocket:Java-WebSocket:1.5.4'
+    minecraftLibrary('com.google.zxing:core:3.5.1') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
 
-    // ZXing 二维码生成库
-    implementation 'com.google.zxing:core:3.5.1'
+    // 指示 Forge 打包进 jar 内部的声明
+    jarJar(group: 'org.java-websocket', name: 'Java-WebSocket', version: '[1.5.4, 2.0)')
+    jarJar(group: 'com.google.zxing', name: 'core', version: '[3.5.1, 4.0)')
 
     // Real mod deobf dependency examples - these get remapped to your current mappings
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
@@ -173,7 +178,7 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
-// Example for how to get properties into the manifest for reading at runtime.
+// 配置默认的 jar 任务
 tasks.named('jar', Jar).configure {
     manifest {
         attributes([
@@ -186,10 +191,8 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-
-    // This is the preferred method to reobfuscate your jar file
-    finalizedBy 'reobfJar'
 }
+
 
 // However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing:
 // tasks.named('publish').configure {
@@ -211,4 +214,12 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// 将 jarJar 绑定到默认的 build 流程中
+build.dependsOn 'jarJar'
+
+// 确保 jarJar 任务启用
+tasks.named('jarJar') {
+    enabled = true
 }

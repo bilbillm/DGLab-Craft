@@ -21,5 +21,13 @@ build
 eclipse
 run
 
+# Minecraft runtime files
+crash-reports/
+logs/
+saves/
+usercache.json
+usernamecache.json
+options.txt
+
 # Files from Forge MDK
 forge*changelog.txt
