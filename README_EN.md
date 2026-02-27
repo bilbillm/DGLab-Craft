@@ -56,6 +56,15 @@ Press the **`K` key** in-game to bring up the settings menu, where you'll find p
 > **💡 Gameplay Tip:**
 > The mod features a built-in "Fade" effect. When you escape danger (like crawling out of lava), the stimulation won't cut off abruptly. Instead, it smoothly transitions to 0 over 2 seconds, providing a highly realistic lingering sensation. Have fun (and stay safe) in your Minecraft world!
 
+#### 1. Design Philosophy of "Shock Play": Sandbox Customization vs. Immersive Simulation
+* **CaiJi-ikun Version (Sandbox Customization):** Focuses on providing players with a high degree of freedom and customization. Players can act like they are operating a mixing console, deciding for themselves which game events correspond to which waveforms and parameters. It provides a highly flexible underlying control surface.
+* **DGLab Craft (Immersive Simulation):** This mod focuses on an out-of-the-box, immersive scenario experience. Under the hood, we have pre-bound in-game survival states to specific physical feedback. For example, damage is subdivided into different dimensions of sensation, such as sharp weapons (Fast Pinch), blunt force (Beat), high temperature (Burn), and magic (Tide). It also introduces ambient environment feedback (like the Nether and the End) and a physiological heartbeat simulation when health drops below 30%.
+
+#### 2. Channel Scheduling Strategy: Free Combination vs. Preset Scheduling
+The two mods also handle the utilization of the Coyote device's dual channels differently:
+* **CaiJi-ikun Version:** Channel allocation is primarily left to the player to plan and combine freely within their custom configurations.
+* **DGLab Craft:** Adopts a preset, scenario-based channel scheduling scheme. By default (in asynchronous mode), the mod tends to assign "ambient environments" (like the Breath waveform in the Nether, or the Tide waveform in the End) to Channel B, while assigning "damage environments" (like being on fire) to Channel A. For intense environmental interactions (like traveling through a portal), it uses a coordinated A+B channel fade-in approach. Of course, we also retain a global "A/B Channel Sync" option for players who prefer a unified pace across both channels.
+
 ## Features
 
 ### Feedback Types
