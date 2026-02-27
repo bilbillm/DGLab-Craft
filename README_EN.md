@@ -16,6 +16,46 @@ I'll probably write about the differences between the two mods tomorrow.
 
 Developing this mod was quite a journey - I worked on it for four consecutive days and finally finished it at 2 AM. Some testing may not be comprehensive, so please feel free to report bugs via issues. This was my first time working with Java and WebSocket servers 😂 - I had to dig through documentation and ask AI for help. Pull requests with better, more elegant code and algorithms are very welcome! I might record a video to promote it on Bilibili later, and add some GIFs and screenshots to improve the README~
 
+## 📖 Beginner's Guide: Your First "Shocking" Journey
+
+If this is your first time installing a Minecraft mod, don't worry! Follow these simple steps, and you'll be experiencing unprecedented haptic feedback in just a few minutes.
+
+### ⚠️ Step 1: Preparation (What you need)
+Before we start, ensure you have the following ready:
+1. **Minecraft 1.19.2** installed.
+2. **Forge Mod Loader** (Version **43.5.0** or higher).
+   * *Pro-tip: Third-party launchers like Prism Launcher or CurseForge make installing Forge a 1-click breeze!*
+3. Your **DGLab Coyote device** and the **DGLab App** installed on your smartphone.
+
+### 📥 Step 2: Installation
+1. Download the latest **DGLab Craft** mod file (`.jar` extension) from the [`Releases`](https://github.com/bilbillm/DGLab-Craft/releases/) page on this repository.
+2. Locate your Minecraft game directory:
+   * Official Launcher: Press `Win + R`, type `%appdata%\.minecraft`, and hit Enter.
+   * Third-party Launchers: Usually located within the specific instance's folder.
+3. Find the `mods` folder in your game directory (if it doesn't exist, simply create a new folder named `mods`).
+4. Drag and drop the downloaded `.jar` file into this folder. Done!
+
+### 🔌 Step 3: Connect Your DGLab Device
+1. Open your launcher and start the game using your **Forge 1.19.2** profile.
+2. Enter any single-player world or join a multiplayer server.
+3. Press the **`K` key** (default shortcut) on your keyboard to open the mod's main settings menu.
+4. Click the **"Connect Device" (连接设备)** button, and a QR code will pop up on your screen.
+5. Open the **DGLab App** on your phone, tap the scan icon in the top right corner, and scan the QR code on your monitor.
+   * *Note: Make sure your PC and phone are connected to the network. If scanning fails, click "Refresh QR Code" in-game and try again.*
+6. Once successfully scanned, the App will connect to the WebSocket server, and your in-game HUD will proudly display "Connected"!
+
+### ⚙️ Step 4: Safety First! Customize Your Intensity
+**[STRONGLY RECOMMENDED] Before you dive into a pool of lava or hug a Creeper, please adjust your intensity settings!**
+
+Press the **`K` key** in-game to bring up the settings menu, where you'll find plenty of customization options:
+* **Global Intensity Limit:** This is your safety lock. For your first run, it's highly recommended to set this to **20%~30%**. You can gradually increase it later based on your tolerance.
+* **Heartbeat Threshold:** By default, when your health drops below 30%, the device will simulate a heartbeat waveform. You can freely adjust this trigger threshold.
+* **Damage Multipliers:** Think lava isn't stimulating enough? Or cactus pricks are too sharp? You can individually tweak the intensity multiplier for specific types of damage (e.g., sharp, explosive, fall damage).
+* **Channel Routing:** By default, the mod assigns different waveforms to Channel A and Channel B. You can enable "A/B Channel Sync" for a more uniform experience across both channels.
+
+> **💡 Gameplay Tip:**
+> The mod features a built-in "Fade" effect. When you escape danger (like crawling out of lava), the stimulation won't cut off abruptly. Instead, it smoothly transitions to 0 over 2 seconds, providing a highly realistic lingering sensation. Have fun (and stay safe) in your Minecraft world!
+
 ## Features
 
 ### Feedback Types
