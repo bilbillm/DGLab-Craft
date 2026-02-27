@@ -40,7 +40,7 @@ Before we start, ensure you have the following ready:
 2. Enter any single-player world or join a multiplayer server.
 3. Press the **`K` key** (default shortcut) on your keyboard to open the mod's main settings menu.
 4. Click the **"Connect Device" (连接设备)→Refresh QR Code刷新二维码→Open QR ode打开二维码** button, and a QR code will pop up on your screen.
-5. Open the **DGLab App** on your phone, tap the scan icon in the top right corner, and scan the QR code on your monitor.
+5. Open the **DGLab App** on your phone, conact the socket,then tap the scan icon , and scan the QR code on your monitor.
    * *Note: Make sure your PC and phone are connected to the network. If scanning fails, click "Refresh QR Code" in-game and try again.*
 6. Once successfully scanned, the App will connect to the WebSocket server, and your in-game HUD will proudly display "Connected"!
 
