@@ -95,3 +95,33 @@ cd DGLab-Craft
 
 # 使用 Java 21 进行编译
 ./gradlew build
+```
+编译完成后，纯净的 JAR 文件将生成在 build/libs/ 目录下。
+
+## 📂 核心项目结构 (1.21.1)
+src/main/java/com/lumoren/dglabcraft/
+├── DGLabCraft.java          # NeoForge 主类
+├── config/
+│   └── DGLabConfig.java     # 全新 ModConfigSpec 配置文件
+├── events/
+│   ├── HeartbeatHandler.java   # 心跳处理
+│   ├── EnvironmentHandler.java # 环境处理
+│   ├── DamageHandler.java      # 真实伤害判定 (getNewDamage)
+│   └── FadeManager.java        # 平滑渐变管理
+├── gui/
+│   ├── MainScreen.java      # 现代化高斯模糊主界面
+│   ├── ConnectionScreen.java # 扫码连接界面
+│   └── DGLabCraftScreen.java # 强度与倍率滚动设置界面
+└── network/
+    └── WebSocketServerManager.java # WebSocket 核心逻辑
+
+## 🙏 致谢
+CaiJi-ikun/DG_LAB - 参考实现
+DG-LAB-OPENSOURCE - 官方 Socket 协议文档
+NeoForge 社区 - 感谢提供优雅的 1.21.1 模组加载 API
+
+## 📄 许可证
+GPL 3.0
+
+## 👤 作者
+Lumoren
