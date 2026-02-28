@@ -36,10 +36,10 @@ public class EnvironmentHandler {
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
         Player player = (Player) event.getEntity();
-        handleClientEnvironment(player);
+        handleClientEnvironment(player, mc);
     }
 
-    private void handleClientEnvironment(Player player) {
+    private void handleClientEnvironment(Player player, Minecraft mc) {
         tickCounter++;
         // 每 10 tick 检查一次 (减少频繁调用)
         if (tickCounter % 10 != 0) return;
@@ -53,8 +53,11 @@ public class EnvironmentHandler {
         int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
         int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
+        // 使用 mc.level 获取世界
+        if (mc.level == null) return;
+
         // 检查维度 - 通过获取 level 的 dimension 类型
-        DimensionType dimType = player.level.dimensionType();
+        DimensionType dimType = mc.level.dimensionType();
         // 下界 dimension type 的 registry name 包含 "nether"
         boolean isNetherDimension = dimType != null &&
             dimType.toString().toLowerCase().contains("nether");
@@ -94,7 +97,7 @@ public class EnvironmentHandler {
         }
 
         // 1.5 终界环境反馈 - 每40tick发送一次 tide 波形，AB通道同步
-        DimensionType dimTypeEnd = player.level.dimensionType();
+        DimensionType dimTypeEnd = mc.level.dimensionType();
         boolean isEndDimension = dimTypeEnd != null &&
             dimTypeEnd.toString().toLowerCase().contains("end");
         if (isEndDimension) {
@@ -132,7 +135,7 @@ public class EnvironmentHandler {
         // 2. 寒冷环境检测 (通过玩家是否接触细雪方块判断)
         if (!isNetherDimension) {
             // 检查玩家是否接触到细雪方块
-            boolean touchingSnow = isTouchingBlock(player, Blocks.POWDER_SNOW);
+            boolean touchingSnow = isTouchingBlock(player, Blocks.POWDER_SNOW, mc);
             if (touchingSnow) {
                 if (!wasInCold) {
                     wasInCold = true;
@@ -151,26 +154,28 @@ public class EnvironmentHandler {
         }
 
         // 3. 检查玩家脚下的方块
-        checkPlayerFootBlock(player, maxIntensityA, maxIntensityB, tickCounter);
+        checkPlayerFootBlock(player, maxIntensityA, maxIntensityB, tickCounter, mc);
     }
 
     /**
      * 检查玩家是否直接接触指定方块（只检查脚部和身体位置）
      */
-    private boolean isTouchingBlock(Player player, Block targetBlock) {
+    private boolean isTouchingBlock(Player player, Block targetBlock, Minecraft mc) {
+        if (mc.level == null) return false;
         BlockPos pos = player.blockPosition();
         // 只检查玩家当前所在的方块和脚下方块
-        Block blockAtFeet = player.level.getBlockState(pos.below()).getBlock();
-        Block blockAtBody = player.level.getBlockState(pos).getBlock();
+        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
+        Block blockAtBody = mc.level.getBlockState(pos).getBlock();
         return blockAtFeet == targetBlock || blockAtBody == targetBlock;
     }
 
     /**
      * 检查玩家脚下的方块
      */
-    private void checkPlayerFootBlock(Player player, int maxIntensityA, int maxIntensityB, int tickCounter) {
+    private void checkPlayerFootBlock(Player player, int maxIntensityA, int maxIntensityB, int tickCounter, Minecraft mc) {
+        if (mc.level == null) return;
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
-        Block feetBlock = player.level.getBlockState(player.blockPosition().below()).getBlock();
+        Block feetBlock = mc.level.getBlockState(player.blockPosition().below()).getBlock();
 
         // 细雪 - 每1.5秒发送一次 fast_pinch 波形
         if (feetBlock == Blocks.POWDER_SNOW) {
@@ -194,7 +199,7 @@ public class EnvironmentHandler {
         // 注：仙人掌伤害已由 DamageHandler 处理，此处不再重复发送
 
         // 下界传送门方块 - 检测玩家身体位置是否在传送门内部
-        boolean inNetherPortal = isTouchingBlock(player, Blocks.NETHER_PORTAL);
+        boolean inNetherPortal = isTouchingBlock(player, Blocks.NETHER_PORTAL, mc);
         if (inNetherPortal) {
             if (!wasInNetherPortal) {
                 wasInNetherPortal = true;

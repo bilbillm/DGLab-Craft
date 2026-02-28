@@ -11,6 +11,7 @@ import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * HUD 渲染 - 显示 A/B 通道状态和强度
@@ -46,9 +47,9 @@ public class DGLabCraftHUD {
         // 根据配置计算位置
         int[] pos = calculatePosition(textWidth, screenWidth, screenHeight);
 
-        // 渲染文本
-        PoseStack poseStack = event.getPoseStack();
-        mc.font.drawShadow(poseStack, text, pos[0], pos[1], 0xFFFFFF);
+        // 渲染文本 - 使用 PoseStack
+        GuiGraphics guiGraphics = event.getGuiGraphics();
+        guiGraphics.drawString(mc.font, Component.literal(text), pos[0], pos[1], 0xFFFFFF, false);
     }
 
     /**

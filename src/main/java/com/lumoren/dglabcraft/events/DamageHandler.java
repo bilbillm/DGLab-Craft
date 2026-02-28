@@ -11,11 +11,12 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 伤害事件处理
- * 根据 DamageSource.getMsgId() 映射到对应的倍率配置
+ * 根据 DamageSource 获取伤害类型并映射到对应的倍率配置
  */
 public class DamageHandler {
 
     @SubscribeEvent
+    @SuppressWarnings("deprecation")
     public void onLivingDamage(LivingDamageEvent event) {
         // 只处理客户端玩家自身
         Minecraft mc = Minecraft.getInstance();
@@ -33,6 +34,7 @@ public class DamageHandler {
 
         DamageSource source = event.getSource();
         float damage = event.getAmount();
+        // 1.20.1: getMsgId() 已废弃但仍可用，返回伤害类型字符串 ID
         String msgId = source.getMsgId();
 
         System.out.println("[DGLabCraft] 伤害来源: " + msgId + ", 伤害值: " + damage);

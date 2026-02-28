@@ -3,13 +3,13 @@ package com.lumoren.dglabcraft.gui;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -58,19 +58,13 @@ public class DGLabCraftScreen extends Screen {
         int centerX = this.width / 2;
 
         // 完成按钮 - 居中偏左
-        this.doneButton = new Button(
-            centerX - buttonWidth - 5, bottomY, buttonWidth, buttonHeight,
-            Component.literal("完成"),
-            (button) -> this.onClose()
-        );
+        this.doneButton = Button.builder(Component.literal("完成"), button -> this.onClose())
+            .bounds(centerX - buttonWidth - 5, bottomY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(doneButton);
 
         // 重置按钮 - 居中偏右
-        this.resetButton = new Button(
-            centerX + 5, bottomY, buttonWidth, buttonHeight,
-            Component.literal("重置为默认"),
-            (button) -> resetToDefaults()
-        );
+        this.resetButton = Button.builder(Component.literal("重置为默认"), button -> resetToDefaults())
+            .bounds(centerX + 5, bottomY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(resetButton);
     }
 
@@ -120,8 +114,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         // A/B通道同步
-        Button syncButton = new Button(
-            0, 0, 190, 20,
+        Button syncButton = Button.builder(
             Component.literal("A/B 通道同步: " + (ModConfig.SYNC_CHANNELS.get() ? "开" : "关")),
             (button) -> {
                 boolean newValue = !ModConfig.SYNC_CHANNELS.get();
@@ -129,7 +122,7 @@ public class DGLabCraftScreen extends Screen {
                 ModConfig.save();
                 button.setMessage(Component.literal("A/B 通道同步: " + (newValue ? "开" : "关")));
             }
-        );
+        ).bounds(0, 0, 190, 20).build();
 
         this.list.addEntry(new SettingsList.RowEntry(percentageSlider, syncButton));
 
@@ -511,20 +504,20 @@ public class DGLabCraftScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(pPoseStack);
+    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.renderBackground(guiGraphics);
 
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
 
         // 渲染列表（原版泥土背景、阴影、滚动条由列表自动处理）
-        this.list.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+        this.list.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 渲染标题
-        drawCenteredString(pPoseStack, this.font, "DGLab 强度与倍率设置", this.width / 2, 20, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, Component.literal("DGLab 强度与倍率设置"), this.width / 2, 20, 0xFFFFFF);
 
         // 渲染底部按钮
-        super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     /**
@@ -658,13 +651,13 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染深色背景条
-                net.minecraft.client.gui.GuiComponent.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
+                guiGraphics.fill(left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
 
                 // 渲染居中标题文本（带阴影）
                 int textWidth = this.minecraft.font.width(this.title);
-                this.minecraft.font.drawShadow(poseStack, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
+                guiGraphics.drawString(this.minecraft.font, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
             }
 
             @Override
@@ -698,9 +691,9 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染标签文本
-                net.minecraft.client.gui.GuiComponent.drawString(poseStack,
+                guiGraphics.drawString(
                     net.minecraft.client.Minecraft.getInstance().font,
                     text,
                     left + 15,
@@ -737,24 +730,24 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 int gap = 15;
                 int widgetWidth = (entryWidth - gap - 20) / 2;
 
                 // 渲染左侧 Widget
                 if (leftWidget != null) {
-                    leftWidget.x = left + 10;
-                    leftWidget.y = top + 2;
+                    leftWidget.setX(left + 10);
+                    leftWidget.setY(top + 2);
                     leftWidget.setWidth(widgetWidth);
-                    leftWidget.render(poseStack, mouseX, mouseY, partialTick);
+                    leftWidget.render(guiGraphics, mouseX, mouseY, partialTick);
                 }
 
                 // 渲染右侧 Widget
                 if (rightWidget != null) {
-                    rightWidget.x = left + 10 + widgetWidth + gap;
-                    rightWidget.y = top + 2;
+                    rightWidget.setX(left + 10 + widgetWidth + gap);
+                    rightWidget.setY(top + 2);
                     rightWidget.setWidth(widgetWidth);
-                    rightWidget.render(poseStack, mouseX, mouseY, partialTick);
+                    rightWidget.render(guiGraphics, mouseX, mouseY, partialTick);
                 }
             }
 
