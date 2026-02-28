@@ -2,23 +2,31 @@
 
 [English Version](./README_EN.md)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)
+![NeoForge](https://img.shields.io/badge/NeoForge-21.1.61+-orange)
+![Java](https://img.shields.io/badge/Java-21-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
-> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
+> **Topics:** `minecraft-mod` `neoforge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-21-1`
 
-DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件转换为物理反馈发送到 DGLab 设备。
+DGLab Craft 是一个基于 Minecraft **NeoForge** 的模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件（受伤、环境变化、特定状态）精准转换为物理反馈发送到 DGLab 设备，为你带来全方位的 4D 沉浸式硬核体验。
 
-## 写在前面
+## 📝 写在前面
 
-这是个forge的模组，之前B站很火的那个是Fabric的，而且我俩电击play的想法不能说大相径庭但也能说比较有出入把（笑）至于区别在哪，下载一个狠狠地电两下就知道了~ 
+**欢迎来到 1.21.1 的新纪元！**
 
-咳咳，明天或许我会把两个mod的区别写出来的 
+这是本模组经历的最彻底的一次底层重构。从 1.19.2/1.20.1 跨越到 1.21.1，我们告别了老旧的 Forge，全面拥抱了更现代的 **NeoForge** 生态。
 
-开发不易，还望支持，连续肝了四天终于在今天凌晨两点做好了。做到后面有些测试不太全面，还望大家及时反馈bug提issue给我。代码上这是我第一次接触java和websocket服务器😂，硬啃文档和问AI，有更好更优雅的代码和算法以及某些增删查改的地方非常希望能看到pull request！今天下午起来可能会录个视频发到b站宣传一下，还有搞点gif截点图什么的把README做的更好些~
+在最新的版本中，我们不仅修复了诸多底层逻辑，还迎来了几项极其硬核的升级：
+1. **真实伤害判定计算：** 接入了全新的 `getNewDamage()` API，现在你的护甲、附魔和抗性药水终于能为你“挡电”了！只有真正扣除的血量才会转化为电击反馈。
+2. **现代化 UI 渲染：** 全面重写了 GUI 渲染管线，完美适配 1.21 官方的高斯模糊（Blur）滤镜，界面质感大幅提升。
+3. **更纯净的依赖环境：** 彻底解决了 WebSocket 和 ZXing 库的打包冲突，开箱即用。
 
-## 功能特点
+开发不易，连续爆肝跨越大版本更是让人头秃。这是我第一次深度接触 Java 模组开发与 WebSocket，如果在 1.21.1 的新环境下遇到 Bug，极其欢迎提交 Issue 或 PR！如果玩得开心，别忘了给个 Star！⭐
+
+---
+
+## ⚡ 功能特点
 
 ### 反馈类型
 
@@ -41,10 +49,9 @@ DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App �
 | 末地 (End) | 潮汐 | B通道 | 固定 |
 | 传送门 (Portal) | 按捏渐强 | A+B通道 | 渐强 |
 | 细雪 (Snow) | 快速按捏 | A通道 | 固定 |
-| 反馈通道 | B通道 (非同步模式) / A+B通道 (同步模式) |
 
 #### 3. 伤害反馈 (Damage)
-当玩家受到伤害时触发。根据不同伤害类型使用不同波形。
+当玩家受到伤害时触发。根据不同伤害类型使用不同波形（受护甲减伤影响）。
 
 | 伤害类型 | 波形 | 说明 |
 |----------|------|------|
@@ -55,170 +62,36 @@ DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App �
 | 环境与缺氧 | 溺水 | 溺水、冰冻 |
 | 魔法与毒素 | 潮汐 | 魔法、凋零、龙息、饥饿 |
 
-| 项目 | 说明 |
-|------|------|
-| 反馈通道 | A通道 (非同步模式) / A+B通道 (同步模式) |
-| 强度计算 | 基于伤害值与最大生命值比例 |
-
 #### 4. 强度渐变 (Fade)
-当触发条件结束后，强度会平滑过渡到0。
+当触发条件结束后，电击不会生硬断开，强度会平滑过渡到 0，还原真实的痛感消退过程。
 
-| 阶段 | 说明 |
-|------|------|
-| 延迟 | 状态结束后2秒 |
-| 渐变 | 2秒内从当前强度降为0 |
-| 发送间隔 | 每0.5秒发送一次 |
+---
 
-### 连接方式
+## 💻 系统要求 (⚠️ 非常重要)
 
-- 通过 DGLab App 扫描二维码连接
-- 支持局域网自动发现
-- 刷新二维码功能
+由于 Minecraft 1.21.1 的底层变更，请严格确保你的运行环境符合以下要求：
 
-### 强度渐变
+- **Minecraft:** 1.21.1
+- **Mod Loader:** NeoForge 21.1.61 或更高版本 (不支持老版 Forge)
+- **Java:** **Java 21** (1.21.1 强制要求)
+- **设备:** DGLab 设备 (支持 Socket 控制)
 
-- 状态结束后 2 秒开始渐变
-- 2 秒内强度平滑降为 0
+## 📦 安装与连接说明
 
-## 系统要求
+1. 确保已安装 Java 21 和 NeoForge 1.21.1。
+2. 下载已构建的模组 JAR 文件，将其放入 `.minecraft/mods` 文件夹并启动游戏。
+3. 进入游戏后，按下快捷键 **`K`** 打开全新的控制面板。
+4. 使用手机 DGLab App 扫描屏幕上的二维码连接。
+5. *(强烈建议：首次使用请将全局强度上限调低测试，安全第一！)*
 
-- Minecraft 1.19.2
-- Forge 43.5.0+
-- Java 17+
-- DGLab 设备 (支持 Socket 控制)
+## 🛠️ 编译方法
 
-## 安装方法
-
-1. 下载已构建的模组 JAR 文件
-2. 将 JAR 文件放入 `.minecraft/mods` 文件夹
-3. 启动游戏
-
-## 使用说明
-
-### 首次连接
-
-1. 启动游戏，WebSocket 服务器会自动启动
-2. 打开连接界面（点击 HUD 按钮或使用快捷键）
-3. 使用 DGLab App 扫描屏幕上的二维码
-4. 连接成功后即可使用
-
-### 配置选项
-
-在游戏内配置界面或配置文件中可以设置以下选项：
-
-#### 基础设置
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| 全局强度上限 | 100% | A/B 通道的最大强度百分比 |
-| HUD 显示 | 开启 | 在屏幕上显示连接状态和AB通道的强度和波形 |
-| HUD 位置 | 左上 | HUD 显示位置 (左上/右上/左下/右下) |
-| A/B 通道同步 | 开启 | 同步时双通道使用相同波形 强度独立计算 |
-
-#### WebSocket 设置
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| 服务器端口 | 8877 | WebSocket 服务器监听端口 |
-| 服务器启用 | 开启 | 是否启用 WebSocket 服务器 |
-
-#### 心跳设置
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| 触发阈值 | 30% | 血量低于此值时触发心跳反馈 |
-| 强度倍率 | 1.0x | 心跳强度倍率 |
-
-#### 环境强度
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| 下界强度 | 20% | 在下界时的强度上限 |
-| 末地强度 | 20% | 在末地时的强度上限 |
-| 传送门强度 | 20% | 在传送门内时的强度上限 |
-
-#### 伤害倍率
-
-可对不同类型的伤害设置单独的倍率：
-
-| 伤害类型 | 默认倍率 | 伤害类型 | 默认倍率 | 伤害类型 | 默认倍率 |
-|----------|----------|----------|----------|----------|----------|
-| 仙人掌 | 1.0x | 甜浆果丛 | 1.0x | 弓箭 | 1.0x |
-| 三叉戟 | 1.0x | 钟乳石 | 1.0x | 摔落 | 1.0x |
-| 生物攻击 | 1.0x | 玩家攻击 | 1.0x | 撞墙 | 1.0x |
-| 爆炸 | 1.0x | 烟花 | 1.0x | 着火 | 1.0x |
-| 火中 | 1.0x | 岩浆 | 1.0x | 岩浆块 | 1.0x |
-| 墙内窒息 | 1.0x | 实体挤压 | 1.0x | 坠落方块 | 1.0x |
-| 铁砧 | 1.0x | 溺水 | 1.0x | 冰冻 | 1.0x |
-| 魔法 | 1.0x | 凋零 | 1.0x | 龙息 | 1.0x |
-| 饥饿 | 1.0x | | | | |
-
-#### 波形设置
-
-可在游戏内选择不同波形：
-
-| 波形ID | 中文名称 | 波形ID | 中文名称 |
-|--------|----------|--------|----------|
-| heartbeat | 心跳节奏 | breath | 呼吸 |
-| tide | 潮汐 | beat | 连击 |
-| compress | 压缩 | bounce_gradual | 渐变弹跳 |
-| grain_friction | 颗粒摩擦 | wave_ripple | 波浪涟漪 |
-| rain_wash | 雨水冲刷 | variable_speed | 变速敲击 |
-| signal_light | 信号灯 | tease1 | 挑逗1 |
-| tease2 | 挑逗2 | burn | 燃烧 |
-| fast_pinch | 快速按捏 | pinch_intensify | 按捏渐强 |
-| rhythm_step | 节奏步伐 | drown | 溺水 |
-
-### 快捷键
-
-- `K` - 默认为k打开设置界面
-
-## 编译方法
+本项目现已全面迁移至 `ModDevGradle` 构建体系。
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-repo/DGLab-Craft.git
+git clone [https://github.com/your-repo/DGLab-Craft.git](https://github.com/your-repo/DGLab-Craft.git)
 cd DGLab-Craft
 
-# 编译
+# 使用 Java 21 进行编译
 ./gradlew build
-
-# 生成运行配置 (IDE)
-./gradlew genEclipseRuns
-# 或
-./gradlew genIntellijRuns
-```
-
-编译完成后，JAR 文件位于 `build/libs/` 目录。
-
-## 项目结构
-
-```
-src/main/java/com/lumoren/dglabcraft/
-├── DGLabCraft.java          # 主类
-├── config/
-│   └── ModConfig.java       # 配置文件
-├── events/
-│   ├── HeartbeatHandler.java   # 心跳处理
-│   ├── EnvironmentHandler.java # 环境处理
-│   ├── DamageHandler.java      # 伤害处理
-│   └── FadeManager.java        # 渐变管理
-├── gui/
-│   ├── MainScreen.java      # 主界面
-│   └── ConnectionScreen.java # 连接界面
-└── network/
-    └── WebSocketServerManager.java # WebSocket 服务器
-```
-
-## 致谢
-
-- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB) - 参考实现
-- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE) - 官方 Socket 协议文档
-
-## 许可证
-
-GPL 3.0
-
-## 作者
-
-Lumoren
