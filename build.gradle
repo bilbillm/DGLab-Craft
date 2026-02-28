@@ -8,6 +8,10 @@ plugins {
 version = mod_version
 group = 'com.lumoren.dglabcraft'
 
+neoForge {
+    version = "21.1.61"
+}
+
 base {
     archivesName = 'dglab-craft'
 }
@@ -27,8 +31,6 @@ repositories {
 }
 
 dependencies {
-    // NeoForge 依赖
-    neoForge "net.neoforged:neoforge:${neoforge_version}"
 
     // 开发环境依赖
     implementation 'org.java-websocket:Java-WebSocket:1.5.4'
