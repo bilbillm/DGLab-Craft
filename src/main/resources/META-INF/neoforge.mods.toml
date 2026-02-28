@@ -1,0 +1,26 @@
+# This is an example mods.toml file for NeoForge.
+modLoader="javafml"
+loaderVersion="[21.1,)"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+
+description='''${mod_description}'''
+
+[[dependencies.dglabcraft]]
+modId="neoforge"
+mandatory=true
+versionRange="[21.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.dglabcraft]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"
