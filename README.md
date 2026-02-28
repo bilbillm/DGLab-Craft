@@ -99,6 +99,7 @@ cd DGLab-Craft
 编译完成后，纯净的 JAR 文件将生成在 build/libs/ 目录下。
 
 ## 📂 核心项目结构 (1.21.1)
+```
 src/main/java/com/lumoren/dglabcraft/
 ├── DGLabCraft.java          # NeoForge 主类
 ├── config/
@@ -114,6 +115,7 @@ src/main/java/com/lumoren/dglabcraft/
 │   └── DGLabCraftScreen.java # 强度与倍率滚动设置界面
 └── network/
     └── WebSocketServerManager.java # WebSocket 核心逻辑
+```
 
 ## 🙏 致谢
 CaiJi-ikun/DG_LAB - 参考实现
