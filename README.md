@@ -118,9 +118,8 @@ src/main/java/com/lumoren/dglabcraft/
 ```
 
 ## 🙏 致谢
-CaiJi-ikun/DG_LAB - 参考实现
-DG-LAB-OPENSOURCE - 官方 Socket 协议文档
-NeoForge 社区 - 感谢提供优雅的 1.21.1 模组加载 API
+- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB) - Reference implementation
+- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE) - Official Socket protocol documentation
 
 ## 📄 许可证
 GPL 3.0
