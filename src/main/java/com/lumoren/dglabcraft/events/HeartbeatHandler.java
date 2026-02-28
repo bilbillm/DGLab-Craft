@@ -1,11 +1,11 @@
 package com.lumoren.dglabcraft.events;
 
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * 濒死心跳处理
@@ -28,7 +28,7 @@ public class HeartbeatHandler {
     }
 
     @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+    public void onPlayerTick(PlayerTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
@@ -47,7 +47,7 @@ public class HeartbeatHandler {
         // 存储当前玩家的最大生命值，供UI使用
         currentMaxHealth = maxHealth;
         // 获取阈值百分比 (0-100)
-        int thresholdPercent = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
+        int thresholdPercent = DGLabConfig.HEARTBEAT_THRESHOLD.get().intValue();
         // 计算触发阈值：maxHealth * 百分比，向上取整
         int thresholdHealth = (int) Math.ceil(maxHealth * thresholdPercent / 100.0);
 
@@ -57,8 +57,8 @@ public class HeartbeatHandler {
         // 计算 A/B 通道实际强度上限
         int appMaxStrengthA = ws.getAppAMaxStrength();
         int appMaxStrengthB = ws.getAppBMaxStrength();
-        int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
-        int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
+        int maxIntensityA = DGLabConfig.getEffectiveMaxIntensity(appMaxStrengthA);
+        int maxIntensityB = DGLabConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
         // 检查是否低于阈值 (百分比触发)
         if (health <= thresholdHealth && thresholdPercent > 0) {
@@ -72,9 +72,9 @@ public class HeartbeatHandler {
                 percentage = Math.max(0.2, Math.min(1.0, percentage));
 
                 // 获取心跳倍率
-                double multiplier = ModConfig.HEARTBEAT_MULTIPLIER.get();
+                double multiplier = DGLabConfig.HEARTBEAT_MULTIPLIER.get();
 
-                if (ModConfig.SYNC_CHANNELS.get()) {
+                if (DGLabConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
                     int intensityA = (int)(maxIntensityA * percentage * multiplier);
                     intensityA = Math.max(1, Math.min(intensityA, maxIntensityA));

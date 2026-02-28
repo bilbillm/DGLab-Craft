@@ -1,15 +1,15 @@
 # This is an example mods.toml file for NeoForge.
 modLoader="javafml"
-loaderVersion="[21.1,)"
+loaderVersion="[4,)"
 license="${mod_license}"
 
 [[mods]]
-modId="${mod_id}"
-version="${mod_version}"
-displayName="${mod_name}"
-authors="${mod_authors}"
+modId="dglabcraft"
+version="1.0.0"
+displayName="DGLab Craft"
+authors="Lumoren"
 
-description='''${mod_description}'''
+description="DGLab physical feedback mod for Minecraft 1.21.1"
 
 [[dependencies.dglabcraft]]
 modId="neoforge"

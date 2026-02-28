@@ -1,13 +1,13 @@
 package com.lumoren.dglabcraft.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ModConfig {
+public class DGLabConfig {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static ForgeConfigSpec configSpec;
+    private static ModConfigSpec configSpec;
 
     /**
      * 显式保存配置到文件
@@ -22,7 +22,7 @@ public class ModConfig {
     /**
      * 设置配置规格引用（用于保存）
      */
-    public static void setConfigSpec(ForgeConfigSpec spec) {
+    public static void setConfigSpec(ModConfigSpec spec) {
         configSpec = spec;
     }
 
@@ -36,70 +36,70 @@ public class ModConfig {
     }
 
     // ========== 全局设置 ==========
-    public static final ForgeConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY; // 保留用于兼容，实际使用动态计算
-    public static final ForgeConfigSpec.ConfigValue<Double> MAX_INTENSITY_PERCENTAGE;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
-    public static final ForgeConfigSpec.ConfigValue<Integer> HUD_POSITION;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
+    public static final ModConfigSpec.ConfigValue<Integer> BASE_MAX_INTENSITY; // 保留用于兼容，实际使用动态计算
+    public static final ModConfigSpec.ConfigValue<Double> MAX_INTENSITY_PERCENTAGE;
+    public static final ModConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
+    public static final ModConfigSpec.ConfigValue<Integer> HUD_POSITION;
+    public static final ModConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
 
     // ========== WebSocket 设置 ==========
-    public static final ForgeConfigSpec.ConfigValue<String> WS_HOST;
-    public static final ForgeConfigSpec.ConfigValue<Integer> WS_PORT;
-    public static final ForgeConfigSpec.ConfigValue<Boolean> WS_ENABLED;
+    public static final ModConfigSpec.ConfigValue<String> WS_HOST;
+    public static final ModConfigSpec.ConfigValue<Integer> WS_PORT;
+    public static final ModConfigSpec.ConfigValue<Boolean> WS_ENABLED;
 
     // ========== 锐器与穿刺 (fast_pinch) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> CACTUS_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> SWEETBERRY_BUSH_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> ARROW_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> TRIDENT_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> STALAGMITE_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> CACTUS_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> SWEETBERRY_BUSH_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> ARROW_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> TRIDENT_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> STALAGMITE_MULTIPLIER;
 
     // ========== 钝器与撞击 (beat) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> FALL_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> MOB_ATTACK_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> PLAYER_ATTACK_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> FLY_INTO_WALL_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> EXPLOSION_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> FIREWORKS_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> FALL_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> MOB_ATTACK_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> PLAYER_ATTACK_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> FLY_INTO_WALL_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> EXPLOSION_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> FIREWORKS_MULTIPLIER;
 
     // ========== 高温与灼烧 (burn) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> ON_FIRE_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> IN_FIRE_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> LAVA_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> HOT_FLOOR_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> ON_FIRE_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> IN_FIRE_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> LAVA_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> HOT_FLOOR_MULTIPLIER;
 
     // ========== 挤压与窒息 (compress) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> IN_WALL_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> CRAMMING_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> FALLING_BLOCK_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> ANVIL_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> IN_WALL_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> CRAMMING_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> FALLING_BLOCK_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> ANVIL_MULTIPLIER;
 
     // ========== 环境与缺氧 (drown) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> DROWN_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> FREEZE_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> DROWN_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> FREEZE_MULTIPLIER;
 
     // ========== 魔法与毒素 (tide) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> MAGIC_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> WITHER_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> DRAGON_BREATH_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> STARVE_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> MAGIC_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> WITHER_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> DRAGON_BREATH_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> STARVE_MULTIPLIER;
 
     // ========== 环境维度 ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> NETHER_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> END_MULTIPLIER;
-    public static final ForgeConfigSpec.ConfigValue<Double> PORTAL_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> NETHER_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> END_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> PORTAL_MULTIPLIER;
 
     // ========== 心跳设置 ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> HEARTBEAT_THRESHOLD;
-    public static final ForgeConfigSpec.ConfigValue<Double> HEARTBEAT_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> HEARTBEAT_THRESHOLD;
+    public static final ModConfigSpec.ConfigValue<Double> HEARTBEAT_MULTIPLIER;
 
     // ========== Buff 强度倍率 (保留) ==========
-    public static final ForgeConfigSpec.ConfigValue<Double> BUFF_MULTIPLIER;
+    public static final ModConfigSpec.ConfigValue<Double> BUFF_MULTIPLIER;
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         // ===== 全局设置 =====
         builder.push("general");

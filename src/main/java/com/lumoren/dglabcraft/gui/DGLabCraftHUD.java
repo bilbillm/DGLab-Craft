@@ -1,32 +1,32 @@
 package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.ClientModEvents;
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * HUD 渲染 - 显示 A/B 通道状态和强度
  * 使用 GUI 覆盖层渲染事件，在屏幕四角落显示状态
  */
-@Mod.EventBusSubscriber(modid = "dglabcraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@EventBusSubscriber(modid = "dglabcraft", bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class DGLabCraftHUD {
 
     @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
+    public static void onRenderGuiOverlay(RenderGuiLayerEvent.Post event) {
         // 检查 HUD 是否启用
-        if (!ModConfig.HUD_ENABLED.get()) return;
+        if (!DGLabConfig.HUD_ENABLED.get()) return;
 
         // 只在渲染完所有原生 GUI 后渲染（例如热栏之后）
-        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) return;
+        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
@@ -35,8 +35,8 @@ public class DGLabCraftHUD {
         if (mc.screen != null) return;
 
         // 获取屏幕尺寸
-        int screenWidth = event.getWindow().getGuiScaledWidth();
-        int screenHeight = event.getWindow().getGuiScaledHeight();
+        int screenWidth = event.getGuiGraphics().guiWidth();
+        int screenHeight = event.getGuiGraphics().guiHeight();
 
         // 获取要显示的文本
         String text = getStatusText();
@@ -57,7 +57,7 @@ public class DGLabCraftHUD {
      * 0 = 左上, 1 = 右上, 2 = 左下, 3 = 右下
      */
     private static int[] calculatePosition(int textWidth, int screenWidth, int screenHeight) {
-        int pos = ModConfig.HUD_POSITION.get();
+        int pos = DGLabConfig.HUD_POSITION.get();
         int x, y;
 
         switch (pos) {

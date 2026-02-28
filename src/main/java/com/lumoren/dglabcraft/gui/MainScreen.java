@@ -1,6 +1,6 @@
 package com.lumoren.dglabcraft.gui;
 
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -56,23 +56,23 @@ public class MainScreen extends Screen {
         int btnWidth = 66;  // 66*3 + 1*2 = 200
         int btnGap = 1;     // 间距
         int startX = centerX - buttonWidth / 2;
-        boolean hudEnabled = ModConfig.HUD_ENABLED.get();
+        boolean hudEnabled = DGLabConfig.HUD_ENABLED.get();
         String hudText = hudEnabled ? "HUD: 开启" : "HUD: 关闭";
         this.hudToggleButton = Button.builder(Component.literal(hudText), button -> {
-            boolean newState = !ModConfig.HUD_ENABLED.get();
-            ModConfig.HUD_ENABLED.set(newState);
-            ModConfig.save();
+            boolean newState = !DGLabConfig.HUD_ENABLED.get();
+            DGLabConfig.HUD_ENABLED.set(newState);
+            DGLabConfig.save();
             button.setMessage(Component.literal(newState ? "HUD: 开启" : "HUD: 关闭"));
         }).bounds(startX, startY + spacing * 3, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudToggleButton);
 
         // HUD 位置切换按钮
-        int currentPos = ModConfig.HUD_POSITION.get();
+        int currentPos = DGLabConfig.HUD_POSITION.get();
         String posText = "位置: " + getPositionText(currentPos);
         this.hudPositionButton = Button.builder(Component.literal(posText), button -> {
-            int newPos = (ModConfig.HUD_POSITION.get() + 1) % 4;
-            ModConfig.HUD_POSITION.set(newPos);
-            ModConfig.save();
+            int newPos = (DGLabConfig.HUD_POSITION.get() + 1) % 4;
+            DGLabConfig.HUD_POSITION.set(newPos);
+            DGLabConfig.save();
             button.setMessage(Component.literal("位置: " + getPositionText(newPos)));
         }).bounds(startX + btnWidth + btnGap, startY + spacing * 3, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudPositionButton);
@@ -98,8 +98,10 @@ public class MainScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics);
+        // 1. 先让父类把毛玻璃背景和所有的按钮都画好
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
+        // 2. 然后在最顶层，画我们极其清晰的文字！
         int centerX = this.width / 2;
 
         // 标题
@@ -123,8 +125,6 @@ public class MainScreen extends Screen {
         // 服务器信息
         String serverInfo = server.getLocalIp() + ":" + server.getPort();
         guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
-
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     @Override

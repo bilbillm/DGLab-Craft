@@ -1,18 +1,18 @@
 package com.lumoren.dglabcraft.events;
 
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * 统一管理所有刺激的渐变消失效果
  * 当玩家退出某种状态后，延迟2秒后开始渐变，再用2秒时间将强度降为0
  */
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class FadeManager {
 
     private static int tickCounter = 0;
@@ -46,7 +46,7 @@ public class FadeManager {
     private static final int FADE_SEND_INTERVAL = 10;
 
     @SubscribeEvent
-    public static void onPlayerTick(LivingEvent.LivingTickEvent event) {
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
@@ -124,7 +124,7 @@ public class FadeManager {
         int intensityB = (int)(lastHeartbeatIntensityB * fadeFactor);
 
         if (intensityA > 0 || intensityB > 0) {
-            if (ModConfig.SYNC_CHANNELS.get()) {
+            if (DGLabConfig.SYNC_CHANNELS.get()) {
                 ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
                 ws.sendStrengthOnly("B", intensityB);
@@ -193,7 +193,7 @@ public class FadeManager {
         int intensityB = (int)(lastEnvironmentIntensityB * fadeFactor);
 
         if (intensityA > 0 || intensityB > 0) {
-            if (ModConfig.SYNC_CHANNELS.get()) {
+            if (DGLabConfig.SYNC_CHANNELS.get()) {
                 ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
                 ws.sendStrengthOnly("B", intensityB);
@@ -262,7 +262,7 @@ public class FadeManager {
         int intensityB = (int)(lastDamageIntensityB * fadeFactor);
 
         if (intensityA > 0 || intensityB > 0) {
-            if (ModConfig.SYNC_CHANNELS.get()) {
+            if (DGLabConfig.SYNC_CHANNELS.get()) {
                 ws.sendDualChannelStrengthOnly(intensityA, intensityB);
             } else {
                 ws.sendStrengthOnly("A", intensityA);

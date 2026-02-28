@@ -62,7 +62,8 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics);
+
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
 
@@ -107,7 +108,6 @@ public class ConnectionScreen extends Screen {
             this.openQrButton.visible = !isConnected;
         }
 
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     @Override

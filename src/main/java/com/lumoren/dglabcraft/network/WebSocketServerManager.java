@@ -1,7 +1,7 @@
 package com.lumoren.dglabcraft.network;
 
 import com.google.gson.Gson;
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.util.QRCodeGenerator;
 import com.lumoren.dglabcraft.util.WaveformGenerator;
 import com.lumoren.dglabcraft.util.WaveformManager;
@@ -65,7 +65,7 @@ public class WebSocketServerManager {
     private WebSocketServerManager() {
         // 使用固定的 sessionId（参考 DG_LAB）
         sessionId = FIXED_CLIENT_ID;
-        port = ModConfig.WS_PORT.get();
+        port = DGLabConfig.WS_PORT.get();
     }
 
     public static WebSocketServerManager getInstance() {
@@ -377,7 +377,7 @@ public class WebSocketServerManager {
             LOGGER.info("发送强度: strength-" + channelNum + "+" + mode + "+" + value);
 
             // 如果启用了通道同步，同时发送到另一个通道
-            if (ModConfig.SYNC_CHANNELS.get()) {
+            if (DGLabConfig.SYNC_CHANNELS.get()) {
                 String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
                 int otherChannelNum = "A".equalsIgnoreCase(otherChannel) ? 1 : 2;
                 String otherChannelStr = "A".equalsIgnoreCase(otherChannel) ? "A" : "B";
@@ -442,7 +442,7 @@ public class WebSocketServerManager {
         }
 
         // 同步模式：使用通道 ID 3 实现零延迟双通道同步
-        if (ModConfig.SYNC_CHANNELS.get()) {
+        if (DGLabConfig.SYNC_CHANNELS.get()) {
             sendWaveformDataDualChannel(waveId, intensity);
             return;
         }

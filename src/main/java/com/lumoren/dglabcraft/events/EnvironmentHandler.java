@@ -1,6 +1,6 @@
 package com.lumoren.dglabcraft.events;
 
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -8,8 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * 环境反馈处理
@@ -26,7 +26,7 @@ public class EnvironmentHandler {
     private boolean wasInNetherPortal = false;
 
     @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+    public void onPlayerTick(PlayerTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
@@ -50,8 +50,8 @@ public class EnvironmentHandler {
         // 计算 A/B 通道实际强度上限
         int appMaxStrengthA = ws.getAppAMaxStrength();
         int appMaxStrengthB = ws.getAppBMaxStrength();
-        int maxIntensityA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
-        int maxIntensityB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
+        int maxIntensityA = DGLabConfig.getEffectiveMaxIntensity(appMaxStrengthA);
+        int maxIntensityB = DGLabConfig.getEffectiveMaxIntensity(appMaxStrengthB);
 
         // 使用 mc.level 获取世界
         if (mc.level == null) return;
@@ -71,16 +71,16 @@ public class EnvironmentHandler {
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
                 int intensityA, intensityB;
-                if (ModConfig.SYNC_CHANNELS.get()) {
+                if (DGLabConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    intensityA = (int)(maxIntensityA * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * DGLabConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("breath", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
                     ws.sendWaveformData("B", "breath", intensityB);
@@ -107,16 +107,16 @@ public class EnvironmentHandler {
             // 每 40 tick (2秒) 发送一次
             if (tickCounter % 40 == 0) {
                 int intensityA, intensityB;
-                if (ModConfig.SYNC_CHANNELS.get()) {
+                if (DGLabConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    intensityA = (int)(maxIntensityA * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * DGLabConfig.END_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.END_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("tide", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.END_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
                     ws.sendWaveformData("B", "tide", intensityB);
@@ -142,7 +142,7 @@ public class EnvironmentHandler {
                 }
                 // 每1.5秒发送一次
                 if (tickCounter % 30 == 0) {
-                    int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                    int intensity = (int)(8.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
                     intensity = Math.min(intensity, maxIntensityA);
                     ws.sendWaveformData("A", "fast_pinch", intensity);
                     // 细雪只用 A 通道，更新 FadeManager
@@ -181,7 +181,7 @@ public class EnvironmentHandler {
         if (feetBlock == Blocks.POWDER_SNOW) {
             // 每 30 tick (1.5秒) 发送一次
             if (tickCounter % 30 == 0) {
-                int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                int intensity = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
                 intensity = Math.min(intensity, maxIntensityA);
                 ws.sendWaveformData("A", "fast_pinch", intensity);
                 // 细雪只用 A 通道，更新 FadeManager
@@ -207,16 +207,16 @@ public class EnvironmentHandler {
             // 每 30 tick (1.5秒) 发送一次 pinch_intensify 波形
             if (tickCounter % 30 == 0) {
                 int intensityA, intensityB;
-                if (ModConfig.SYNC_CHANNELS.get()) {
+                if (DGLabConfig.SYNC_CHANNELS.get()) {
                     // 同步模式：分别用 A/B 通道上限计算
-                    intensityA = (int)(maxIntensityA * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityA = (int)(maxIntensityA * DGLabConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityA = Math.min(intensityA, maxIntensityA);
-                    intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     ws.sendWaveformDataDualChannelWithDifferentIntensity("pinch_intensify", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
-                    intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
+                    intensityB = (int)(maxIntensityB * DGLabConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
                     ws.sendWaveformData("B", "pinch_intensify", intensityB);

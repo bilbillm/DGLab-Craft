@@ -1,6 +1,6 @@
 package com.lumoren.dglabcraft;
 
-import com.lumoren.dglabcraft.config.ModConfig;
+import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
 import com.lumoren.dglabcraft.events.FadeManager;
@@ -9,37 +9,35 @@ import com.lumoren.dglabcraft.events.StatusEffectHandler;
 import com.lumoren.dglabcraft.gui.MainScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 @Mod(DGLabCraft.MODID)
 public class DGLabCraft
 {
     public static final String MODID = "dglabcraft";
 
-    public DGLabCraft(FMLJavaModLoadingContext context)
+    public DGLabCraft(IEventBus modEventBus, ModContainer modContainer)
     {
-        IEventBus modEventBus = context.getModEventBus();
-
         // 注册通用设置
         modEventBus.addListener(this::commonSetup);
 
-        // 注册 Forge 配置
-        ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON,
-            com.lumoren.dglabcraft.config.ModConfig.SPEC);
+        // 注册 NeoForge 配置
+        modContainer.registerConfig(ModConfig.Type.COMMON, DGLabConfig.SPEC);
 
         // 注册事件总线
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new DamageHandler());
-        MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
-        MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
-        MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
-        MinecraftForge.EVENT_BUS.register(FadeManager.class);
+        NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new DamageHandler());
+        NeoForge.EVENT_BUS.register(new StatusEffectHandler());
+        NeoForge.EVENT_BUS.register(new EnvironmentHandler());
+        NeoForge.EVENT_BUS.register(new HeartbeatHandler());
+        NeoForge.EVENT_BUS.register(FadeManager.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
@@ -54,8 +52,7 @@ public class DGLabCraft
      * 输入处理 - 每 tick 检查按键
      */
     @SubscribeEvent
-    public void onClientTick(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
-        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
+    public void onClientTick(ClientTickEvent.Post event) {
         if (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.screen == null) {
