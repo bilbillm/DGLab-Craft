@@ -39,7 +39,6 @@ public class DGLabCraft
         MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
         MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
         MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
-        MinecraftForge.EVENT_BUS.register(FadeManager.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

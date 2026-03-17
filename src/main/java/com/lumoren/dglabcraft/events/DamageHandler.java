@@ -37,6 +37,8 @@ public class DamageHandler {
 
     @SubscribeEvent
     public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+        if (!event.getEntity().level().isClientSide()) return;
+
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null || mc.level == null) return;
@@ -73,6 +75,8 @@ public class DamageHandler {
 
     @SuppressWarnings("deprecation")
     private void cacheDamageSource(LivingDamageEvent event) {
+        if (!event.getEntity().level().isClientSide()) return;
+
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
