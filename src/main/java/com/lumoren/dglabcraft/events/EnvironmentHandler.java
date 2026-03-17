@@ -27,6 +27,8 @@ public class EnvironmentHandler {
 
     @SubscribeEvent
     public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+        if (!event.getEntity().level().isClientSide()) return;
+
         Minecraft mc = Minecraft.getInstance();
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
