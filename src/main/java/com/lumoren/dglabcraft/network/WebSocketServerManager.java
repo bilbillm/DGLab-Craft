@@ -28,6 +28,7 @@ import java.util.TimerTask;
  */
 public class WebSocketServerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
+    private static final long PULSE_PROTECTION_WINDOW_MS = 700L;
     private static WebSocketServerManager instance;
 
     private WebSocketServer server;
@@ -56,6 +57,8 @@ public class WebSocketServerManager {
     private double channelBIntensity = 0;
     private String channelAStatus = "Idle";
     private String channelBStatus = "Idle";
+
+    private long lastPulseSentAt = 0L;
 
     private final Gson gson = new Gson();
 
@@ -589,6 +592,11 @@ public class WebSocketServerManager {
             return;
         }
 
+        if (isPulseProtectionActive()) {
+            LOGGER.info("跳过渐变强度发送: 通道{} = {} (波形保护窗口内)", channel, intensity);
+            return;
+        }
+
         try {
             int channelNum = "A".equals(channel) ? 1 : 2;
             sendMessage("strength-" + channelNum + "+2+" + intensity);
@@ -605,6 +613,11 @@ public class WebSocketServerManager {
      */
     public void sendDualChannelStrengthOnly(int intensityA, int intensityB) {
         if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        if (isPulseProtectionActive()) {
+            LOGGER.info("跳过双通道渐变强度发送: A={}, B={} (波形保护窗口内)", intensityA, intensityB);
             return;
         }
 
@@ -631,11 +644,13 @@ public class WebSocketServerManager {
 
     /**
      * 发送波形消息辅助方法
-     * 格式: pulse-A:["0A0A0A0A64646464", "1919181864646464"]
-     * 每个元素必须是 16 位大写十六进制字符串
+     * 格式: pulse-A:[0A0A0A0A64646464,1919181864646464]
+     * 保持与旧发送路径一致：数组元素不带引号
      */
     private void sendPulseMessage(String channelStr, List<String> chunk) {
-        // 将列表转换为 JSON 数组字符串 (紧凑格式，无空格)
+        markPulseSent();
+
+        // 将列表转换为协议数组字符串 (紧凑格式，无空格)
         StringBuilder hexArray = new StringBuilder("[");
         for (int i = 0; i < chunk.size(); i++) {
             if (i > 0) hexArray.append(",");
@@ -645,13 +660,21 @@ public class WebSocketServerManager {
             while (hex.length() < 16) hex = "0" + hex;
             // 截断超过 16 位的内容
             if (hex.length() > 16) hex = hex.substring(0, 16);
-            hexArray.append("\"").append(hex).append("\"");
+            hexArray.append(hex);
         }
         hexArray.append("]");
 
         // 发送消息: pulse-A:[...]
         sendMessage("pulse-" + channelStr + ":" + hexArray.toString());
         LOGGER.info("发送波形分块: pulse-{}:{}", channelStr, hexArray);
+    }
+
+    private void markPulseSent() {
+        lastPulseSentAt = System.currentTimeMillis();
+    }
+
+    private boolean isPulseProtectionActive() {
+        return System.currentTimeMillis() - lastPulseSentAt < PULSE_PROTECTION_WINDOW_MS;
     }
 
     /**
