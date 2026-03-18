@@ -19,6 +19,8 @@ public class DamageHandler {
     @SubscribeEvent
     @SuppressWarnings("deprecation")
     public void onLivingDamage(LivingDamageEvent.Post event) {
+        if (!event.getEntity().level().isClientSide()) return;
+
         // 只处理客户端玩家自身
         Minecraft mc = Minecraft.getInstance();
 
