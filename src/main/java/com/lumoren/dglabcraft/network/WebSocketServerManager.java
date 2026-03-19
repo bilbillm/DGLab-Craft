@@ -644,8 +644,8 @@ public class WebSocketServerManager {
 
     /**
      * 发送波形消息辅助方法
-     * 格式: pulse-A:[0A0A0A0A64646464,1919181864646464]
-     * 保持与旧发送路径一致：数组元素不带引号
+     * 格式: pulse-A:["0A0A0A0A64646464","1919181864646464"]
+     * iOS 端需要数组元素带双引号
      */
     private void sendPulseMessage(String channelStr, List<String> chunk) {
         markPulseSent();
@@ -660,7 +660,7 @@ public class WebSocketServerManager {
             while (hex.length() < 16) hex = "0" + hex;
             // 截断超过 16 位的内容
             if (hex.length() > 16) hex = hex.substring(0, 16);
-            hexArray.append(hex);
+            hexArray.append("\"").append(hex).append("\"");
         }
         hexArray.append("]");
 
@@ -719,7 +719,7 @@ public class WebSocketServerManager {
         // 发送新波形
         Map<String, String> msg = new HashMap<>();
         msg.put("type", "msg");
-        msg.put("message", "pulse-" + (channelNum == 1 ? "A" : "B") + ":[" + waveform + "]");
+        msg.put("message", "pulse-" + (channelNum == 1 ? "A" : "B") + ":[\"" + waveform + "\"]");
         msg.put("clientId", sessionId);
         msg.put("targetId", targetId != null ? targetId : "");
         connectedClient.send(gson.toJson(msg));
