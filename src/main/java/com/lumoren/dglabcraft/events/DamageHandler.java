@@ -4,10 +4,14 @@ import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 
 /**
@@ -16,46 +20,92 @@ import net.neoforged.bus.api.SubscribeEvent;
  */
 public class DamageHandler {
 
+    private static final float MIN_DAMAGE_DELTA = 0.01f;
+    private static final int DAMAGE_DEBOUNCE_TICKS = 6;
+    private static final int EVENT_SOURCE_MAX_AGE_TICKS = 10;
+
+    private float lastHealth = -1.0f;
+    private int tickCounter = 0;
+    private int lastDamageTriggerTick = -DAMAGE_DEBOUNCE_TICKS;
+    private String lastDamageSourceId;
+    private int lastDamageSourceTick = Integer.MIN_VALUE;
+
     @SubscribeEvent
     @SuppressWarnings("deprecation")
     public void onLivingDamage(LivingDamageEvent.Post event) {
+        cacheDamageSource(event);
+    }
+
+    @SubscribeEvent
+    public void onPlayerTick(PlayerTickEvent.Post event) {
         if (!event.getEntity().level().isClientSide()) return;
 
-        // 只处理客户端玩家自身
         Minecraft mc = Minecraft.getInstance();
-
         if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null || mc.level == null) return;
 
-        // UUID 比较判断是否是本地玩家
         Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) {
+        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
+
+        tickCounter++;
+
+        Player player = eventPlayer;
+        float currentHealth = player.getHealth();
+
+        if (lastHealth < 0.0f) {
+            lastHealth = currentHealth;
             return;
         }
 
-        Player player = eventPlayer;
+        float healthDelta = lastHealth - currentHealth;
+        lastHealth = currentHealth;
+
+        if (healthDelta <= MIN_DAMAGE_DELTA) {
+            expireStaleDamageSource();
+            return;
+        }
+
+        if (tickCounter - lastDamageTriggerTick < DAMAGE_DEBOUNCE_TICKS) {
+            expireStaleDamageSource();
+            return;
+        }
+
+        lastDamageTriggerTick = tickCounter;
+        triggerDamageFeedback(player, healthDelta, mc);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void cacheDamageSource(LivingDamageEvent.Post event) {
+        if (!event.getEntity().level().isClientSide()) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (!(event.getEntity() instanceof Player)) return;
+        if (mc.player == null) return;
+
+        Player eventPlayer = (Player) event.getEntity();
+        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
         DamageSource source = event.getSource();
-        float damage = event.getNewDamage();
-        // 1.20.1: getMsgId() 已废弃但仍可用，返回伤害类型字符串 ID
-        String msgId = source.getMsgId();
+        if (source == null) return;
+
+        lastDamageSourceId = source.getMsgId();
+        lastDamageSourceTick = tickCounter;
+    }
+
+    private void triggerDamageFeedback(Player player, float damage, Minecraft mc) {
+        String msgId = resolveDamageSourceId(player, mc);
+        String waveform = WaveformManager.getWaveformIdForDamage(msgId);
+        if ("default".equals(waveform)) {
+            waveform = "beat";
+        }
 
         System.out.println("[DGLabCraft] 伤害来源: " + msgId + ", 伤害值: " + damage);
 
-        // 获取 WebSocket 管理器
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
-
-        // 获取玩家最大生命值
-        float maxHealth = player.getMaxHealth();
-
-        // 获取波形
-        String waveform = WaveformManager.getWaveformIdForDamage(msgId);
-
-        // 获取倍率
+        float maxHealth = Math.max(player.getMaxHealth(), 1.0f);
         double multiplier = getMultiplierForDamage(msgId);
         float healthRatio = damage / maxHealth;
 
-        // 同步模式：分别计算 A/B 通道强度
         if (DGLabConfig.SYNC_CHANNELS.get()) {
             int appMaxStrengthA = ws.getAppAMaxStrength();
             int appMaxStrengthB = ws.getAppBMaxStrength();
@@ -72,10 +122,8 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
             ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
-            // 更新 FadeManager
             FadeManager.updateDamage(strengthA, strengthB);
         } else {
-            // 非同步模式：只用 A 通道
             int appMaxStrength = ws.getAppAMaxStrength();
             int effectiveMaxIntensity = DGLabConfig.getEffectiveMaxIntensity(appMaxStrength);
 
@@ -86,9 +134,77 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
             ws.sendWaveformData("A", waveform, strength);
-            // 更新 FadeManager（A通道用strength，B通道用0）
             FadeManager.updateDamage(strength, 0);
         }
+    }
+
+    private String resolveDamageSourceId(Player player, Minecraft mc) {
+        String cachedSource = consumeRecentDamageSource();
+        if (cachedSource != null && !cachedSource.isEmpty()) {
+            return cachedSource;
+        }
+
+        if (player.isInLava()) {
+            return "lava";
+        }
+        if (player.isOnFire()) {
+            return "onFire";
+        }
+        if (player.isFreezing()) {
+            return "freeze";
+        }
+        if (player.getAirSupply() <= 0) {
+            return "drown";
+        }
+        if (player.fallDistance > 3.0f) {
+            return "fall";
+        }
+
+        String blockDamageSource = getTouchingBlockDamageSource(player, mc);
+        if (blockDamageSource != null) {
+            return blockDamageSource;
+        }
+
+        return "mob";
+    }
+
+    private String consumeRecentDamageSource() {
+        if (lastDamageSourceId == null) {
+            return null;
+        }
+        if (tickCounter - lastDamageSourceTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            lastDamageSourceId = null;
+            return null;
+        }
+
+        String sourceId = lastDamageSourceId;
+        lastDamageSourceId = null;
+        return sourceId;
+    }
+
+    private void expireStaleDamageSource() {
+        if (lastDamageSourceId != null && tickCounter - lastDamageSourceTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            lastDamageSourceId = null;
+        }
+    }
+
+    private String getTouchingBlockDamageSource(Player player, Minecraft mc) {
+        if (mc.level == null) {
+            return null;
+        }
+
+        BlockPos pos = player.blockPosition();
+        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
+        Block blockAtBody = mc.level.getBlockState(pos).getBlock();
+
+        if (blockAtFeet == Blocks.CACTUS || blockAtBody == Blocks.CACTUS) {
+            return "cactus";
+        }
+        if (blockAtFeet == Blocks.SWEET_BERRY_BUSH || blockAtBody == Blocks.SWEET_BERRY_BUSH) {
+            return "sweetberrybush";
+        }
+
+        return null;
     }
 
     /**
