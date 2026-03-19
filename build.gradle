@@ -79,5 +79,12 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+def removeLegacyAllJars = tasks.register('removeLegacyAllJars', Delete) {
+    delete fileTree(layout.buildDirectory.dir('libs')) {
+        include '*-all.jar'
+    }
+}
+
 // 将 jarJar 绑定到默认的 build 流程中
 build.dependsOn 'jarJar'
+build.finalizedBy removeLegacyAllJars

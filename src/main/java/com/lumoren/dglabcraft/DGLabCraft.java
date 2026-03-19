@@ -37,7 +37,6 @@ public class DGLabCraft
         NeoForge.EVENT_BUS.register(new StatusEffectHandler());
         NeoForge.EVENT_BUS.register(new EnvironmentHandler());
         NeoForge.EVENT_BUS.register(new HeartbeatHandler());
-        NeoForge.EVENT_BUS.register(FadeManager.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
