@@ -28,6 +28,11 @@ public class MainScreen extends Screen {
     protected void init() {
         super.init();
 
+        WebSocketServerManager server = WebSocketServerManager.getInstance();
+        if (!server.isConnected()) {
+            server.generateQrUrl();
+        }
+
         int centerX = this.width / 2;
         int buttonWidth = 200;
         int buttonHeight = 20;
@@ -121,7 +126,7 @@ public class MainScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
 
         // 服务器信息
-        String serverInfo = server.getLocalIp() + ":" + server.getPort();
+        String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
         guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
 
         super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
