@@ -1,217 +1,124 @@
 # DGLab Craft
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
+[中文说明](./README.md)
+
+![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-brightgreen)
+![Forge](https://img.shields.io/badge/Forge-47.2.0+-orange)
+![Java](https://img.shields.io/badge/Java-17-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
-> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
+> Branch target: `1.20.1`
 
-DGLab Craft is a Minecraft Forge mod that connects to the DGLab App via WebSocket, converting in-game events into physical feedback sent to DGLab devices.
+DGLab Craft is a Minecraft Forge mod that connects to the DGLab App through a local WebSocket server and converts in-game damage, environment changes, and low-health states into device feedback.
 
-## Before You Start
+## Branch Scope
 
-This is a Forge mod. The popular one on Bilibili was for Fabric, and our ideas about the "electric play" experience are quite different (lol). To understand the difference, download it and try it out~
+This branch is specifically for:
 
-I'll probably write about the differences between the two mods tomorrow.
+- Minecraft `1.20.1`
+- Forge `47.2.0+`
+- Java `17`
 
-Developing this mod was quite a journey - I worked on it for four consecutive days and finally finished it at 2 AM. Some testing may not be comprehensive, so please feel free to report bugs via issues. This was my first time working with Java and WebSocket servers 😂 - I had to dig through documentation and ask AI for help. Pull requests with better, more elegant code and algorithms are very welcome! I might record a video to promote it on Bilibili later, and add some GIFs and screenshots to improve the README~
+If you need another version:
+
+- use branch `1.19.2` for Minecraft 1.19.2 Forge
+- use branch `1.21.1-NeoForge` for Minecraft 1.21.1 NeoForge
 
 ## Features
 
-### Feedback Types
+- Low-health heartbeat feedback
+- Environment feedback (Nether, End, portal, powder snow, etc.)
+- Damage feedback with waveform mapping by damage source
+- A/B channel sync or split behavior
+- QR-code based DGLab App connection
+- Fade-out handling after stimulus ends
 
-#### 1. Heartbeat Feedback
-Triggers when player's health falls below a set threshold.
+## Requirements
 
-| Property | Description |
-|----------|-------------|
-| Trigger Condition | Player health below heartbeat threshold (default 30%) |
-| Waveform | Heartbeat rhythm |
-| Feedback Channel | A channel (async mode) / A+B channels (sync mode) |
-| Intensity Calculation | Lower health = higher intensity (20%~100%) |
-
-#### 2. Environment Feedback
-Triggers when player is in specific environments.
-
-| Environment | Waveform | Feedback Channel | Intensity |
-|-------------|----------|------------------|-----------|
-| Nether | Breath | B channel | Fixed |
-| End | Tide | B channel | Fixed |
-| Portal | Pinch Intensify | A+B channels | Gradual increase |
-| Snow | Fast Pinch | A channel | Fixed |
-| Feedback Channel | B channel (async mode) / A+B channels (sync mode) |
-
-#### 3. Damage Feedback
-Triggers when player takes damage. Uses different waveforms based on damage type.
-
-| Damage Type | Waveform | Description |
-|-------------|----------|-------------|
-| Piercing | Fast Pinch | Cactus, sweet berry bush, arrows, tridents, stalactites |
-| Blunt | Beat | Fall damage, mob attacks, player attacks, hitting walls, explosions, fireworks |
-| Heat/Burning | Burn | Fire, lava, magma block |
-| Crushing/Suffocation | Compress | Suffocation in walls, entity crushing, falling blocks, anvils |
-| Environment/Drowning | Drown | Drowning, freezing |
-| Magic/Poison | Tide | Magic, wither, dragon breath, hunger |
-
-| Property | Description |
-|----------|-------------|
-| Feedback Channel | A channel (async mode) / A+B channels (sync mode) |
-| Intensity Calculation | Based on damage value and max health ratio |
-
-#### 4. Fade (Intensity Transition)
-When the trigger condition ends, intensity smoothly transitions to 0.
-
-| Stage | Description |
-|-------|-------------|
-| Delay | 2 seconds after state ends |
-| Fade | Intensity drops from current to 0 within 2 seconds |
-| Send Interval | Every 0.5 seconds |
-
-### Connection Methods
-
-- Connect via DGLab App scanning QR code
-- LAN auto-discovery support
-- QR code refresh function
-
-### Intensity Fade
-
-- Fade starts 2 seconds after state ends
-- Intensity smoothly drops to 0 within 2 seconds
-
-## System Requirements
-
-- Minecraft 1.19.2
-- Forge 43.5.0+
-- Java 17+
-- DGLab device (supports Socket control)
+- Minecraft `1.20.1`
+- Forge `47.2.0` or newer in the same major line
+- Java `17`
+- DGLab device and mobile app
 
 ## Installation
 
-1. Download the built mod JAR file
-2. Place the JAR file in `.minecraft/mods` folder
-3. Launch the game
+1. Download the `.jar` built for this branch
+2. Put it into `.minecraft/mods`
+3. Launch the game with Forge 1.20.1
 
-## Usage Guide
+## Quick Start
 
-### First Connection
+1. Enter a single-player world or a multiplayer server
+2. Press `K` to open the settings screen
+3. Generate the QR code from the connection screen
+4. Use the DGLab App SOCKET mode to scan the QR code
+5. Make sure your phone and PC are on the same LAN
 
-1. Launch the game - WebSocket server starts automatically
-2. Open the connection screen (click HUD button or use hotkey)
-3. Use DGLab App to scan the QR code on screen
-4. After successful connection, you're ready to use it
+## Branch Notes
 
-### Configuration Options
+The 1.20.1 line already contains several compatibility-focused fixes, including:
 
-The following options can be set in-game or in the config file:
+- multiplayer client damage feedback fixes
+- health-delta based damage triggering in problematic environments
+- iOS pulse payload formatting compatibility fixes
 
-#### Basic Settings
+When reporting bugs, it is especially helpful to mention whether the problem happens in:
 
-| Config | Default | Description |
-|--------|---------|-------------|
-| Global Intensity Limit | 100% | Max intensity percentage for A/B channels |
-| HUD Display | On | Show connection status, A/B channel intensity and waveform on screen |
-| HUD Position | Top Left | HUD display position (top-left/top-right/bottom-left/bottom-right) |
-| A/B Channel Sync | On | In sync mode, both channels use same waveform, intensity calculated independently |
+- a modpack
+- multiplayer client mode
+- iOS or Android
 
-#### WebSocket Settings
+## Main Configuration
 
-| Config | Default | Description |
-|--------|---------|-------------|
-| Server Port | 8877 | WebSocket server listening port |
-| Server Enable | On | Whether to enable WebSocket server |
+You can configure:
 
-#### Heartbeat Settings
+- Global intensity limit
+- Heartbeat trigger threshold
+- Environment intensity settings
+- Damage multipliers
+- HUD visibility and position
+- A/B channel sync
+- WebSocket port
 
-| Config | Default | Description |
-|--------|---------|-------------|
-| Trigger Threshold | 30% | Health threshold to trigger heartbeat feedback |
-| Intensity Multiplier | 1.0x | Heartbeat intensity multiplier |
-
-#### Environment Intensity
-
-| Config | Default | Description |
-|--------|---------|-------------|
-| Nether Intensity | 20% | Intensity limit in the Nether |
-| End Intensity | 20% | Intensity limit in the End |
-| Portal Intensity | 20% | Intensity limit inside portals |
-
-#### Damage Multipliers
-
-Separate multipliers can be set for different damage types:
-
-| Damage Type | Default | Damage Type | Default | Damage Type | Default |
-|-------------|---------|-------------|---------|-------------|---------|
-| Cactus | 1.0x | Sweet Berry Bush | 1.0x | Arrow | 1.0x |
-| Trident | 1.0x | Stalactite | 1.0x | Fall Damage | 1.0x |
-| Mob Attack | 1.0x | Player Attack | 1.0x | Wall Hit | 1.0x |
-| Explosion | 1.0x | Firework | 1.0x | On Fire | 1.0x |
-| In Fire | 1.0x | Lava | 1.0x | Magma Block | 1.0x |
-| Suffocation | 1.0x | Entity Crushing | 1.0x | Falling Block | 1.0x |
-| Anvil | 1.0x | Drowning | 1.0x | Freezing | 1.0x |
-| Magic | 1.0x | Wither | 1.0x | Dragon Breath | 1.0x |
-| Hunger | 1.0x | | | | |
-
-#### Waveform Settings
-
-Different waveforms can be selected in-game:
-
-| Waveform ID | Name | Waveform ID | Name |
-|-------------|------|-------------|------|
-| heartbeat | Heartbeat Rhythm | breath | Breath |
-| tide | Tide | beat | Beat |
-| compress | Compress | bounce_gradual | Bounce Gradual |
-| grain_friction | Grain Friction | wave_ripple | Wave Ripple |
-| rain_wash | Rain Wash | variable_speed | Variable Speed |
-| signal_light | Signal Light | tease1 | Tease 1 |
-| tease2 | Tease 2 | burn | Burn |
-| fast_pinch | Fast Pinch | pinch_intensify | Pinch Intensify |
-| rhythm_step | Rhythm Step | drown | Drown |
-
-### Hotkeys
-
-- `K` - Default key to open settings screen
-
-## Build Instructions
+## Build
 
 ```bash
-# Clone the project
-git clone https://github.com/your-repo/DGLab-Craft.git
+git clone https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
-
-# Build
 ./gradlew build
+```
 
-# Generate run configurations (IDE)
+To generate IDE run configs:
+
+```bash
 ./gradlew genEclipseRuns
 # or
 ./gradlew genIntellijRuns
 ```
 
-After building, the JAR file is located in the `build/libs/` directory.
+Artifacts are generated in `build/libs/`.
 
-## Project Structure
+## Notes
 
-```
-src/main/java/com/lumoren/dglabcraft/
-├── DGLabCraft.java          # Main class
-├── config/
-│   └── ModConfig.java       # Config file
-├── events/
-│   ├── HeartbeatHandler.java   # Heartbeat handler
-│   ├── EnvironmentHandler.java # Environment handler
-│   ├── DamageHandler.java      # Damage handler
-│   └── FadeManager.java        # Fade manager
-├── gui/
-│   ├── MainScreen.java      # Main screen
-│   └── ConnectionScreen.java # Connection screen
-└── network/
-    └── WebSocketServerManager.java # WebSocket server
-```
+- This branch is only for Forge 1.20.1
+- Its documentation does not apply to the NeoForge 1.21.1 branch
+- Real-world verification is still recommended for large modpacks, multiplayer setups, and device-specific edge cases
 
-## Acknowledgments
+## Bug Reports
 
-- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB) - Reference implementation
-- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE) - Official Socket protocol documentation
+Please include:
+
+- branch / mod version
+- Minecraft / Forge version
+- Java version
+- device platform (iOS / Android)
+- `latest.log`
+- whether the problem happens in single-player, multiplayer, or a modpack
+
+## Credits
+
+- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
+- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
 
 ## License
 
