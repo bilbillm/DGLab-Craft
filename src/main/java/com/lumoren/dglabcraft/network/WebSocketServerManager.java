@@ -501,9 +501,10 @@ public class WebSocketServerManager {
         try {
             int value = (int) intensity;
 
-            // ===== 第1步: 一次性清空双通道 =====
-            sendMessage("clear-3");
-            LOGGER.info("发送清空命令: clear-3 (双通道)");
+            // ===== 第1步: 分别清空双通道 =====
+            sendMessage("clear-1");
+            sendMessage("clear-2");
+            LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
             var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
@@ -550,9 +551,10 @@ public class WebSocketServerManager {
             int valueA = (int) intensityA;
             int valueB = (int) intensityB;
 
-            // ===== 第1步: 一次性清空双通道 =====
-            sendMessage("clear-3");
-            LOGGER.info("发送清空命令: clear-3 (双通道不同强度)");
+            // ===== 第1步: 分别清空双通道 =====
+            sendMessage("clear-1");
+            sendMessage("clear-2");
+            LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道不同强度)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
             var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
