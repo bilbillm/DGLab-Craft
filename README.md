@@ -7,122 +7,126 @@
 ![Java](https://img.shields.io/badge/Java-21-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
-> **Topics:** `minecraft-mod` `neoforge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-21-1`
+> 当前分支：`1.21.1-NeoForge`
 
-DGLab Craft 是一个基于 Minecraft **NeoForge** 的模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件（受伤、环境变化、特定状态）精准转换为物理反馈发送到 DGLab 设备，为你带来全方位的 4D 沉浸式硬核体验。
+DGLab Craft 是一个面向 Minecraft NeoForge 的体感反馈模组。它通过本地 WebSocket 服务与 DGLab App 连接，并将伤害、环境变化、低血量状态等游戏事件转换为设备反馈。
 
-## 📝 写在前面
+## 分支定位
 
-**欢迎来到 1.21.1 的新纪元！**
+这个分支对应：
 
-这是本模组经历的最彻底的一次底层重构。从 1.19.2/1.20.1 跨越到 1.21.1，我们告别了老旧的 Forge，全面拥抱了更现代的 **NeoForge** 生态。
+- Minecraft `1.21.1`
+- NeoForge `21.1.61+`
+- Java `21`
 
-在最新的版本中，我们不仅修复了诸多底层逻辑，还迎来了几项极其硬核的升级：
-1. **真实伤害判定计算：** 接入了全新的 `getNewDamage()` API，现在你的护甲、附魔和抗性药水终于能为你“挡电”了！只有真正扣除的血量才会转化为电击反馈。
-2. **现代化 UI 渲染：** 全面重写了 GUI 渲染管线，完美适配 1.21 官方的高斯模糊（Blur）滤镜，界面质感大幅提升。
-3. **更纯净的依赖环境：** 彻底解决了 WebSocket 和 ZXing 库的打包冲突，开箱即用。
+如果你要使用其他版本：
 
-开发不易，连续爆肝跨越大版本更是让人头秃。这是我第一次深度接触 Java 模组开发与 WebSocket，如果在 1.21.1 的新环境下遇到 Bug，极其欢迎提交 Issue 或 PR！如果玩得开心，别忘了给个 Star！⭐
+- `1.19.2` 请切换到 `1.19.2` 分支
+- `1.20.1` 请切换到 `1.20.1` 分支
 
----
+## 分支特点
 
-## ⚡ 功能特点
+这是当前仓库中面向新版本生态的分支，主要特征包括：
 
-### 反馈类型
+- 从 Forge 迁移到 NeoForge
+- Java 运行环境升级到 21
+- GUI 与配置实现适配 1.21.1
+- 已修复当前版本中的联机伤害反馈主链路问题
 
-#### 1. 心跳反馈 (Heartbeat)
-当玩家血量低于设定阈值时触发。
+## 功能概览
 
-| 项目 | 说明 |
-|------|------|
-| 触发条件 | 玩家血量低于心跳阈值（默认30%） |
-| 波形 | 心跳节奏 |
-| 反馈通道 | A通道 (非同步模式) / A+B通道 (同步模式) |
-| 强度计算 | 血量越低，强度越高（20%~100%） |
+- 低血量心跳反馈
+- 环境反馈（下界、末地、传送门、细雪等）
+- 伤害反馈（按伤害来源映射不同波形）
+- A / B 通道同步或独立控制
+- 二维码连接 DGLab App
+- 强度渐变淡出
 
-#### 2. 环境反馈 (Environment)
-当玩家处于特定环境时触发。
+## 运行要求
 
-| 环境 | 波形 | 反馈通道 | 强度 |
-|------|------|----------|------|
-| 下界 (Nether) | 呼吸 | B通道 | 固定 |
-| 末地 (End) | 潮汐 | B通道 | 固定 |
-| 传送门 (Portal) | 按捏渐强 | A+B通道 | 渐强 |
-| 细雪 (Snow) | 快速按捏 | A通道 | 固定 |
+- Minecraft `1.21.1`
+- NeoForge `21.1.61` 或更高版本（同大版本）
+- Java `21`
+- DGLab 设备与手机 App
 
-#### 3. 伤害反馈 (Damage)
-当玩家受到伤害时触发。根据不同伤害类型使用不同波形（受护甲减伤影响）。
+## 安装方法
 
-| 伤害类型 | 波形 | 说明 |
-|----------|------|------|
-| 锐器与穿刺 | 快速按捏 | 仙人掌、甜浆果丛、弓箭、三叉戟、钟乳石 |
-| 钝器与撞击 | 连击 | 摔落、生物攻击、玩家攻击、撞墙、爆炸、烟花 |
-| 高温与灼烧 | 燃烧 | 着火、火中、岩浆、岩浆块 |
-| 挤压与窒息 | 压缩 | 墙内窒息、实体挤压、坠落方块、铁砧 |
-| 环境与缺氧 | 溺水 | 溺水、冰冻 |
-| 魔法与毒素 | 潮汐 | 魔法、凋零、龙息、饥饿 |
+1. 下载本分支对应的 `.jar`
+2. 放入 `.minecraft/mods`
+3. 使用 NeoForge 1.21.1 启动游戏
 
-#### 4. 强度渐变 (Fade)
-当触发条件结束后，电击不会生硬断开，强度会平滑过渡到 0，还原真实的痛感消退过程。
+## 快速使用
 
----
+1. 进入单人世界或多人服务器
+2. 按默认快捷键 `K` 打开主界面
+3. 打开连接界面并生成二维码
+4. 使用 DGLab App 的 SOCKET 控制扫码连接
+5. 确保手机和电脑位于同一局域网
 
-## 💻 系统要求 (⚠️ 非常重要)
+## 当前分支说明
 
-由于 Minecraft 1.21.1 的底层变更，请严格确保你的运行环境符合以下要求：
+`1.21.1-NeoForge` 分支目前重点维护：
 
-- **Minecraft:** 1.21.1
-- **Mod Loader:** NeoForge 21.1.61 或更高版本 (不支持老版 Forge)
-- **Java:** **Java 21** (1.21.1 强制要求)
-- **设备:** DGLab 设备 (支持 Socket 控制)
+- NeoForge 版本兼容
+- 连接链路稳定性
+- 联机 / 整合包环境下的伤害反馈修复
 
-## 📦 安装与连接说明
+如果你在这个分支提交 issue，建议说明：
 
-1. 确保已安装 Java 21 和 NeoForge 1.21.1。
-2. 下载已构建的模组 JAR 文件，将其放入 `.minecraft/mods` 文件夹并启动游戏。
-3. 进入游戏后，按下快捷键 **`K`** 打开全新的控制面板。
-4. 使用手机 DGLab App 扫描屏幕上的二维码连接。
-5. *(强烈建议：首次使用请将全局强度上限调低测试，安全第一！)*
+- 是否为 NeoForge 原生环境还是整合包
+- 是否为联机客机
+- 设备平台（iOS / Android）
+- Java 版本与启动器信息
 
-## 🛠️ 编译方法
+## 主要配置
 
-本项目现已全面迁移至 `ModDevGradle` 构建体系。
+可在游戏内调整：
+
+- 全局强度上限
+- 心跳触发阈值
+- 环境强度
+- 各类伤害倍率
+- HUD 显示与位置
+- A/B 通道同步
+- WebSocket 端口
+
+## 开发与构建
+
+这个分支使用 NeoForge / ModDevGradle 构建。
 
 ```bash
-# 克隆项目
-git clone [https://github.com/your-repo/DGLab-Craft.git](https://github.com/your-repo/DGLab-Craft.git)
+git clone https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
-
-# 使用 Java 21 进行编译
 ./gradlew build
 ```
-编译完成后，纯净的 JAR 文件将生成在 build/libs/ 目录下。
 
-## 📂 核心项目结构 (1.21.1)
-```
-src/main/java/com/lumoren/dglabcraft/
-├── DGLabCraft.java          # NeoForge 主类
-├── config/
-│   └── DGLabConfig.java     # 全新 ModConfigSpec 配置文件
-├── events/
-│   ├── HeartbeatHandler.java   # 心跳处理
-│   ├── EnvironmentHandler.java # 环境处理
-│   ├── DamageHandler.java      # 真实伤害判定 (getNewDamage)
-│   └── FadeManager.java        # 平滑渐变管理
-├── gui/
-│   ├── MainScreen.java      # 现代化高斯模糊主界面
-│   ├── ConnectionScreen.java # 扫码连接界面
-│   └── DGLabCraftScreen.java # 强度与倍率滚动设置界面
-└── network/
-    └── WebSocketServerManager.java # WebSocket 核心逻辑
-```
+构建产物位于：`build/libs/`
 
-## 🙏 致谢
-- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB) - Reference implementation
-- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE) - Official Socket protocol documentation
+## 已知说明
 
-## 📄 许可证
+- 本分支不适用于旧版 Forge
+- 运行时必须使用 Java 21
+- 文档只针对 NeoForge 1.21.1 分支有效
+
+## 问题反馈
+
+提交 issue 时请附带：
+
+- 分支 / 模组版本
+- Minecraft / NeoForge 版本
+- Java 版本
+- `latest.log`
+- 单人 / 联机 / 整合包环境说明
+
+## 致谢
+
+- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
+- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
+
+## 许可证
+
 GPL 3.0
 
-## 👤 作者
+## 作者
+
 Lumoren
