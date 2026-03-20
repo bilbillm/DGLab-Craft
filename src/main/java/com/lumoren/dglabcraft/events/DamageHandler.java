@@ -137,7 +137,7 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] 计算强度: A=" + strengthA + "(上限" + effectiveMaxA + "), B=" + strengthB + "(上限" + effectiveMaxB + ")");
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
-            ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
+            ws.requestSyncedEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, waveform, strengthA, strengthB);
             FadeManager.updateDamage(strengthA, strengthB);
         } else {
             int appMaxStrength = ws.getAppAMaxStrength();
@@ -149,7 +149,7 @@ public class DamageHandler {
             System.out.println("[DGLabCraft] 计算强度: " + strength + ", 有效上限: " + effectiveMaxIntensity + ", 通道: A");
             System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
 
-            ws.sendWaveformData("A", waveform, strength);
+            ws.requestEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, "A", waveform, strength);
             FadeManager.updateDamage(strength, 0);
         }
     }
