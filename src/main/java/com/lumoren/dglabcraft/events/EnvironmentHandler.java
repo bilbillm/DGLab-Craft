@@ -74,13 +74,13 @@ public class EnvironmentHandler {
                     intensityA = Math.min(intensityA, maxIntensityA);
                     intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("breath", intensityA, intensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "nether", "breath", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     intensityB = (int)(maxIntensityB * ModConfig.NETHER_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
-                    ws.sendWaveformData("B", "breath", intensityB);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "nether", "B", "breath", intensityB);
                 }
                 // 更新 FadeManager
                 FadeManager.updateEnvironment(intensityA, intensityB);
@@ -110,13 +110,13 @@ public class EnvironmentHandler {
                     intensityA = Math.min(intensityA, maxIntensityA);
                     intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("tide", intensityA, intensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "end", "tide", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     intensityB = (int)(maxIntensityB * ModConfig.END_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
-                    ws.sendWaveformData("B", "tide", intensityB);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "end", "B", "tide", intensityB);
                 }
                 // 更新 FadeManager
                 FadeManager.updateEnvironment(intensityA, intensityB);
@@ -139,11 +139,21 @@ public class EnvironmentHandler {
                 }
                 // 每1.5秒发送一次
                 if (tickCounter % 30 == 0) {
-                    int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensity = Math.min(intensity, maxIntensityA);
-                    ws.sendWaveformData("A", "fast_pinch", intensity);
-                    // 细雪只用 A 通道，更新 FadeManager
-                    FadeManager.updateEnvironment(intensity, 0);
+                    int intensityA;
+                    int intensityB;
+                    if (ModConfig.SYNC_CHANNELS.get()) {
+                        intensityA = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                        intensityA = Math.min(intensityA, maxIntensityA);
+                        intensityB = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                        intensityB = Math.min(intensityB, maxIntensityB);
+                        ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
+                    } else {
+                        intensityB = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                        intensityB = Math.min(intensityB, maxIntensityB);
+                        intensityA = 0;
+                        ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
+                    }
+                    FadeManager.updateEnvironment(intensityA, intensityB);
                 }
             } else {
                 wasInCold = false;
@@ -176,11 +186,21 @@ public class EnvironmentHandler {
         if (feetBlock == Blocks.POWDER_SNOW) {
             // 每 30 tick (1.5秒) 发送一次
             if (tickCounter % 30 == 0) {
-                int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                intensity = Math.min(intensity, maxIntensityA);
-                ws.sendWaveformData("A", "fast_pinch", intensity);
-                // 细雪只用 A 通道，更新 FadeManager
-                FadeManager.updateEnvironment(intensity, 0);
+                int intensityA;
+                int intensityB;
+                if (ModConfig.SYNC_CHANNELS.get()) {
+                    intensityA = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                    intensityA = Math.min(intensityA, maxIntensityA);
+                    intensityB = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
+                } else {
+                    intensityB = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    intensityA = 0;
+                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
+                }
+                FadeManager.updateEnvironment(intensityA, intensityB);
             }
             wasInSnow = true;
         } else {
@@ -208,13 +228,13 @@ public class EnvironmentHandler {
                     intensityA = Math.min(intensityA, maxIntensityA);
                     intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("pinch_intensify", intensityA, intensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "portal", "pinch_intensify", intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     intensityB = (int)(maxIntensityB * ModConfig.PORTAL_MULTIPLIER.get() / 100.0);
                     intensityB = Math.min(intensityB, maxIntensityB);
                     intensityA = 0;
-                    ws.sendWaveformData("B", "pinch_intensify", intensityB);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "portal", "B", "pinch_intensify", intensityB);
                 }
                 // 更新 FadeManager
                 FadeManager.updateEnvironment(intensityA, intensityB);
