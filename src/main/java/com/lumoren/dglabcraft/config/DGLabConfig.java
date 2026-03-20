@@ -117,7 +117,7 @@ public class DGLabConfig {
 
         // ===== WebSocket 配置 =====
         builder.push("websocket");
-        WS_HOST = builder.comment("WebSocket 服务器地址")
+        WS_HOST = builder.comment("手动覆盖的局域网 IP 地址（留空时自动获取）")
                 .define("host", "localhost");
         WS_PORT = builder.comment("WebSocket 服务器端口")
                 .define("port", 8877);
