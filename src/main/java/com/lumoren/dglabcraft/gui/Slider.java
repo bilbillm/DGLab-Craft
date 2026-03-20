@@ -135,6 +135,10 @@ public class Slider extends AbstractSliderButton {
     @Override
     public void onRelease(double mouseX, double mouseY) {
         super.onRelease(mouseX, mouseY);
+        commitCurrentValue();
+    }
+
+    public void commitCurrentValue() {
         double actualValue = this.getValue();
         if (onValueChangeComplete != null) {
             onValueChangeComplete.accept(actualValue);

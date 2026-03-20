@@ -595,7 +595,22 @@ public class DGLabCraftScreen extends Screen {
 
     @Override
     public void onClose() {
+        commitAllSliders();
         this.minecraft.setScreen(this.parent);
+    }
+
+    private void commitAllSliders() {
+        if (this.list == null) {
+            return;
+        }
+
+        for (SettingsList.Entry entry : this.list.children()) {
+            for (GuiEventListener child : entry.children()) {
+                if (child instanceof Slider slider) {
+                    slider.commitCurrentValue();
+                }
+            }
+        }
     }
 
     // ========== 内部类：滚动列表 ==========
