@@ -135,6 +135,13 @@ public class Slider extends AbstractSliderButton {
     @Override
     public void onRelease(double mouseX, double mouseY) {
         super.onRelease(mouseX, mouseY);
+        commitCurrentValue();
+    }
+
+    /**
+     * 提交当前滑块值（用于释放鼠标或界面关闭时统一保存）
+     */
+    public void commitCurrentValue() {
         double actualValue = this.getValue();
         if (onValueChangeComplete != null) {
             onValueChangeComplete.accept(actualValue);
