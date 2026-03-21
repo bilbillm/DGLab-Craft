@@ -1,10 +1,12 @@
 package com.lumoren.dglabcraft.gui;
 
+import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import com.lumoren.dglabcraft.util.QRCodeGenerator;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -16,10 +18,15 @@ import java.io.File;
  */
 public class ConnectionScreen extends Screen {
 
+    private static final Component MANUAL_IP_HINT = Component.literal("留空则使用自动获取的ip")
+        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+
     private final Screen parent;
     private Button refreshQrButton;
     private Button openQrButton;
     private Button doneButton;
+    private EditBox manualIpInput;
+    private boolean manualIpInvalid = false;
 
     public ConnectionScreen(Screen parent) {
         super(Component.literal("连接设置"));
@@ -33,6 +40,19 @@ public class ConnectionScreen extends Screen {
         int centerX = this.width / 2;
         int buttonWidth = 200;
 
+        WebSocketServerManager server = WebSocketServerManager.getInstance();
+
+        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, this.height / 2 - 10, buttonWidth, 20, Component.literal("手动局域网IP"));
+        String currentHost = ModConfig.WS_HOST.get();
+        if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
+            this.manualIpInput.setValue(currentHost);
+        }
+        this.addRenderableWidget(this.manualIpInput);
+
+        if (!server.isConnected()) {
+            ensureQrCodeGenerated();
+        }
+
         // 刷新二维码按钮
         this.refreshQrButton = new Button(
             centerX - buttonWidth / 2,
@@ -41,8 +61,9 @@ public class ConnectionScreen extends Screen {
             20,
             Component.literal("刷新二维码"),
             (button) -> {
-                String qrUrl = WebSocketServerManager.getInstance().generateQrUrl();
-                QRCodeGenerator.generateQRCode(qrUrl);
+                if (commitManualIpInput()) {
+                    ensureQrCodeGenerated();
+                }
             }
         );
         this.addRenderableWidget(this.refreshQrButton);
@@ -77,7 +98,51 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public void onClose() {
+        commitManualIpInput();
         this.minecraft.setScreen(this.parent);
+    }
+
+    private boolean commitManualIpInput() {
+        String value = this.manualIpInput == null ? "" : this.manualIpInput.getValue().trim();
+        if (value.isEmpty()) {
+            ModConfig.WS_HOST.set("localhost");
+            ModConfig.save();
+            manualIpInvalid = false;
+            return true;
+        }
+        if (!isValidIpv4(value)) {
+            manualIpInvalid = true;
+            return false;
+        }
+
+        ModConfig.WS_HOST.set(value);
+        ModConfig.save();
+        manualIpInvalid = false;
+        return true;
+    }
+
+    private void ensureQrCodeGenerated() {
+        WebSocketServerManager server = WebSocketServerManager.getInstance();
+        server.generateQrUrl();
+    }
+
+    private boolean isValidIpv4(String value) {
+        String[] parts = value.split("\\.");
+        if (parts.length != 4) return false;
+        try {
+            for (String part : parts) {
+                if (part.isEmpty() || (part.length() > 1 && part.startsWith("0"))) {
+                    return false;
+                }
+                int number = Integer.parseInt(part);
+                if (number < 0 || number > 255) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     @Override
@@ -105,8 +170,18 @@ public class ConnectionScreen extends Screen {
         drawCenteredString(pPoseStack, this.font, statusText, centerX, 50, statusColor);
 
         // 服务器信息
-        String serverInfo = "地址: " + server.getLocalIp() + ":" + server.getPort();
+        String serverInfo = "地址: " + server.resolveConnectionHost() + ":" + server.getPort();
         drawCenteredString(pPoseStack, this.font, serverInfo, centerX, 70, 0xAAAAAA);
+
+        if (!isConnected) {
+            drawCenteredString(pPoseStack, this.font, "请使用DGLab APP扫描二维码连接", centerX, 82, 0xAAAAAA);
+        }
+
+        if (manualIpInvalid) {
+            drawCenteredString(pPoseStack, this.font, "手动 IP 无效，请输入正确的 IPv4 地址", centerX, this.height / 2 + 2, 0xFF5555);
+        } else if (this.manualIpInput != null && this.manualIpInput.getValue().isEmpty()) {
+            this.font.drawShadow(pPoseStack, MANUAL_IP_HINT, centerX - 95, this.height / 2 - 4, 0x888888);
+        }
 
         // 连接信息
         if (isConnected) {
@@ -114,9 +189,6 @@ public class ConnectionScreen extends Screen {
             if (clientId != null) {
                 drawCenteredString(pPoseStack, this.font, "设备: " + clientId, centerX, 90, 0xAAAAAA);
             }
-        } else {
-            // 提示文字
-            drawCenteredString(pPoseStack, this.font, "请使用 DGLab App 扫描二维码连接", centerX, this.height / 2 - 20, 0xAAAAAA);
         }
 
         // 已连接时隐藏二维码按钮
