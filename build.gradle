@@ -13,7 +13,7 @@ neoForge {
 }
 
 base {
-    archivesName = 'dglab-craft'
+    archivesName = "DGLabCraft-${minecraft_version}"
 }
 
 // Java 17
@@ -47,8 +47,24 @@ dependencies {
     }
 }
 
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
+            neoforge_version: neoforge_version, loader_version_range: loader_version_range,
+            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors: mod_authors, mod_description: mod_description,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
 // 配置 jar 任务
 tasks.named('jar', Jar).configure {
+    archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}.jar"
+
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,

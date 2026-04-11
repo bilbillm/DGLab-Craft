@@ -4,12 +4,12 @@ loaderVersion="[4,)"
 license="${mod_license}"
 
 [[mods]]
-modId="dglabcraft"
-version="1.0.0"
-displayName="DGLab Craft"
-authors="Lumoren"
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
 
-description="DGLab physical feedback mod for Minecraft 1.21.1"
+description="${mod_description}"
 
 [[dependencies.dglabcraft]]
 modId="neoforge"
