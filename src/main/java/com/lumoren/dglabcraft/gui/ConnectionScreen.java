@@ -19,12 +19,19 @@ import java.io.File;
  */
 public class ConnectionScreen extends Screen {
 
+    private static final int BUTTON_HEIGHT = 20;
+    private static final int BUTTON_VERTICAL_SPACING = 4;
+    private static final int SECTION_VERTICAL_SPACING = 4;
+    private static final int DONE_BUTTON_BOTTOM_MARGIN = 30;
+    private static final int QR_BUTTON_COUNT = 3;
+
     private static final Component MANUAL_IP_HINT = Component.literal("留空则使用自动获取的ip")
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 
     private final Screen parent;
     private Button refreshQrButton;
     private Button openQrButton;
+    private Button openQrFolderButton;
     private Button doneButton;
     private EditBox manualIpInput;
     private boolean manualIpInvalid = false;
@@ -40,10 +47,13 @@ public class ConnectionScreen extends Screen {
 
         int centerX = this.width / 2;
         int buttonWidth = 200;
+        int manualInputY = getManualInputY();
+        int doneButtonY = getDoneButtonY();
+        int qrButtonStartY = getQrButtonStartY(doneButtonY);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
-        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, this.height / 2 - 10, buttonWidth, 20, Component.literal("手动局域网IP"));
+        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, manualInputY, buttonWidth, BUTTON_HEIGHT, Component.literal("手动局域网IP"));
         String currentHost = ModConfig.WS_HOST.get();
         if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
             this.manualIpInput.setValue(currentHost);
@@ -57,9 +67,9 @@ public class ConnectionScreen extends Screen {
         // 刷新二维码按钮
         this.refreshQrButton = new Button(
             centerX - buttonWidth / 2,
-            this.height / 2 + 20,
+            getQrButtonY(0, qrButtonStartY),
             buttonWidth,
-            20,
+            BUTTON_HEIGHT,
             Component.literal("刷新二维码"),
             (button) -> {
                 if (commitManualIpInput()) {
@@ -72,25 +82,41 @@ public class ConnectionScreen extends Screen {
         // 打开二维码按钮
         this.openQrButton = new Button(
             centerX - buttonWidth / 2,
-            this.height / 2 + 50,
+            getQrButtonY(1, qrButtonStartY),
             buttonWidth,
-            20,
+            BUTTON_HEIGHT,
             Component.literal("打开二维码图片"),
             (button) -> {
-                File qrFile = new File(Minecraft.getInstance().gameDirectory, "dglab-qrcode.png");
-                if (qrFile.exists()) {
+                File qrFile = getQrCodeFile();
+                if (qrFile.isFile()) {
                     net.minecraft.Util.getPlatform().openFile(qrFile);
                 }
             }
         );
         this.addRenderableWidget(this.openQrButton);
 
+        this.openQrFolderButton = new Button(
+            centerX - buttonWidth / 2,
+            getQrButtonY(2, qrButtonStartY),
+            buttonWidth,
+            BUTTON_HEIGHT,
+            Component.literal("打开二维码文件夹"),
+            (button) -> {
+                File qrFile = getQrCodeFile();
+                File qrFolder = qrFile.getParentFile();
+                if (qrFolder != null && qrFolder.isDirectory()) {
+                    net.minecraft.Util.getPlatform().openFile(qrFolder);
+                }
+            }
+        );
+        this.addRenderableWidget(this.openQrFolderButton);
+
         // 完成按钮
         this.doneButton = new Button(
             centerX - buttonWidth / 2,
-            this.height - 40,
+            doneButtonY,
             buttonWidth,
-            20,
+            BUTTON_HEIGHT,
             Component.literal("完成"),
             (button) -> this.onClose()
         );
@@ -125,6 +151,9 @@ public class ConnectionScreen extends Screen {
     private void ensureQrCodeGenerated() {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         server.generateQrUrl();
+        if (this.manualIpInput != null) {
+            this.manualIpInput.setSuggestion(MANUAL_IP_HINT.getString());
+        }
     }
 
     private boolean isValidIpv4(String value) {
@@ -176,6 +205,11 @@ public class ConnectionScreen extends Screen {
 
         if (!isConnected) {
             drawCenteredString(pPoseStack, this.font, "请使用DGLab APP扫描二维码连接", centerX, 82, 0xAAAAAA);
+
+            File qrFile = getQrCodeFile();
+            if (qrFile.isFile()) {
+                renderQrPath(pPoseStack, centerX, 94, qrFile);
+            }
         }
 
         if (manualIpInvalid) {
@@ -197,10 +231,92 @@ public class ConnectionScreen extends Screen {
             this.refreshQrButton.visible = !isConnected;
         }
         if (this.openQrButton != null) {
-            this.openQrButton.visible = !isConnected;
+            this.openQrButton.visible = !isConnected && hasQrImageFile();
+        }
+        if (this.openQrFolderButton != null) {
+            this.openQrFolderButton.visible = !isConnected && hasQrFolder();
         }
 
         super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+    }
+
+    private File getQrCodeFile() {
+        File qrFile = QRCodeGenerator.getQrCodeFile();
+        if (qrFile != null) {
+            return qrFile;
+        }
+        return new File(Minecraft.getInstance().gameDirectory, "dglab-qrcode.png");
+    }
+
+    private boolean hasQrImageFile() {
+        return getQrCodeFile().isFile();
+    }
+
+    private boolean hasQrFolder() {
+        File qrFolder = getQrCodeFile().getParentFile();
+        return qrFolder != null && qrFolder.isDirectory();
+    }
+
+    private int getDoneButtonY() {
+        return this.height - DONE_BUTTON_BOTTOM_MARGIN;
+    }
+
+    private int getManualInputY() {
+        return this.height / 2 - 10;
+    }
+
+    private int getQrButtonStartY(int doneButtonY) {
+        int minY = getManualInputY() + BUTTON_HEIGHT + SECTION_VERTICAL_SPACING;
+        int maxY = doneButtonY - SECTION_VERTICAL_SPACING - getQrButtonBlockHeight();
+        return Math.max(minY, maxY);
+    }
+
+    private int getQrButtonY(int index, int qrButtonStartY) {
+        return qrButtonStartY + index * (BUTTON_HEIGHT + BUTTON_VERTICAL_SPACING);
+    }
+
+    private int getQrButtonBlockHeight() {
+        return QR_BUTTON_COUNT * BUTTON_HEIGHT + (QR_BUTTON_COUNT - 1) * BUTTON_VERTICAL_SPACING;
+    }
+
+    private void renderQrPath(PoseStack pPoseStack, int centerX, int startY, File qrFile) {
+        drawCenteredString(pPoseStack, this.font, "二维码文件:", centerX, startY, 0xAAAAAA);
+        drawCenteredString(pPoseStack, this.font, fitTextToWidth(qrFile.getAbsolutePath(), Math.max(120, this.width - 40)), centerX, startY + 12, 0xAAAAAA);
+    }
+
+    private String fitTextToWidth(String text, int maxWidth) {
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "...";
+        int targetWidth = maxWidth - this.font.width(ellipsis);
+        if (targetWidth <= 0) {
+            return ellipsis;
+        }
+
+        int left = 0;
+        int right = text.length();
+        String prefix = "";
+        String suffix = "";
+
+        while (left < right && this.font.width(prefix + suffix) < targetWidth) {
+            if ((left + (text.length() - right)) % 2 == 0) {
+                prefix += text.charAt(left++);
+            } else {
+                suffix = text.charAt(--right) + suffix;
+            }
+
+            while (!suffix.isEmpty() && this.font.width(prefix + suffix) > targetWidth) {
+                suffix = suffix.substring(1);
+            }
+        }
+
+        while (!prefix.isEmpty() && this.font.width(prefix + suffix) > targetWidth) {
+            prefix = prefix.substring(0, prefix.length() - 1);
+        }
+
+        return prefix + ellipsis + suffix;
     }
 
     @Override
