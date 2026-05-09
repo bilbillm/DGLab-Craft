@@ -1,10 +1,17 @@
 # DGLab Craft
 
+<p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
+
 [English Version](./README_EN.md)
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
 ![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
+
+## ⬇️ 下载 Download
+
+[![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
+[![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
 > **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
 
