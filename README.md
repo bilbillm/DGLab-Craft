@@ -1,11 +1,18 @@
 # DGLab Craft
 
+<p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
+
 [English Version](./README_EN.md)
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-brightgreen)
 ![Forge](https://img.shields.io/badge/Forge-47.2.0+-orange)
 ![Java](https://img.shields.io/badge/Java-17-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
+
+## ⬇️ 下载 Download
+
+[![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
+[![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
 > 当前分支：`1.20.1`
 
