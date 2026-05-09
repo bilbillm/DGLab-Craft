@@ -98,6 +98,7 @@ public class WebSocketServerManager {
     private long syncLeaseUntilAt = 0L;
 
     private final Gson gson = new Gson();
+    private Timer heartbeatTimer;
 
     // 固定的客户端 ID（参考 DG_LAB）
     private static final String FIXED_CLIENT_ID = "1234-123456789-12345-12345-01";
@@ -178,11 +179,7 @@ public class WebSocketServerManager {
                 public void onClose(WebSocket conn, int code, String reason, boolean remote) {
                     LOGGER.info("连接关闭: " + code + " - " + reason);
                     if (connectedClient == conn) {
-                        connectedClient = null;
-                        connectedClientId = null;
-                        isBound = false;
-                        targetId = null;
-                        generatedClientId = null;
+                        clearConnectionState();
                     }
                 }
 
@@ -205,8 +202,9 @@ public class WebSocketServerManager {
      * 启动心跳定时器
      */
     private void startHeartbeat(WebSocket conn) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
+        stopHeartbeat();
+        heartbeatTimer = new Timer("DGLabCraft-Heartbeat", true);
+        heartbeatTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 if (connectedClient != null && connectedClient.isOpen()) {
@@ -221,19 +219,57 @@ public class WebSocketServerManager {
         }, 0, 60000); // 每 60 秒发送一次心跳
     }
 
+    private void stopHeartbeat() {
+        if (heartbeatTimer != null) {
+            heartbeatTimer.cancel();
+            heartbeatTimer = null;
+        }
+    }
+
+    private void resetRuntimeState() {
+        appAStrength = 0;
+        appBStrength = 0;
+        appAMaxStrength = 100;
+        appBMaxStrength = 100;
+        channelAIntensity = 0;
+        channelBIntensity = 0;
+        channelAStatus = "Idle";
+        channelBStatus = "Idle";
+        channelAState.reset();
+        channelBState.reset();
+        syncEffectActive = false;
+        syncSource = EffectSource.NONE;
+        syncDetail = "";
+        syncWaveform = "";
+        syncLeaseUntilAt = 0L;
+    }
+
+    private void clearConnectionState() {
+        connectedClient = null;
+        connectedClientId = null;
+        isBound = false;
+        targetId = null;
+        generatedClientId = null;
+        stopHeartbeat();
+        resetRuntimeState();
+    }
+
     /**
      * 停止服务器
      */
     public void stop() {
+        stopHeartbeat();
         if (server != null) {
             try {
                 server.stop();
-                isRunning = false;
                 LOGGER.info("WebSocket 服务器已停止");
             } catch (Exception e) {
                 LOGGER.error("停止服务器失败: " + e.getMessage());
             }
         }
+        server = null;
+        isRunning = false;
+        clearConnectionState();
     }
 
     /**
@@ -574,12 +610,25 @@ public class WebSocketServerManager {
         syncSource = EffectSource.NONE;
         syncDetail = "";
         syncWaveform = "";
+        syncLeaseUntilAt = 0L;
 
         LOGGER.info("安全归零 action=silence-clear reason=no-active-damage-heartbeat-environment clear=1,2 strengthA=0 strengthB=0");
     }
 
     public boolean hasActiveEffects() {
         return isChannelStateActive(channelAState) || isChannelStateActive(channelBState) || isSyncStateActive();
+    }
+
+    public boolean hasLiveOutput() {
+        return hasActiveEffects() || channelAIntensity > 0 || channelBIntensity > 0;
+    }
+
+    public boolean hasClientSocketConnection() {
+        return connectedClient != null && connectedClient.isOpen();
+    }
+
+    public boolean isWaitingForAppBind() {
+        return hasClientSocketConnection() && !isBound;
     }
 
     /**
@@ -793,6 +842,19 @@ public class WebSocketServerManager {
         try {
             int channelNum = "A".equals(channel) ? 1 : 2;
             sendMessage("strength-" + channelNum + "+2+" + intensity);
+            if (channelNum == 1) {
+                channelAIntensity = intensity;
+                if (intensity <= 0) {
+                    channelAStatus = "Idle";
+                    channelAState.reset();
+                }
+            } else {
+                channelBIntensity = intensity;
+                if (intensity <= 0) {
+                    channelBStatus = "Idle";
+                    channelBState.reset();
+                }
+            }
             LOGGER.info("发送渐变强度: 通道{} = {}", channel, intensity);
         } catch (Exception e) {
             LOGGER.error("发送强度失败: " + e.getMessage());
@@ -817,6 +879,23 @@ public class WebSocketServerManager {
         try {
             sendMessage("strength-1+2+" + intensityA);
             sendMessage("strength-2+2+" + intensityB);
+            channelAIntensity = intensityA;
+            channelBIntensity = intensityB;
+            if (intensityA <= 0) {
+                channelAStatus = "Idle";
+                channelAState.reset();
+            }
+            if (intensityB <= 0) {
+                channelBStatus = "Idle";
+                channelBState.reset();
+            }
+            if (intensityA <= 0 && intensityB <= 0) {
+                syncEffectActive = false;
+                syncSource = EffectSource.NONE;
+                syncDetail = "";
+                syncWaveform = "";
+                syncLeaseUntilAt = 0L;
+            }
             LOGGER.info("发送双通道渐变强度: A={}, B={}", intensityA, intensityB);
         } catch (Exception e) {
             LOGGER.error("发送双通道强度失败: " + e.getMessage());
@@ -921,6 +1000,10 @@ public class WebSocketServerManager {
 
     private boolean isSyncStateActive() {
         return syncEffectActive && syncLeaseUntilAt > System.currentTimeMillis();
+    }
+
+    private ChannelRuntime getChannelState(String channel) {
+        return "A".equalsIgnoreCase(channel) ? channelAState : channelBState;
     }
 
     private long computeLeaseUntil(EffectSource source, String detail) {
@@ -1033,6 +1116,8 @@ public class WebSocketServerManager {
     public String getLocalIp() { return localIp; }
     public int getPort() { return port; }
     public String getConnectedClientId() { return connectedClientId; }
+    public String getTargetId() { return targetId; }
+    public String getGeneratedClientId() { return generatedClientId; }
 
     // 获取 App 设置的最大强度
     public int getAppAMaxStrength() { return appAMaxStrength; }
@@ -1042,4 +1127,18 @@ public class WebSocketServerManager {
     public double getChannelBIntensity() { return channelBIntensity; }
     public String getChannelAStatus() { return channelAStatus; }
     public String getChannelBStatus() { return channelBStatus; }
+    public boolean isChannelRuntimeActive(String channel) { return isChannelStateActive(getChannelState(channel)); }
+    public String getChannelRuntimeWaveform(String channel) { return getChannelState(channel).waveformId; }
+    public String getChannelRuntimeDetail(String channel) { return getChannelState(channel).detail; }
+    public EffectSource getChannelRuntimeSource(String channel) { return getChannelState(channel).source; }
+    public int getChannelRuntimeIntensity(String channel) { return getChannelState(channel).currentIntensity; }
+    public long getChannelRuntimeRemainingMillis(String channel) {
+        ChannelRuntime state = getChannelState(channel);
+        return Math.max(0L, state.leaseUntilAt - System.currentTimeMillis());
+    }
+    public boolean isSyncRuntimeActive() { return isSyncStateActive(); }
+    public EffectSource getSyncRuntimeSource() { return syncSource; }
+    public String getSyncRuntimeDetail() { return syncDetail; }
+    public String getSyncRuntimeWaveform() { return syncWaveform; }
+    public long getSyncRuntimeRemainingMillis() { return Math.max(0L, syncLeaseUntilAt - System.currentTimeMillis()); }
 }

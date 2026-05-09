@@ -19,6 +19,7 @@ public class MainScreen extends Screen {
 
     private Button settingsButton;
     private Button connectionButton;
+    private Button diagnosticButton;
     private Button waveformButton;
     private Button hudToggleButton;
     private Button hudPositionButton;
@@ -51,10 +52,16 @@ public class MainScreen extends Screen {
         }).bounds(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.connectionButton);
 
+        // 连接诊断按钮
+        this.diagnosticButton = Button.builder(Component.literal("连接诊断"), button -> {
+            this.minecraft.setScreen(new DiagnosticScreen(this));
+        }).bounds(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight).build();
+        this.addRenderableWidget(this.diagnosticButton);
+
         // 波形设置按钮 (敬请期待)
         this.waveformButton = Button.builder(Component.literal("波形设置 (敬请期待)"), button -> {
             // TODO: 波形设置界面
-        }).bounds(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight).build();
+        }).bounds(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.waveformButton);
 
         // HUD 开关按钮 + HUD 位置切换按钮 + 关闭界面按钮（三列并排，总宽度200与上方按钮对齐）
@@ -68,7 +75,7 @@ public class MainScreen extends Screen {
             ModConfig.HUD_ENABLED.set(newState);
             ModConfig.save();
             button.setMessage(Component.literal(newState ? "HUD: 开启" : "HUD: 关闭"));
-        }).bounds(startX, startY + spacing * 3, btnWidth, buttonHeight).build();
+        }).bounds(startX, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudToggleButton);
 
         // HUD 位置切换按钮
@@ -79,12 +86,12 @@ public class MainScreen extends Screen {
             ModConfig.HUD_POSITION.set(newPos);
             ModConfig.save();
             button.setMessage(Component.literal("位置: " + getPositionText(newPos)));
-        }).bounds(startX + btnWidth + btnGap, startY + spacing * 3, btnWidth, buttonHeight).build();
+        }).bounds(startX + btnWidth + btnGap, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudPositionButton);
 
         // 关闭界面按钮
         this.closeButton = Button.builder(Component.literal("关闭界面"), button -> this.onClose())
-            .bounds(startX + (btnWidth + btnGap) * 2, startY + spacing * 3, btnWidth, buttonHeight).build();
+            .bounds(startX + (btnWidth + btnGap) * 2, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.closeButton);
     }
 
