@@ -1,5 +1,31 @@
 # DGLab Craft Changelog
 
+## [1.0.8-beta] - 2026-05-12
+
+> ⚠️ **此为 Beta 版本，未经实机测试。** 包含架构加固（线程安全、资源清理、死代码删除）、75 个单元测试和日志规范化改动。如需稳定版本请使用 [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.20.1)。
+
+### 架构加固
+- WebSocket 服务器管理器线程安全改造（volatile + synchronized 保护共享状态）
+- 心跳定时器 Timer → ScheduledExecutorService（异常安全）
+- 注册 JVM shutdown hook 清理 WebSocket 连接
+- 修复心跳响应 targetId 错误
+
+### 死代码清理
+- 删除 WaveformGenerator.java（509 行，从未调用）
+- 删除 sendStimulus() / sendWaveform() 旧版发送方法
+- 移除 StatusEffectHandler 空壳注册
+
+### 日志与质量
+- DamageHandler：6 处 System.out.println → SLF4J Logger
+- WaveformManager：InputStream 改用 try-with-resources 防泄漏
+- getLeaseTicks() 添加完整 Javadoc 文档
+
+### 测试
+- 引入 JUnit 5 测试框架
+- 75 个单元测试覆盖：WS 调度逻辑、伤害来源标准化、波形 JSON 解析、强度计算、枚举查询
+
+---
+
 ## [1.0.7] - 2026-05-09
 
 ### 新增
