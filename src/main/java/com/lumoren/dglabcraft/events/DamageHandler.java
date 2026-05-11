@@ -201,7 +201,8 @@ public class DamageHandler {
         return "mob";
     }
 
-    private String normalizeDamageSourceId(String rawId) {
+    // package-private for testing
+    String normalizeDamageSourceId(String rawId) {
         if (rawId == null || rawId.isEmpty()) {
             return "mob";
         }
@@ -222,7 +223,7 @@ public class DamageHandler {
             case "fly_into_wall" -> "flyIntoWall";
             case "mob_attack", "mobattack" -> "mob";
             case "player_attack", "playerattack" -> "player";
-            case "indirect_magic" -> "magic";
+            case "indirect_magic", "indirectmagic" -> "magic";
             case "onfire" -> "onFire";
             case "infire" -> "inFire";
             case "hotfloor" -> "hotFloor";
