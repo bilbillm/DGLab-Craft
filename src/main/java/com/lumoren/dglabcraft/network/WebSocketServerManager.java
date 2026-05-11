@@ -3,7 +3,6 @@ package com.lumoren.dglabcraft.network;
 import com.google.gson.Gson;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.util.QRCodeGenerator;
-import com.lumoren.dglabcraft.util.WaveformGenerator;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -19,8 +18,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * WebSocket 服务器管理器
@@ -29,8 +29,12 @@ import java.util.TimerTask;
 public class WebSocketServerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
     private static final long PULSE_PROTECTION_WINDOW_MS = 700L;
+    /** 单 tick 毫秒数，假设 20 TPS。用于将租约 tick 数转换为实际毫秒 */
     private static final long TICK_MS = 50L;
     private static WebSocketServerManager instance;
+
+    /** 同步锁 — 保护所有通道状态和连接字段的读写 */
+    private final Object stateLock = new Object();
 
     public enum EffectSource {
         NONE,
@@ -63,32 +67,31 @@ public class WebSocketServerManager {
 
     private WebSocketServer server;
     private int port;
-    private String sessionId;  // 对应 targetId
+    private String sessionId;
     private String localIp;
-    private boolean isRunning = false;
+    private volatile boolean isRunning = false;
 
-    // 当前连接的客户端
-    private WebSocket connectedClient;
-    private String connectedClientId = null;  // App 的 clientId
-    private String targetId = null;  // 我们的 targetId（等于 onOpen 中生成的 clientId）
-    private boolean isBound = false; // 是否已收到 DGLab App 的绑定消息
+    // 当前连接的客户端 — volatile 保证跨线程可见
+    private volatile WebSocket connectedClient;
+    private volatile String connectedClientId = null;
+    private volatile String targetId = null;
+    private volatile boolean isBound = false;
+    private volatile String generatedClientId = null;
 
-    // 保存我们在 onOpen 中生成的 clientId
-    private String generatedClientId = null;
+    // 设备端发来的强度设置 — volatile，仅由 handleMessage 写入
+    private volatile int appAStrength = 0;
+    private volatile int appBStrength = 0;
+    private volatile int appAMaxStrength = 100;
+    private volatile int appBMaxStrength = 100;
 
-    // 设备端发来的强度设置
-    private int appAStrength = 0;
-    private int appBStrength = 0;
-    private int appAMaxStrength = 100;
-    private int appBMaxStrength = 100;
-
-    // 通道状态 (用于 HUD)
+    // 通道 HUD 状态 — 仅由游戏线程写入/读取，无需 volatile
     private double channelAIntensity = 0;
     private double channelBIntensity = 0;
     private String channelAStatus = "Idle";
     private String channelBStatus = "Idle";
 
     private long lastPulseSentAt = 0L;
+    /** 通道 A/B 运行时状态 — 必须在 stateLock 保护下访问 */
     private final ChannelRuntime channelAState = new ChannelRuntime();
     private final ChannelRuntime channelBState = new ChannelRuntime();
     private boolean syncEffectActive = false;
@@ -98,7 +101,8 @@ public class WebSocketServerManager {
     private long syncLeaseUntilAt = 0L;
 
     private final Gson gson = new Gson();
-    private Timer heartbeatTimer;
+    /** 心跳定时器 — 单线程调度器，异常安全 */
+    private ScheduledExecutorService heartbeatScheduler;
 
     // 固定的客户端 ID（参考 DG_LAB）
     private static final String FIXED_CLIENT_ID = "1234-123456789-12345-12345-01";
@@ -203,53 +207,65 @@ public class WebSocketServerManager {
      */
     private void startHeartbeat(WebSocket conn) {
         stopHeartbeat();
-        heartbeatTimer = new Timer("DGLabCraft-Heartbeat", true);
-        heartbeatTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (connectedClient != null && connectedClient.isOpen()) {
+        heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "DGLabCraft-Heartbeat");
+            t.setDaemon(true);
+            t.setUncaughtExceptionHandler((th, ex) ->
+                LOGGER.error("心跳定时器线程异常", ex));
+            return t;
+        });
+        heartbeatScheduler.scheduleAtFixedRate(() -> {
+            try {
+                WebSocket client = connectedClient;
+                if (client != null && client.isOpen()) {
                     Map<String, String> heartbeat = new HashMap<>();
                     heartbeat.put("type", "heartbeat");
                     heartbeat.put("message", "200");
                     heartbeat.put("clientId", sessionId);
                     heartbeat.put("targetId", targetId != null ? targetId : "");
-                    connectedClient.send(gson.toJson(heartbeat));
+                    client.send(gson.toJson(heartbeat));
                 }
+            } catch (Exception e) {
+                LOGGER.error("发送心跳失败", e);
             }
-        }, 0, 60000); // 每 60 秒发送一次心跳
+        }, 0, 60, TimeUnit.SECONDS);
     }
 
     private void stopHeartbeat() {
-        if (heartbeatTimer != null) {
-            heartbeatTimer.cancel();
-            heartbeatTimer = null;
+        if (heartbeatScheduler != null) {
+            heartbeatScheduler.shutdownNow();
+            heartbeatScheduler = null;
         }
     }
 
     private void resetRuntimeState() {
-        appAStrength = 0;
-        appBStrength = 0;
-        appAMaxStrength = 100;
-        appBMaxStrength = 100;
-        channelAIntensity = 0;
-        channelBIntensity = 0;
-        channelAStatus = "Idle";
-        channelBStatus = "Idle";
-        channelAState.reset();
-        channelBState.reset();
-        syncEffectActive = false;
-        syncSource = EffectSource.NONE;
-        syncDetail = "";
-        syncWaveform = "";
-        syncLeaseUntilAt = 0L;
+        synchronized (stateLock) {
+            appAStrength = 0;
+            appBStrength = 0;
+            appAMaxStrength = 100;
+            appBMaxStrength = 100;
+            channelAIntensity = 0;
+            channelBIntensity = 0;
+            channelAStatus = "Idle";
+            channelBStatus = "Idle";
+            channelAState.reset();
+            channelBState.reset();
+            syncEffectActive = false;
+            syncSource = EffectSource.NONE;
+            syncDetail = "";
+            syncWaveform = "";
+            syncLeaseUntilAt = 0L;
+        }
     }
 
     private void clearConnectionState() {
-        connectedClient = null;
-        connectedClientId = null;
-        isBound = false;
-        targetId = null;
-        generatedClientId = null;
+        synchronized (stateLock) {
+            connectedClient = null;
+            connectedClientId = null;
+            isBound = false;
+            targetId = null;
+            generatedClientId = null;
+        }
         stopHeartbeat();
         resetRuntimeState();
     }
@@ -318,13 +334,8 @@ public class WebSocketServerManager {
                             msgContent, appClientId, receivedTargetId, generatedClientId);
                 }
             } else if ("heartbeat".equals(type)) {
-                // 心跳响应 - 必须包含正确的 targetId
-                String receivedTargetId = json.has("targetId") ? json.get("targetId").getAsString() : null;
-
-                // {"type":"heartbeat","clientId":"<PC_ID>","targetId":"<appId>","message":"200"}
-                // 注意：这里 receivedTargetId 应该是我们在 onOpen 中发送给 APP 的 UUID
-                // 如果没有收到有效的 targetId，使用之前绑定的 targetId
-                String responseTargetId = (receivedTargetId != null && !receivedTargetId.isEmpty()) ? receivedTargetId : targetId;
+                // 心跳响应 — targetId 应为 App 的 clientId（绑定后为 connectedClientId）
+                String responseTargetId = connectedClientId != null ? connectedClientId : "";
                 connectedClient.send("{\"type\":\"heartbeat\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + responseTargetId + "\",\"message\":\"200\"}");
                 LOGGER.info("心跳响应已发送");
             } else if ("msg".equals(type)) {
@@ -386,125 +397,6 @@ public class WebSocketServerManager {
     }
 
     /**
-     * 发送刺激到连接的客户端
-     * 格式: strength-<通道>+<模式>+<值>
-     */
-    public void sendStimulus(String channel, String waveType, double intensity, int duration) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
-            return;
-        }
-
-        try {
-            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
-            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
-
-            // 根据波形类型决定模式
-            int mode;
-            if ("increase".equals(waveType)) {
-                mode = 1;
-            } else if ("decrease".equals(waveType)) {
-                mode = 0;
-            } else {
-                mode = 2; // 设置值
-            }
-
-            int value = (int) intensity;
-
-            // 更新通道状态
-            if (channelNum == 1) {
-                channelAIntensity = intensity;
-                channelAStatus = waveType;
-            } else {
-                channelBIntensity = intensity;
-                channelBStatus = waveType;
-            }
-
-            // 发送波形配置 (让 App 显示对应的波形) - 使用 WaveformManager 获取实际波形数据
-            if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
-                // 从 WaveformManager 获取实际波形数据
-                List<String> waveformData = WaveformManager.getInstance().getWaveform(waveType);
-
-                // 构造脉冲格式: pulse-A:[hex1,hex2,...]
-                StringBuilder waveformMessage = new StringBuilder();
-                waveformMessage.append("pulse-").append(channelStr).append(":[");
-                for (int i = 0; i < waveformData.size(); i++) {
-                    if (i > 0) waveformMessage.append(",");
-                    waveformMessage.append(waveformData.get(i));
-                }
-                waveformMessage.append("]");
-
-                Map<String, String> waveformMsg = new HashMap<>();
-                waveformMsg.put("type", "msg");
-                waveformMsg.put("message", waveformMessage.toString());
-                waveformMsg.put("clientId", sessionId);
-                waveformMsg.put("targetId", targetId != null ? targetId : "");
-                connectedClient.send(gson.toJson(waveformMsg));
-                LOGGER.info("发送波形配置: " + waveformMessage);
-            }
-
-            // 发送强度值
-            Map<String, String> msg = new HashMap<>();
-            msg.put("type", "msg");
-            msg.put("message", "strength-" + channelNum + "+" + mode + "+" + value);
-            msg.put("clientId", sessionId);
-            msg.put("targetId", targetId != null ? targetId : "");
-
-            connectedClient.send(gson.toJson(msg));
-            LOGGER.info("发送强度: strength-" + channelNum + "+" + mode + "+" + value);
-
-            // 如果启用了通道同步，同时发送到另一个通道
-            if (ModConfig.SYNC_CHANNELS.get()) {
-                String otherChannel = "A".equalsIgnoreCase(channel) ? "B" : "A";
-                int otherChannelNum = "A".equalsIgnoreCase(otherChannel) ? 1 : 2;
-                String otherChannelStr = "A".equalsIgnoreCase(otherChannel) ? "A" : "B";
-
-                // 更新另一个通道的状态
-                if (otherChannelNum == 1) {
-                    channelAIntensity = intensity;
-                    channelAStatus = waveType;
-                } else {
-                    channelBIntensity = intensity;
-                    channelBStatus = waveType;
-                }
-
-                // 发送波形配置到另一个通道 - 使用实际波形数据
-                if (waveType != null && !waveType.equals("increase") && !waveType.equals("decrease")) {
-                    // 从 WaveformManager 获取实际波形数据
-                    List<String> waveformData = WaveformManager.getInstance().getWaveform(waveType);
-
-                    // 构造脉冲格式: pulse-B:[hex1,hex2,...]
-                    StringBuilder waveformMessage = new StringBuilder();
-                    waveformMessage.append("pulse-").append(otherChannelStr).append(":[");
-                    for (int i = 0; i < waveformData.size(); i++) {
-                        if (i > 0) waveformMessage.append(",");
-                        waveformMessage.append(waveformData.get(i));
-                    }
-                    waveformMessage.append("]");
-
-                    Map<String, String> otherWaveformMsg = new HashMap<>();
-                    otherWaveformMsg.put("type", "msg");
-                    otherWaveformMsg.put("message", waveformMessage.toString());
-                    otherWaveformMsg.put("clientId", sessionId);
-                    otherWaveformMsg.put("targetId", targetId != null ? targetId : "");
-                    connectedClient.send(gson.toJson(otherWaveformMsg));
-                    LOGGER.info("同步发送波形配置: " + waveformMessage);
-                }
-
-                // 发送强度值到另一个通道
-                Map<String, String> otherMsg = new HashMap<>();
-                otherMsg.put("type", "msg");
-                otherMsg.put("message", "strength-" + otherChannelNum + "+" + mode + "+" + value);
-                otherMsg.put("clientId", sessionId);
-                otherMsg.put("targetId", targetId != null ? targetId : "");
-                connectedClient.send(gson.toJson(otherMsg));
-                LOGGER.info("同步发送强度: strength-" + otherChannelNum + "+" + mode + "+" + value);
-            }
-        } catch (Exception e) {
-            LOGGER.error("发送刺激失败: " + e.getMessage());
-        }
-    }
-
-    /**
      * 发送波形数据 (带分块机制) - 严格遵守协议
      * 根据 syncChannels 配置决定使用单通道或双通道同步模式
      *
@@ -528,70 +420,79 @@ public class WebSocketServerManager {
     }
 
     public void requestEffect(EffectSource source, String detail, String channel, String waveId, double intensity) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        WebSocket client = connectedClient;
+        if (client == null || !client.isOpen()) {
             return;
         }
 
         int value = (int) intensity;
         String normalizedChannel = "A".equalsIgnoreCase(channel) ? "A" : "B";
-        ChannelRuntime state = "A".equals(normalizedChannel) ? channelAState : channelBState;
-        int newPriority = priorityOf(source);
-        boolean currentOwnerValid = isChannelStateActive(state);
 
-        LOGGER.info("请求效果 source={} detail={} channel={} waveform={} intensity={}", source, detail, normalizedChannel, waveId, value);
+        synchronized (stateLock) {
+            ChannelRuntime state = "A".equals(normalizedChannel) ? channelAState : channelBState;
+            int newPriority = priorityOf(source);
+            boolean currentOwnerValid = isChannelStateActive(state);
 
-        if (currentOwnerValid && state.priority > newPriority && !sameWaveform(state, source, waveId)) {
-            LOGGER.info("调度决策 channel={} action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
-                    normalizedChannel, source, detail, waveId, state.source, state.waveformId);
-            return;
-        }
+            LOGGER.info("请求效果 source={} detail={} channel={} waveform={} intensity={}", source, detail, normalizedChannel, waveId, value);
 
-        if (sameWaveform(state, source, waveId)) {
-            resendSingleChannel(normalizedChannel, waveId, intensity, source, detail);
-            LOGGER.info("调度决策 channel={} action=refresh source={} detail={} waveform={} reason=same-waveform", normalizedChannel, source, detail, waveId);
-        } else {
-            sendWaveformDataSingleChannel(normalizedChannel, waveId, intensity);
-            updateChannelState(state, source, detail, waveId, value);
-            LOGGER.info("调度决策 channel={} action=replace source={} detail={} waveform={} reason=priority-ok", normalizedChannel, source, detail, waveId);
+            if (currentOwnerValid && state.priority > newPriority && !sameWaveform(state, source, waveId)) {
+                LOGGER.info("调度决策 channel={} action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                        normalizedChannel, source, detail, waveId, state.source, state.waveformId);
+                return;
+            }
+
+            if (sameWaveform(state, source, waveId)) {
+                resendSingleChannel(normalizedChannel, waveId, intensity, source, detail);
+                LOGGER.info("调度决策 channel={} action=refresh source={} detail={} waveform={} reason=same-waveform", normalizedChannel, source, detail, waveId);
+            } else {
+                sendWaveformDataSingleChannel(normalizedChannel, waveId, intensity);
+                updateChannelState(state, source, detail, waveId, value);
+                LOGGER.info("调度决策 channel={} action=replace source={} detail={} waveform={} reason=priority-ok", normalizedChannel, source, detail, waveId);
+            }
         }
     }
 
     public void requestSyncedEffect(EffectSource source, String detail, String waveId, double intensityA, double intensityB) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        WebSocket client = connectedClient;
+        if (client == null || !client.isOpen()) {
             return;
         }
 
         int valueA = (int) intensityA;
         int valueB = (int) intensityB;
-        int newPriority = priorityOf(source);
-        boolean syncOwnerValid = isSyncStateActive();
 
-        LOGGER.info("请求效果 source={} detail={} channel=AB waveform={} intensityA={} intensityB={} sync=true", source, detail, waveId, valueA, valueB);
+        synchronized (stateLock) {
+            int newPriority = priorityOf(source);
+            boolean syncOwnerValid = isSyncStateActive();
 
-        if (syncOwnerValid && priorityOf(syncSource) > newPriority && !(syncSource == source && waveId.equals(syncWaveform))) {
-            LOGGER.info("调度决策 syncGroup=AB action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
-                    source, detail, waveId, syncSource, syncWaveform);
-            return;
-        }
+            LOGGER.info("请求效果 source={} detail={} channel=AB waveform={} intensityA={} intensityB={} sync=true", source, detail, waveId, valueA, valueB);
 
-        if (syncOwnerValid && syncSource == source && waveId.equals(syncWaveform)) {
-            resendSyncedChannels(waveId, intensityA, intensityB, source, detail);
-            LOGGER.info("调度决策 syncGroup=AB action=refresh source={} detail={} waveform={} reason=same-waveform", source, detail, waveId);
-        } else {
-            sendWaveformDataDualChannelWithDifferentIntensity(waveId, intensityA, intensityB);
-            updateChannelState(channelAState, source, detail, waveId, valueA);
-            updateChannelState(channelBState, source, detail, waveId, valueB);
-            syncEffectActive = true;
-            syncSource = source;
-            syncDetail = detail;
-            syncWaveform = waveId;
-            syncLeaseUntilAt = computeLeaseUntil(source, detail);
-            LOGGER.info("调度决策 syncGroup=AB action=replace source={} detail={} waveform={} reason=priority-ok", source, detail, waveId);
+            if (syncOwnerValid && priorityOf(syncSource) > newPriority && !(syncSource == source && waveId.equals(syncWaveform))) {
+                LOGGER.info("调度决策 syncGroup=AB action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                        source, detail, waveId, syncSource, syncWaveform);
+                return;
+            }
+
+            if (syncOwnerValid && syncSource == source && waveId.equals(syncWaveform)) {
+                resendSyncedChannels(waveId, intensityA, intensityB, source, detail);
+                LOGGER.info("调度决策 syncGroup=AB action=refresh source={} detail={} waveform={} reason=same-waveform", source, detail, waveId);
+            } else {
+                sendWaveformDataDualChannelWithDifferentIntensity(waveId, intensityA, intensityB);
+                updateChannelState(channelAState, source, detail, waveId, valueA);
+                updateChannelState(channelBState, source, detail, waveId, valueB);
+                syncEffectActive = true;
+                syncSource = source;
+                syncDetail = detail;
+                syncWaveform = waveId;
+                syncLeaseUntilAt = computeLeaseUntil(source, detail);
+                LOGGER.info("调度决策 syncGroup=AB action=replace source={} detail={} waveform={} reason=priority-ok", source, detail, waveId);
+            }
         }
     }
 
     public void safeSilenceAll() {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        WebSocket client = connectedClient;
+        if (client == null || !client.isOpen()) {
             return;
         }
 
@@ -600,31 +501,42 @@ public class WebSocketServerManager {
         sendMessage("clear-1");
         sendMessage("clear-2");
 
-        channelAIntensity = 0;
-        channelBIntensity = 0;
-        channelAStatus = "Idle";
-        channelBStatus = "Idle";
-        channelAState.reset();
-        channelBState.reset();
-        syncEffectActive = false;
-        syncSource = EffectSource.NONE;
-        syncDetail = "";
-        syncWaveform = "";
-        syncLeaseUntilAt = 0L;
+        synchronized (stateLock) {
+            channelAIntensity = 0;
+            channelBIntensity = 0;
+            channelAStatus = "Idle";
+            channelBStatus = "Idle";
+            channelAState.reset();
+            channelBState.reset();
+            syncEffectActive = false;
+            syncSource = EffectSource.NONE;
+            syncDetail = "";
+            syncWaveform = "";
+            syncLeaseUntilAt = 0L;
+        }
 
         LOGGER.info("安全归零 action=silence-clear reason=no-active-damage-heartbeat-environment clear=1,2 strengthA=0 strengthB=0");
     }
 
     public boolean hasActiveEffects() {
-        return isChannelStateActive(channelAState) || isChannelStateActive(channelBState) || isSyncStateActive();
+        synchronized (stateLock) {
+            return isChannelStateActive(channelAState)
+                || isChannelStateActive(channelBState)
+                || isSyncStateActive();
+        }
     }
 
     public boolean hasLiveOutput() {
-        return hasActiveEffects() || channelAIntensity > 0 || channelBIntensity > 0;
+        synchronized (stateLock) {
+            return hasActiveEffects()
+                || channelAIntensity > 0
+                || channelBIntensity > 0;
+        }
     }
 
     public boolean hasClientSocketConnection() {
-        return connectedClient != null && connectedClient.isOpen();
+        WebSocket client = connectedClient;
+        return client != null && client.isOpen();
     }
 
     public boolean isWaitingForAppBind() {
@@ -1010,6 +922,15 @@ public class WebSocketServerManager {
         return System.currentTimeMillis() + getLeaseTicks(source, detail) * TICK_MS;
     }
 
+    /**
+     * 根据效果来源和详情计算租约 tick 数。
+     * <ul>
+     *   <li>HEARTBEAT: 55 ticks (~2.75s) — 覆盖两次心跳间隔，确保低血量恢复前不被打断</li>
+     *   <li>ENVIRONMENT: 40-55 ticks — portal/powder_snow 较短(40)，avoiding 干扰玩家操作；nether/end 较长(55)</li>
+     *   <li>DAMAGE: 12-30 ticks — 默认 12 ticks(~0.6s)对应原版无敌帧窗口；onFire 等持续性伤害 30 ticks</li>
+     * </ul>
+     * 所有租约到期后通道自动释放，由 FadeManager 的安全归零接管。
+     */
     private int getLeaseTicks(EffectSource source, String detail) {
         String normalizedDetail = detail == null ? "" : detail.toLowerCase();
         return switch (source) {
@@ -1025,33 +946,6 @@ public class WebSocketServerManager {
             };
             case NONE -> 0;
         };
-    }
-
-    /**
-     * 发送波形到客户端
-     */
-    public void sendWaveform(String channel, String waveform) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
-            return;
-        }
-
-        int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
-
-        // 先清除之前的波形
-        Map<String, String> clearMsg = new HashMap<>();
-        clearMsg.put("type", "msg");
-        clearMsg.put("message", "clear-" + channelNum);
-        clearMsg.put("clientId", sessionId);
-        clearMsg.put("targetId", targetId != null ? targetId : "");
-        connectedClient.send(gson.toJson(clearMsg));
-
-        // 发送新波形
-        Map<String, String> msg = new HashMap<>();
-        msg.put("type", "msg");
-        msg.put("message", "pulse-" + (channelNum == 1 ? "A" : "B") + ":[\"" + waveform + "\"]");
-        msg.put("clientId", sessionId);
-        msg.put("targetId", targetId != null ? targetId : "");
-        connectedClient.send(gson.toJson(msg));
     }
 
     /**
@@ -1111,7 +1005,10 @@ public class WebSocketServerManager {
 
     // Getters
     public boolean isRunning() { return isRunning; }
-    public boolean isConnected() { return isBound && connectedClient != null && connectedClient.isOpen(); }
+    public boolean isConnected() {
+        WebSocket client = connectedClient;
+        return isBound && client != null && client.isOpen();
+    }
     public String getSessionId() { return sessionId; }
     public String getLocalIp() { return localIp; }
     public int getPort() { return port; }

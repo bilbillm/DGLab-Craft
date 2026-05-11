@@ -3,9 +3,7 @@ package com.lumoren.dglabcraft;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
-import com.lumoren.dglabcraft.events.FadeManager;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
-import com.lumoren.dglabcraft.events.StatusEffectHandler;
 import com.lumoren.dglabcraft.gui.MainScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
@@ -33,10 +31,9 @@ public class DGLabCraft
         ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON,
             com.lumoren.dglabcraft.config.ModConfig.SPEC);
 
-        // 注册事件总线
+        // 注册事件总线 (注意: StatusEffectHandler 已废弃，药水效果由 DamageHandler 处理)
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new DamageHandler());
-        MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
         MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
         MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
     }
@@ -45,6 +42,11 @@ public class DGLabCraft
     {
         // 启动 WebSocket 服务器
         WebSocketServerManager.getInstance().start();
+
+        // 注册 JVM 关闭钩子 — 确保游戏退出时清理 WebSocket 连接
+        Runtime.getRuntime().addShutdownHook(new Thread(
+            () -> WebSocketServerManager.getInstance().stop(),
+            "DGLabCraft-Shutdown"));
 
         // 波形管理器使用懒加载，首次使用时自动初始化
     }

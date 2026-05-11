@@ -137,11 +137,9 @@ public class WaveformManager implements ResourceManagerReloadListener {
         };
 
         for (String fileName : waveformFiles) {
-            try {
-                // 从 classpath 加载
-                String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
-                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath);
-
+            // 从 classpath 加载
+            String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
+            try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
                     String jsonContent = new String(is.readAllBytes());
                     List<String> waveformData = parseWaveformJson(jsonContent, gson);
@@ -150,7 +148,6 @@ public class WaveformManager implements ResourceManagerReloadListener {
                         waveformPool.put(fileName, waveformData);
                         LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
                     }
-                    is.close();
                 } else {
                     LOGGER.warn("找不到资源: {}", resourcePath);
                 }

@@ -17,6 +17,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 伤害事件处理
@@ -24,6 +26,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
  */
 public class DamageHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-DamageHandler");
     private static final float MIN_DAMAGE_DELTA = 0.01f;
     private static final int DAMAGE_DEBOUNCE_TICKS = 6;
     private static final int EVENT_SOURCE_MAX_AGE_TICKS = 40;
@@ -104,7 +107,7 @@ public class DamageHandler {
             lastDamageSourceId = source.getMsgId();
         }
         lastDamageSourceTick = tickCounter;
-        System.out.println("[DGLabCraft] 原始伤害事件 source.getMsgId(): " + lastDamageSourceId);
+        LOGGER.debug("原始伤害事件 source.getMsgId(): {}", lastDamageSourceId);
     }
 
     private void triggerDamageFeedback(Player player, float damage, Minecraft mc) {
@@ -114,7 +117,7 @@ public class DamageHandler {
             waveform = "beat";
         }
 
-        System.out.println("[DGLabCraft] 伤害来源: " + msgId + ", 伤害值: " + damage);
+        LOGGER.debug("伤害来源: {}, 伤害值: {}", msgId, damage);
 
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         float maxHealth = Math.max(player.getMaxHealth(), 1.0f);
@@ -133,8 +136,8 @@ public class DamageHandler {
             int strengthB = (int)(effectiveMaxB * healthRatio * 2 * multiplier);
             strengthB = Math.max(1, Math.min(strengthB, effectiveMaxB));
 
-            System.out.println("[DGLabCraft] 计算强度: A=" + strengthA + "(上限" + effectiveMaxA + "), B=" + strengthB + "(上限" + effectiveMaxB + ")");
-            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+            LOGGER.debug("计算强度: A={}(上限{}), B={}(上限{}), WebSocket已连接: {}",
+                    strengthA, effectiveMaxA, strengthB, effectiveMaxB, ws.isConnected());
 
             ws.requestSyncedEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, waveform, strengthA, strengthB);
             FadeManager.updateDamage(strengthA, strengthB);
@@ -145,8 +148,7 @@ public class DamageHandler {
             int strength = (int)(effectiveMaxIntensity * healthRatio * 2 * multiplier);
             strength = Math.max(1, Math.min(strength, effectiveMaxIntensity));
 
-            System.out.println("[DGLabCraft] 计算强度: " + strength + ", 有效上限: " + effectiveMaxIntensity + ", 通道: A");
-            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+            LOGGER.debug("计算强度: {}, 有效上限: {}, 通道: A, WebSocket已连接: {}", strength, effectiveMaxIntensity, ws.isConnected());
 
             ws.requestEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, "A", waveform, strength);
             FadeManager.updateDamage(strength, 0);
