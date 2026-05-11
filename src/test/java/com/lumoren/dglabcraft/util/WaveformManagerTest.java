@@ -2,11 +2,13 @@ package com.lumoren.dglabcraft.util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.google.gson.Gson;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WaveformManagerTest {
 
     private WaveformManager manager;
+    private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
@@ -118,5 +120,67 @@ class WaveformManagerTest {
         assertNotNull(chunks);
         assertEquals(3, chunks.size());
         chunks.forEach(chunk -> assertEquals(1, chunk.size()));
+    }
+
+    // ===== parseWaveformJson =====
+
+    @Test
+    void parseWaveformJson_arrayFormat() {
+        String json = "[\"0A0A0A0A0A0A0A0A\",\"1414141414141414\"]";
+        java.util.List<String> result = manager.parseWaveformJson(json, gson);
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("0A0A0A0A0A0A0A0A", result.get(0));
+        assertEquals("1414141414141414", result.get(1));
+    }
+
+    @Test
+    void parseWaveformJson_objectFormat() {
+        String json = "{\"name_cn\":\"test\",\"frame_count\":2,\"data\":[\"AA00FF00BB00CC00\",\"1122334411223344\"]}";
+        java.util.List<String> result = manager.parseWaveformJson(json, gson);
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("AA00FF00BB00CC00", result.get(0));
+        assertEquals("1122334411223344", result.get(1));
+    }
+
+    @Test
+    void parseWaveformJson_emptyArray() {
+        java.util.List<String> result = manager.parseWaveformJson("[]", gson);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void parseWaveformJson_emptyObject() {
+        java.util.List<String> result = manager.parseWaveformJson("{}", gson);
+        assertNull(result);
+    }
+
+    @Test
+    void parseWaveformJson_objectWithEmptyData() {
+        java.util.List<String> result = manager.parseWaveformJson("{\"data\":[]}", gson);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void parseWaveformJson_objectWithNullData() {
+        java.util.List<String> result = manager.parseWaveformJson("{\"data\":null}", gson);
+        assertNull(result);
+    }
+
+    @Test
+    void parseWaveformJson_notJson() {
+        java.util.List<String> result = manager.parseWaveformJson("not json at all", gson);
+        assertNull(result);
+    }
+
+    @Test
+    void parseWaveformJson_singleElement() {
+        java.util.List<String> result = manager.parseWaveformJson("[\"DEADBEEFDEADBEEF\"]", gson);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("DEADBEEFDEADBEEF", result.get(0));
     }
 }

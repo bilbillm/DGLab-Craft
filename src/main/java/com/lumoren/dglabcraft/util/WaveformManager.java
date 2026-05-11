@@ -170,7 +170,8 @@ public class WaveformManager implements ResourceManagerReloadListener {
      * 1. 简单数组: ["0a64...", ...]
      * 2. 对象格式: { "data": ["0a64...", ...] }
      */
-    private List<String> parseWaveformJson(String jsonContent, Gson gson) {
+    // package-private for testing
+    List<String> parseWaveformJson(String jsonContent, Gson gson) {
         jsonContent = jsonContent.trim();
 
         // 尝试解析为简单数组

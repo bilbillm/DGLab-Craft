@@ -160,7 +160,6 @@ dependencies {
 
     // 测试框架
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testImplementation 'org.mockito:mockito-core:5.10.0'
 }
 
 test {

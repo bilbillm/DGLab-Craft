@@ -359,7 +359,8 @@ public class WebSocketServerManager {
      *    - 第四个数字 = B通道强度上限
      * 2. 旧格式: strength-<通道>+<模式>+<值> (如 strength-1+2+50)
      */
-    private void parseStrengthMessage(String msg) {
+    // package-private for testing
+    void parseStrengthMessage(String msg) {
         if (msg.startsWith("strength-")) {
             String[] parts = msg.substring(9).split("\\+");
             if (parts.length >= 4) {
@@ -886,7 +887,8 @@ public class WebSocketServerManager {
         return isChannelStateActive(state) && state.source == source && waveId.equals(state.waveformId);
     }
 
-    private int priorityOf(EffectSource source) {
+    // package-private for testing
+    int priorityOf(EffectSource source) {
         return switch (source) {
             case DAMAGE -> 3;
             case HEARTBEAT -> 2;
@@ -931,7 +933,8 @@ public class WebSocketServerManager {
      * </ul>
      * 所有租约到期后通道自动释放，由 FadeManager 的安全归零接管。
      */
-    private int getLeaseTicks(EffectSource source, String detail) {
+    // package-private for testing
+    int getLeaseTicks(EffectSource source, String detail) {
         String normalizedDetail = detail == null ? "" : detail.toLowerCase();
         return switch (source) {
             case HEARTBEAT -> 55;

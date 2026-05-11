@@ -109,4 +109,23 @@ class DamageHandlerTest {
         assertEquals("cactus", handler.normalizeDamageSourceId("CACTUS"));
         assertEquals("cactus", handler.normalizeDamageSourceId("Cactus"));
     }
+
+    // ===== edge cases =====
+
+    @Test
+    void normalize_dotThenUnderscore_compoundFirst() {
+        // "hot_floor.player" → strip dot → "hot_floor" → camelCase → "hotFloor"
+        assertEquals("hotFloor", handler.normalizeDamageSourceId("hot_floor.player"));
+    }
+
+    @Test
+    void normalize_dragonBreath_dotSuffix() {
+        assertEquals("dragonBreath", handler.normalizeDamageSourceId("dragon_breath.player"));
+    }
+
+    @Test
+    void normalize_dotOnly_noPrefix_emptyAfterSplit() {
+        // ".player" → split → [ "", "player" ] → first part "" → default passthrough → ""
+        assertEquals("", handler.normalizeDamageSourceId(".player"));
+    }
 }
