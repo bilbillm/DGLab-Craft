@@ -101,12 +101,13 @@ public class WebSocketServerManager {
 
     // 固定的客户端 ID（参考 DG_LAB）
     private static final String FIXED_CLIENT_ID = "1234-123456789-12345-12345-01";
+    private static final int DEFAULT_WS_PORT = 8877;
 
     private WebSocketServerManager() {
         // 使用固定的 sessionId（参考 DG_LAB）
         sessionId = FIXED_CLIENT_ID;
         // 端口号延迟到 start() 时读取 — NeoForge 在 FMLCommonSetupEvent 期间配置尚未就绪
-        port = 8877;
+        port = DEFAULT_WS_PORT;
     }
 
     public static WebSocketServerManager getInstance() {
@@ -129,8 +130,8 @@ public class WebSocketServerManager {
         try {
             port = DGLabConfig.WS_PORT.get();
         } catch (Exception e) {
-            LOGGER.warn("无法读取 WS_PORT 配置，使用默认端口 8877", e);
-            port = 8877;
+            LOGGER.warn("无法读取 WS_PORT 配置，使用默认端口 {}", DEFAULT_WS_PORT, e);
+            port = DEFAULT_WS_PORT;
         }
 
         // 获取本机局域网 IP
