@@ -5,9 +5,10 @@ import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DGLab Craft 设置界面 - 使用原版 ContainerObjectSelectionList
+ * DGLab Craft 设置界面 - 使用原版 AbstractSelectionList
  */
 public class DGLabCraftScreen extends Screen {
 
@@ -609,9 +610,9 @@ public class DGLabCraftScreen extends Screen {
     // ========== 内部类：滚动列表 ==========
 
     /**
-     * 设置列表 - 继承自 ContainerObjectSelectionList
+     * 设置列表 - 继承自 AbstractSelectionList
      */
-    static class SettingsList extends ContainerObjectSelectionList<SettingsList.Entry> {
+    static class SettingsList extends AbstractSelectionList<SettingsList.Entry> {
 
         public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int itemHeight) {
             super(minecraft, width, height, top, itemHeight);
@@ -632,6 +633,11 @@ public class DGLabCraftScreen extends Screen {
             return false;
         }
 
+        @Override
+        public void updateWidgetNarration(NarrationElementOutput narration) {
+            this.defaultButtonNarrationText(narration);
+        }
+
         /**
          * 公开的添加条目方法
          */
@@ -644,11 +650,19 @@ public class DGLabCraftScreen extends Screen {
         /**
          * 设置项基类
          */
-        abstract static class Entry extends ContainerObjectSelectionList.Entry<SettingsList.Entry> {
+        abstract static class Entry extends AbstractSelectionList.Entry<SettingsList.Entry> {
             protected final net.minecraft.client.Minecraft minecraft;
 
             protected Entry() {
                 this.minecraft = net.minecraft.client.Minecraft.getInstance();
+            }
+
+            public List<? extends GuiEventListener> children() {
+                return List.of();
+            }
+
+            public List<? extends NarratableEntry> narratables() {
+                return List.of();
             }
         }
 
@@ -673,12 +687,10 @@ public class DGLabCraftScreen extends Screen {
                 guiGraphics.drawString(this.minecraft.font, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
             }
 
-            @Override
             public List<? extends GuiEventListener> children() {
                 return List.of();
             }
 
-            @Override
             public List<? extends NarratableEntry> narratables() {
                 return List.of();
             }
@@ -714,12 +726,10 @@ public class DGLabCraftScreen extends Screen {
                     0xFFFFFF);
             }
 
-            @Override
             public List<? extends NarratableEntry> narratables() {
                 return List.of();
             }
 
-            @Override
             public List<? extends GuiEventListener> children() {
                 return List.of();
             }
@@ -764,12 +774,10 @@ public class DGLabCraftScreen extends Screen {
                 }
             }
 
-            @Override
             public List<? extends GuiEventListener> children() {
                 return widgets;
             }
 
-            @Override
             public List<? extends NarratableEntry> narratables() {
                 return widgets;
             }
