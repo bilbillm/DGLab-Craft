@@ -618,7 +618,7 @@ public class DGLabCraftScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPosition() {
+        protected int scrollBarX() {
             return this.width - 10;
         }
 

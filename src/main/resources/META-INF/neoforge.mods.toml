@@ -15,7 +15,7 @@ description="${mod_description}"
 [[dependencies.dglabcraft]]
 modId="neoforge"
 mandatory=true
-versionRange="[21.1,)"
+versionRange="[21.4,)"
 ordering="NONE"
 side="BOTH"
 

@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
  * HUD 渲染 - 显示 A/B 通道状态和强度
  * 使用 GUI 覆盖层渲染事件，在屏幕四角落显示状态
  */
-@EventBusSubscriber(modid = "dglabcraft", bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = "dglabcraft", value = Dist.CLIENT)
 public class DGLabCraftHUD {
 
     @SubscribeEvent

@@ -11,7 +11,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Supplier;
 
-@EventBusSubscriber(modid = DGLabCraft.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = DGLabCraft.MODID, value = Dist.CLIENT)
 public class ClientModEvents {
 
     // 使用 Supplier 延迟加载 KeyMapping，确保在被请求时已实例化

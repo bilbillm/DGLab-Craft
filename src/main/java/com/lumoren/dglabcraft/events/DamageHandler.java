@@ -303,7 +303,15 @@ public class DamageHandler {
             return "inWall";
         }
 
-        int maxCramming = mc.level.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+        // NeoForge 1.21.4: ClientLevel 不再提供 getGameRules()，回退至单机服务器或使用默认值 24
+        int maxCramming = 24;
+        try {
+            if (mc.getSingleplayerServer() != null) {
+                maxCramming = mc.getSingleplayerServer().getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+            }
+        } catch (Exception ignored) {
+            // fall through to default
+        }
         if (maxCramming > 0) {
             java.util.List<Entity> nearbyEntities = mc.level.getEntities(player, player.getBoundingBox().inflate(0.2D));
             if (nearbyEntities.size() >= maxCramming) {
