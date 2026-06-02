@@ -14,9 +14,12 @@ import java.net.InetAddress;
 import java.util.UUID;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -971,6 +974,7 @@ public class WebSocketServerManager {
      * 获取本机局域网 IPv4 地址
      */
     private String getLocalIpAddress() {
+        List<LocalAddressCandidate> candidates = new ArrayList<>();
         try {
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 if (ni.isLoopback() || !ni.isUp()) continue;
@@ -979,12 +983,14 @@ public class WebSocketServerManager {
                     if (addr instanceof java.net.Inet4Address) {
                         String ip = addr.getHostAddress();
                         // 只返回局域网IP: 10.x.x.x, 172.16-31.x.x, 192.168.x.x
-                        if (ip.startsWith("10.") ||
-                            (ip.startsWith("172.") &&
-                             Integer.parseInt(ip.split("\\.")[1]) >= 16 &&
-                             Integer.parseInt(ip.split("\\.")[1]) <= 31) ||
-                            ip.startsWith("192.168.")) {
-                            return ip;
+                        if (isPrivateIpv4(ip)) {
+                            candidates.add(new LocalAddressCandidate(
+                                ip,
+                                ni.getName(),
+                                ni.getDisplayName(),
+                                ni.isVirtual(),
+                                ni.supportsMulticast()
+                            ));
                         }
                     }
                 }
@@ -992,7 +998,84 @@ public class WebSocketServerManager {
         } catch (Exception e) {
             LOGGER.error("获取 IP 地址失败: " + e.getMessage());
         }
+
+        String selectedIp = chooseBestLocalIpAddress(candidates);
+        if (selectedIp != null) {
+            return selectedIp;
+        }
         return "127.0.0.1";
+    }
+
+    static String chooseBestLocalIpAddress(List<LocalAddressCandidate> candidates) {
+        return candidates.stream()
+            .filter(candidate -> candidate != null && isPrivateIpv4(candidate.ip()))
+            .min(Comparator.comparingInt(WebSocketServerManager::scoreLocalAddressCandidate))
+            .map(LocalAddressCandidate::ip)
+            .orElse(null);
+    }
+
+    private static int scoreLocalAddressCandidate(LocalAddressCandidate candidate) {
+        int score = 0;
+        String descriptor = ((candidate.name() == null ? "" : candidate.name()) + " " +
+            (candidate.displayName() == null ? "" : candidate.displayName())).toLowerCase(Locale.ROOT);
+
+        if (candidate.virtualInterface() || containsVirtualAdapterMarker(descriptor)) {
+            score += 1000;
+        }
+        if (!candidate.supportsMulticast()) {
+            score += 100;
+        }
+        if (descriptor.contains("wi-fi") || descriptor.contains("wifi") || descriptor.contains("wlan") ||
+            descriptor.contains("ethernet") || descriptor.contains("realtek") || descriptor.contains("intel")) {
+            score -= 100;
+        }
+        if (candidate.ip().startsWith("192.168.")) {
+            score -= 20;
+        } else if (candidate.ip().startsWith("10.")) {
+            score -= 10;
+        }
+
+        return score;
+    }
+
+    private static boolean containsVirtualAdapterMarker(String descriptor) {
+        return descriptor.contains("virtual")
+            || descriptor.contains("vmware")
+            || descriptor.contains("vmnet")
+            || descriptor.contains("virtualbox")
+            || descriptor.contains("hyper-v")
+            || descriptor.contains("wsl")
+            || descriptor.contains("docker")
+            || descriptor.contains("tailscale")
+            || descriptor.contains("zerotier")
+            || descriptor.contains("loopback")
+            || descriptor.contains("tap")
+            || descriptor.contains("tun");
+    }
+
+    private static boolean isPrivateIpv4(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return false;
+        }
+        if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
+            return true;
+        }
+        if (!ip.startsWith("172.")) {
+            return false;
+        }
+        String[] parts = ip.split("\\.");
+        if (parts.length < 2) {
+            return false;
+        }
+        try {
+            int second = Integer.parseInt(parts[1]);
+            return second >= 16 && second <= 31;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    record LocalAddressCandidate(String ip, String name, String displayName, boolean virtualInterface, boolean supportsMulticast) {
     }
 
     public String resolveConnectionHost() {
