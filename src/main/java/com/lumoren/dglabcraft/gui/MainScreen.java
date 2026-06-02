@@ -1,4 +1,4 @@
-package com.lumoren.dglabcraft.gui;
+﻿package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 public class MainScreen extends Screen {
 
     public MainScreen() {
-        super(Component.literal("DGLab Craft"));
+        super(new net.minecraft.network.chat.TextComponent("DGLab Craft"));
     }
 
     private Button settingsButton;
@@ -45,7 +45,7 @@ public class MainScreen extends Screen {
             startY,
             buttonWidth,
             buttonHeight,
-            Component.literal("强度设置"),
+            new net.minecraft.network.chat.TextComponent("强度设置"),
             (button) -> {
                 this.minecraft.setScreen(new DGLabCraftScreen(this));
             }
@@ -58,7 +58,7 @@ public class MainScreen extends Screen {
             startY + spacing,
             buttonWidth,
             buttonHeight,
-            Component.literal("连接设置"),
+            new net.minecraft.network.chat.TextComponent("连接设置"),
             (button) -> {
                 this.minecraft.setScreen(new ConnectionScreen(this));
             }
@@ -71,7 +71,7 @@ public class MainScreen extends Screen {
             startY + spacing * 2,
             buttonWidth,
             buttonHeight,
-            Component.literal("波形设置 (敬请期待)"),
+            new net.minecraft.network.chat.TextComponent("波形设置 (敬请期待)"),
             (button) -> {
                 // TODO: 波形设置界面
             }
@@ -89,12 +89,12 @@ public class MainScreen extends Screen {
             startY + spacing * 3,
             btnWidth,
             buttonHeight,
-            Component.literal(hudText),
+            new net.minecraft.network.chat.TextComponent(hudText),
             (button) -> {
                 boolean newState = !ModConfig.HUD_ENABLED.get();
                 ModConfig.HUD_ENABLED.set(newState);
                 ModConfig.save();
-                button.setMessage(Component.literal(newState ? "HUD: 开启" : "HUD: 关闭"));
+                button.setMessage(new net.minecraft.network.chat.TextComponent(newState ? "HUD: 开启" : "HUD: 关闭"));
             }
         );
         this.addRenderableWidget(this.hudToggleButton);
@@ -107,12 +107,12 @@ public class MainScreen extends Screen {
             startY + spacing * 3,
             btnWidth,
             buttonHeight,
-            Component.literal(posText),
+            new net.minecraft.network.chat.TextComponent(posText),
             (button) -> {
                 int newPos = (ModConfig.HUD_POSITION.get() + 1) % 4;
                 ModConfig.HUD_POSITION.set(newPos);
                 ModConfig.save();
-                button.setMessage(Component.literal("位置: " + getPositionText(newPos)));
+                button.setMessage(new net.minecraft.network.chat.TextComponent("位置: " + getPositionText(newPos)));
             }
         );
         this.addRenderableWidget(this.hudPositionButton);
@@ -123,7 +123,7 @@ public class MainScreen extends Screen {
             startY + spacing * 3,
             btnWidth,
             buttonHeight,
-            Component.literal("关闭界面"),
+            new net.minecraft.network.chat.TextComponent("关闭界面"),
             (button) -> this.onClose()
         );
         this.addRenderableWidget(this.closeButton);

@@ -9,7 +9,7 @@ version = mod_version
 group = 'com.lumoren.dglabcraft'
 
 base {
-    archivesName = 'dglab-craft'
+    archivesName = "dglab-craft-${minecraft_version}"
 }
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
@@ -180,6 +180,8 @@ tasks.named('processResources', ProcessResources).configure {
 
 // 配置默认的 jar 任务
 tasks.named('jar', Jar).configure {
+    archiveClassifier = 'slim'
+
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -222,4 +224,5 @@ build.dependsOn 'jarJar'
 // 确保 jarJar 任务启用
 tasks.named('jarJar') {
     enabled = true
+    archiveClassifier = ''
 }

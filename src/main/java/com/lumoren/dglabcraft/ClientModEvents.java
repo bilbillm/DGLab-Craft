@@ -1,12 +1,12 @@
 package com.lumoren.dglabcraft;
 
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = DGLabCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -20,8 +20,8 @@ public class ClientModEvents {
     ));
 
     @SubscribeEvent
-    public static void onKeyRegister(RegisterKeyMappingsEvent event) {
+    public static void onClientSetup(FMLClientSetupEvent event) {
         // 直接在此处注册，不会有 null 的问题
-        event.register(OPEN_SETTINGS_KEY.get());
+        event.enqueueWork(() -> ClientRegistry.registerKeyBinding(OPEN_SETTINGS_KEY.get()));
     }
 }

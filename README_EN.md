@@ -1,11 +1,11 @@
-# DGLab Craft
+﻿# DGLab Craft
 
 <p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
 
 [中文说明](./README.md)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-brightgreen)
+![Forge](https://img.shields.io/badge/Forge-40.2.21-orange)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 ## ⬇️ Download
@@ -13,7 +13,7 @@
 [![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
 [![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
-> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
+> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-18-2`
 
 DGLab Craft is a Minecraft Forge mod that connects to the DGLab App via WebSocket, converting in-game events into physical feedback sent to DGLab devices.
 
@@ -31,8 +31,8 @@ If this is your first time installing a Minecraft mod, don't worry! Follow these
 
 ### ⚠️ Step 1: Preparation (What you need)
 Before we start, ensure you have the following ready:
-1. **Minecraft 1.19.2** installed.
-2. **Forge Mod Loader** (Version **43.5.0** or higher).
+1. **Minecraft 1.18.2** installed.
+2. **Forge Mod Loader** (Version **40.2.21** or higher).
    * *Pro-tip: Third-party launchers like Prism Launcher or CurseForge make installing Forge a 1-click breeze!*
 3. Your **DGLab Coyote device** and the **DGLab App** installed on your smartphone.
 
@@ -45,7 +45,7 @@ Before we start, ensure you have the following ready:
 4. Drag and drop the downloaded `.jar` file into this folder. Done!
 
 ### 🔌 Step 3: Connect Your DGLab Device
-1. Open your launcher and start the game using your **Forge 1.19.2** profile.
+1. Open your launcher and start the game using your **Forge 1.18.2** profile.
 2. Enter any single-player world or join a multiplayer server.
 3. Press the **`K` key** (default shortcut) on your keyboard to open the mod's main settings menu.
 4. Click the **"Connect Device" (连接设备)→Refresh QR Code刷新二维码→Open QR ode打开二维码** button, and a QR code will pop up on your screen.
@@ -138,8 +138,8 @@ When the trigger condition ends, intensity smoothly transitions to 0.
 
 ## System Requirements
 
-- Minecraft 1.19.2
-- Forge 43.5.0+
+- Minecraft 1.18.2
+- Forge 40.2.21+
 - Java 17+
 - DGLab device (supports Socket control)
 

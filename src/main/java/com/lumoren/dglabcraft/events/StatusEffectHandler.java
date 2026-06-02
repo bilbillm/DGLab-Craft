@@ -1,8 +1,6 @@
 package com.lumoren.dglabcraft.events;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
@@ -22,7 +20,7 @@ public class StatusEffectHandler {
      * 负面效果（凋零、中毒）伤害由 DamageHandler 处理
      */
     @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         // 已禁用 - 效果伤害由 DamageHandler 的 LivingDamageEvent 处理
     }
 }

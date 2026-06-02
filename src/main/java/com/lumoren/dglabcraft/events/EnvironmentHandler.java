@@ -8,7 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
@@ -26,16 +26,17 @@ public class EnvironmentHandler {
     private boolean wasInNetherPortal = false;
 
     @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!event.player.level.isClientSide()) return;
         if (mc.player == null) return;
 
         // 使用 UUID 比较
-        Player eventPlayer = (Player) event.getEntity();
+        Player eventPlayer = event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
-        Player player = (Player) event.getEntity();
+        Player player = event.player;
         handleClientEnvironment(player);
     }
 

@@ -1,4 +1,4 @@
-package com.lumoren.dglabcraft.gui;
+﻿package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
@@ -36,7 +36,7 @@ public class DGLabCraftScreen extends Screen {
     private boolean lastConnected = false;
 
     public DGLabCraftScreen(Screen parent) {
-        super(Component.literal("DGLab 强度与倍率设置"));
+        super(new net.minecraft.network.chat.TextComponent("DGLab 强度与倍率设置"));
         this.parent = parent;
     }
 
@@ -60,7 +60,7 @@ public class DGLabCraftScreen extends Screen {
         // 完成按钮 - 居中偏左
         this.doneButton = new Button(
             centerX - buttonWidth - 5, bottomY, buttonWidth, buttonHeight,
-            Component.literal("完成"),
+            new net.minecraft.network.chat.TextComponent("完成"),
             (button) -> this.onClose()
         );
         this.addRenderableWidget(doneButton);
@@ -68,7 +68,7 @@ public class DGLabCraftScreen extends Screen {
         // 重置按钮 - 居中偏右
         this.resetButton = new Button(
             centerX + 5, bottomY, buttonWidth, buttonHeight,
-            Component.literal("重置为默认"),
+            new net.minecraft.network.chat.TextComponent("重置为默认"),
             (button) -> resetToDefaults()
         );
         this.addRenderableWidget(resetButton);
@@ -112,7 +112,7 @@ public class DGLabCraftScreen extends Screen {
         // 全局强度上限百分比滑块
         int percentage = ModConfig.MAX_INTENSITY_PERCENTAGE.get().intValue();
         Slider percentageSlider = new Slider(
-            0, 0, 190, 20, Component.literal("全局强度上限%: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("全局强度上限%: "),
             0, 100, percentage, 1.0, "%", value -> {
                 ModConfig.MAX_INTENSITY_PERCENTAGE.set((double) value);
                 ModConfig.save();
@@ -122,12 +122,12 @@ public class DGLabCraftScreen extends Screen {
         // A/B通道同步
         Button syncButton = new Button(
             0, 0, 190, 20,
-            Component.literal("A/B 通道同步: " + (ModConfig.SYNC_CHANNELS.get() ? "开" : "关")),
+            new net.minecraft.network.chat.TextComponent("A/B 通道同步: " + (ModConfig.SYNC_CHANNELS.get() ? "开" : "关")),
             (button) -> {
                 boolean newValue = !ModConfig.SYNC_CHANNELS.get();
                 ModConfig.SYNC_CHANNELS.set(newValue);
                 ModConfig.save();
-                button.setMessage(Component.literal("A/B 通道同步: " + (newValue ? "开" : "关")));
+                button.setMessage(new net.minecraft.network.chat.TextComponent("A/B 通道同步: " + (newValue ? "开" : "关")));
             }
         );
 
@@ -135,7 +135,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 心跳阈值 + 心跳倍率
         Slider thresholdSlider = new Slider(
-            0, 0, 190, 20, Component.literal("心跳阈值: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("心跳阈值: "),
             0, 100, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "%", value -> {
                 ModConfig.HEARTBEAT_THRESHOLD.set(value);
                 ModConfig.save();
@@ -149,7 +149,7 @@ public class DGLabCraftScreen extends Screen {
         this.heartbeatThresholdLabel = new SettingsList.LabelEntry("心跳触发: ≤ " + triggerHealth + " 生命值");
 
         Slider heartbeatSlider = new Slider(
-            0, 0, 190, 20, Component.literal("心跳倍率: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("心跳倍率: "),
             0, 5.0, ModConfig.HEARTBEAT_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.HEARTBEAT_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -164,7 +164,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 仙人掌 + 甜浆果丛
         Slider cactusSlider = new Slider(
-            0, 0, 190, 20, Component.literal("仙人掌: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("仙人掌: "),
             0, 5.0, ModConfig.CACTUS_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.CACTUS_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -172,7 +172,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider sweetberrySlider = new Slider(
-            0, 0, 190, 20, Component.literal("甜浆果丛: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("甜浆果丛: "),
             0, 5.0, ModConfig.SWEETBERRY_BUSH_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.SWEETBERRY_BUSH_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -183,7 +183,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 弓箭 + 三叉戟
         Slider arrowSlider = new Slider(
-            0, 0, 190, 20, Component.literal("弓箭: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("弓箭: "),
             0, 5.0, ModConfig.ARROW_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ARROW_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -191,7 +191,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider tridentSlider = new Slider(
-            0, 0, 190, 20, Component.literal("三叉戟: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("三叉戟: "),
             0, 5.0, ModConfig.TRIDENT_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.TRIDENT_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -202,7 +202,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 钟乳石 + (空)
         Slider stalagmiteSlider = new Slider(
-            0, 0, 190, 20, Component.literal("钟乳石: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("钟乳石: "),
             0, 5.0, ModConfig.STALAGMITE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.STALAGMITE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -216,7 +216,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 跌落 + 生物攻击
         Slider fallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("跌落: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("跌落: "),
             0, 5.0, ModConfig.FALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -224,7 +224,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider mobAttackSlider = new Slider(
-            0, 0, 190, 20, Component.literal("生物攻击: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("生物攻击: "),
             0, 5.0, ModConfig.MOB_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.MOB_ATTACK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -235,7 +235,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 玩家攻击 + 撞墙
         Slider playerAttackSlider = new Slider(
-            0, 0, 190, 20, Component.literal("玩家攻击: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("玩家攻击: "),
             0, 5.0, ModConfig.PLAYER_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.PLAYER_ATTACK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -243,7 +243,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider flyIntoWallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("撞墙: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("撞墙: "),
             0, 5.0, ModConfig.FLY_INTO_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FLY_INTO_WALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -254,7 +254,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 爆炸 + 烟花
         Slider explosionSlider = new Slider(
-            0, 0, 190, 20, Component.literal("爆炸: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("爆炸: "),
             0, 5.0, ModConfig.EXPLOSION_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.EXPLOSION_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -262,7 +262,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider fireworksSlider = new Slider(
-            0, 0, 190, 20, Component.literal("烟花: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("烟花: "),
             0, 5.0, ModConfig.FIREWORKS_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FIREWORKS_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -276,7 +276,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 着火 + 火中
         Slider onFireSlider = new Slider(
-            0, 0, 190, 20, Component.literal("着火: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("着火: "),
             0, 5.0, ModConfig.ON_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ON_FIRE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -284,7 +284,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider inFireSlider = new Slider(
-            0, 0, 190, 20, Component.literal("火中: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("火中: "),
             0, 5.0, ModConfig.IN_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.IN_FIRE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -295,7 +295,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 岩浆 + 烫脚
         Slider lavaSlider = new Slider(
-            0, 0, 190, 20, Component.literal("岩浆: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("岩浆: "),
             0, 5.0, ModConfig.LAVA_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.LAVA_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -303,7 +303,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider hotFloorSlider = new Slider(
-            0, 0, 190, 20, Component.literal("烫脚: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("烫脚: "),
             0, 5.0, ModConfig.HOT_FLOOR_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.HOT_FLOOR_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -317,7 +317,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 墙内窒息 + 实体挤压
         Slider inWallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("墙内窒息: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("墙内窒息: "),
             0, 5.0, ModConfig.IN_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.IN_WALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -325,7 +325,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider crammingSlider = new Slider(
-            0, 0, 190, 20, Component.literal("实体挤压: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("实体挤压: "),
             0, 5.0, ModConfig.CRAMMING_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.CRAMMING_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -336,7 +336,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 坠落方块 + 铁砧
         Slider fallingBlockSlider = new Slider(
-            0, 0, 190, 20, Component.literal("坠落方块: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("坠落方块: "),
             0, 5.0, ModConfig.FALLING_BLOCK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FALLING_BLOCK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -344,7 +344,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider anvilSlider = new Slider(
-            0, 0, 190, 20, Component.literal("铁砧: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("铁砧: "),
             0, 5.0, ModConfig.ANVIL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ANVIL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -358,7 +358,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 溺水 + 细雪冰冻
         Slider drownSlider = new Slider(
-            0, 0, 190, 20, Component.literal("溺水: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("溺水: "),
             0, 5.0, ModConfig.DROWN_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.DROWN_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -366,7 +366,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider freezeSlider = new Slider(
-            0, 0, 190, 20, Component.literal("细雪冰冻: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("细雪冰冻: "),
             0, 5.0, ModConfig.FREEZE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FREEZE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -377,7 +377,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 魔法 + 凋零
         Slider magicSlider = new Slider(
-            0, 0, 190, 20, Component.literal("魔法: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("魔法: "),
             0, 5.0, ModConfig.MAGIC_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.MAGIC_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -385,7 +385,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider witherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("凋零: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("凋零: "),
             0, 5.0, ModConfig.WITHER_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.WITHER_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -396,7 +396,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 龙息 + 饥饿
         Slider dragonBreathSlider = new Slider(
-            0, 0, 190, 20, Component.literal("龙息: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("龙息: "),
             0, 5.0, ModConfig.DRAGON_BREATH_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.DRAGON_BREATH_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -404,7 +404,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider starveSlider = new Slider(
-            0, 0, 190, 20, Component.literal("饥饿: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("饥饿: "),
             0, 5.0, ModConfig.STARVE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.STARVE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -418,7 +418,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 下界 + 末地
         Slider netherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("下界: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("下界: "),
             0, 100, ModConfig.NETHER_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.NETHER_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -426,7 +426,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider endSlider = new Slider(
-            0, 0, 190, 20, Component.literal("末地: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("末地: "),
             0, 100, ModConfig.END_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.END_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -437,7 +437,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 传送门 + (空)
         Slider portalSlider = new Slider(
-            0, 0, 190, 20, Component.literal("传送门: "),
+            0, 0, 190, 20, new net.minecraft.network.chat.TextComponent("传送门: "),
             0, 100, ModConfig.PORTAL_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.PORTAL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -507,7 +507,7 @@ public class DGLabCraftScreen extends Screen {
         ModConfig.save();
 
         // 重新初始化界面以反映新值
-        this.rebuildWidgets();
+        this.init();
     }
 
     @Override
@@ -542,7 +542,7 @@ public class DGLabCraftScreen extends Screen {
                 this.lastAppStrengthB = ws.getAppBMaxStrength();
             }
             // 重建整个界面以反映连接状态变化
-            this.rebuildWidgets();
+            this.init();
             return;
         }
 

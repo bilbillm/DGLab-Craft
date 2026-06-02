@@ -85,7 +85,7 @@ public class WebSocketServerManager {
         }
 
         // 获取本机局域网 IP
-        localIp = getLocalIpAddress();
+        localIp = resolveConnectionHost();
         if (localIp == null) {
             localIp = "127.0.0.1";
         }
@@ -709,7 +709,7 @@ public class WebSocketServerManager {
      */
     public String generateQrUrl() {
         // 重新获取本机 IP 地址（网络可能已变化）
-        String currentLocalIp = getLocalIpAddress();
+        String currentLocalIp = resolveConnectionHost();
 
         // 使用 dungeon-lab.com 格式（参考 DG_LAB）
         String url = String.format("https://www.dungeon-lab.com/app-download.php#DGLAB-SOCKET#ws://%s:%d/%s",
@@ -746,6 +746,17 @@ public class WebSocketServerManager {
             LOGGER.error("获取 IP 地址失败: " + e.getMessage());
         }
         return "127.0.0.1";
+    }
+
+    public String resolveConnectionHost() {
+        String configuredHost = ModConfig.WS_HOST.get();
+        if (configuredHost != null) {
+            configuredHost = configuredHost.trim();
+            if (!configuredHost.isEmpty() && !"localhost".equalsIgnoreCase(configuredHost)) {
+                return configuredHost;
+            }
+        }
+        return getLocalIpAddress();
     }
 
     // Getters

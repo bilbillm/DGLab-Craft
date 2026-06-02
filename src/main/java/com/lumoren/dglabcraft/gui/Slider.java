@@ -1,4 +1,4 @@
-package com.lumoren.dglabcraft.gui;
+﻿package com.lumoren.dglabcraft.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
@@ -114,7 +114,7 @@ public class Slider extends AbstractSliderButton {
         }
 
         // 使用保存的原始前缀文本构建显示文本
-        Component fullMessage = Component.literal(prefixText + valueStr + suffix);
+        Component fullMessage = new net.minecraft.network.chat.TextComponent(prefixText + valueStr + suffix);
         this.setMessage(fullMessage);
     }
 

@@ -15,6 +15,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.ModLoadingContext;
 
 @Mod(DGLabCraft.MODID)
 public class DGLabCraft
@@ -29,7 +30,7 @@ public class DGLabCraft
         modEventBus.addListener(this::commonSetup);
 
         // 注册 Forge 配置
-        context.registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON,
+        ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON,
             com.lumoren.dglabcraft.config.ModConfig.SPEC);
 
         // 注册事件总线

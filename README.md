@@ -1,11 +1,11 @@
-# DGLab Craft
+﻿# DGLab Craft
 
 <p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
 
 [English Version](./README_EN.md)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.19.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-43.5.0-orange)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-brightgreen)
+![Forge](https://img.shields.io/badge/Forge-40.2.21-orange)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 ## ⬇️ 下载 Download
@@ -13,7 +13,7 @@
 [![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
 [![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
-> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-19-2`
+> **Topics:** `minecraft-mod` `forge-mod` `dglab` `websocket` `haptic-feedback` `minecraft-1-18-2`
 
 DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App 连接，将游戏内的事件转换为物理反馈发送到 DGLab 设备。
 
@@ -33,8 +33,8 @@ DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App �
 
 ### ⚠️ 第一步：准备工作 (你需要有这些)
 在开始之前，请确保你的电脑上已经安装了以下环境：
-1. **Minecraft 1.19.2** 游戏本体。
-2. **Forge 模组加载器**（版本需为 **43.5.0** 或以上）。
+1. **Minecraft 1.18.2** 游戏本体。
+2. **Forge 模组加载器**（版本需为 **40.2.21** 或以上）。
    * *小白提示：推荐使用 PCL2、HMCL 等第三方启动器，它们都有一键安装 Forge 的功能，极其方便！*
 3. 准备好你的 **DGLab 郊狼设备**，并在手机上安装好配套的 **DGLab App**。
 
@@ -47,7 +47,7 @@ DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App �
 4. 将你刚刚下载的 `.jar` 文件直接拖进去。搞定！
 
 ### 🔌 第三步：连接你的 DGLab 设备
-1. 打开启动器，选择带有 **Forge 1.19.2** 的版本启动游戏。
+1. 打开启动器，选择带有 **Forge 1.18.2** 的版本启动游戏。
 2. 进入任意一个单人存档或多人服务器。
 3. 按下键盘上的 **`K` 键**（默认快捷键），打开模组的设置主界面。
 4. 点击界面上的 **“连接设备”→刷新二维码→打开二维码** ，屏幕上会弹出一个二维码。
@@ -144,8 +144,8 @@ DGLab Craft 是一个 Minecraft Forge 模组，通过 WebSocket 与 DGLab App �
 
 ## 系统要求
 
-- Minecraft 1.19.2
-- Forge 43.5.0+
+- Minecraft 1.18.2
+- Forge 40.2.21+
 - Java 17+
 - DGLab 设备 (支持 Socket 控制)
 

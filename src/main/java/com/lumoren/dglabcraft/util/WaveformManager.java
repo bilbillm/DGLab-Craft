@@ -57,24 +57,23 @@ public class WaveformManager implements ResourceManagerReloadListener {
         Type listType = new TypeToken<List<String>>(){}.getType();
 
         // 遍历 waveforms 目录下的所有 JSON 文件
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources("assets/dglabcraft/waveforms",
-            path -> path.getPath().endsWith(".json"));
+        Collection<ResourceLocation> resources = resourceManager.listResources("waveforms",
+            path -> path.endsWith(".json"));
 
         LOGGER.info("找到 {} 个波形资源文件", resources.size());
 
-        for (Map.Entry<ResourceLocation, Resource> entry : resources.entrySet()) {
+        for (ResourceLocation path : resources) {
             try {
-                ResourceLocation path = entry.getKey();
                 String pathString = path.toString();
                 LOGGER.info("处理波形文件: {}", pathString);
 
                 // 提取文件名作为波形 ID (去除 .json 后缀)
-                String fileName = pathString.replace("assets/dglabcraft/waveforms/", "").replace(".json", "");
+                String fileName = path.getPath().replace("waveforms/", "").replace(".json", "");
                 LOGGER.info("提取波形ID: {}", fileName);
 
                 // 读取资源
-                Resource resource = entry.getValue();
-                String jsonContent = new String(resource.open().readAllBytes());
+                Resource resource = resourceManager.getResource(path);
+                String jsonContent = new String(resource.getInputStream().readAllBytes());
                 LOGGER.info("JSON内容: {}", jsonContent);
                 List<String> waveformData = gson.fromJson(jsonContent, listType);
 
@@ -83,7 +82,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
                     LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
                 }
             } catch (Exception e) {
-                LOGGER.error("加载波形文件失败: {} - {}", entry.getKey(), e.getMessage());
+                LOGGER.error("加载波形文件失败: {} - {}", path, e.getMessage());
             }
         }
 

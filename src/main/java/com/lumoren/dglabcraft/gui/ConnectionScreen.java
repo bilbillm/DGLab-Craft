@@ -1,4 +1,4 @@
-package com.lumoren.dglabcraft.gui;
+﻿package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
@@ -18,7 +18,7 @@ import java.io.File;
  */
 public class ConnectionScreen extends Screen {
 
-    private static final Component MANUAL_IP_HINT = Component.literal("留空则使用自动获取的ip")
+    private static final Component MANUAL_IP_HINT = new net.minecraft.network.chat.TextComponent("留空则使用自动获取的ip")
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 
     private final Screen parent;
@@ -29,7 +29,7 @@ public class ConnectionScreen extends Screen {
     private boolean manualIpInvalid = false;
 
     public ConnectionScreen(Screen parent) {
-        super(Component.literal("连接设置"));
+        super(new net.minecraft.network.chat.TextComponent("连接设置"));
         this.parent = parent;
     }
 
@@ -42,7 +42,7 @@ public class ConnectionScreen extends Screen {
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
-        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, this.height / 2 - 10, buttonWidth, 20, Component.literal("手动局域网IP"));
+        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, this.height / 2 - 10, buttonWidth, 20, new net.minecraft.network.chat.TextComponent("手动局域网IP"));
         String currentHost = ModConfig.WS_HOST.get();
         if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
             this.manualIpInput.setValue(currentHost);
@@ -59,7 +59,7 @@ public class ConnectionScreen extends Screen {
             this.height / 2 + 20,
             buttonWidth,
             20,
-            Component.literal("刷新二维码"),
+            new net.minecraft.network.chat.TextComponent("刷新二维码"),
             (button) -> {
                 if (commitManualIpInput()) {
                     ensureQrCodeGenerated();
@@ -74,7 +74,7 @@ public class ConnectionScreen extends Screen {
             this.height / 2 + 50,
             buttonWidth,
             20,
-            Component.literal("打开二维码图片"),
+            new net.minecraft.network.chat.TextComponent("打开二维码图片"),
             (button) -> {
                 File qrFile = new File(Minecraft.getInstance().gameDirectory, "dglab-qrcode.png");
                 if (qrFile.exists()) {
@@ -90,7 +90,7 @@ public class ConnectionScreen extends Screen {
             this.height - 40,
             buttonWidth,
             20,
-            Component.literal("完成"),
+            new net.minecraft.network.chat.TextComponent("完成"),
             (button) -> this.onClose()
         );
         this.addRenderableWidget(this.doneButton);

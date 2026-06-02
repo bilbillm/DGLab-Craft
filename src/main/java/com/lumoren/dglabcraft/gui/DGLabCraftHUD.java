@@ -5,10 +5,8 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -20,12 +18,12 @@ import net.minecraftforge.fml.common.Mod;
 public class DGLabCraftHUD {
 
     @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
+    public static void onRenderGuiOverlay(RenderGameOverlayEvent.Post event) {
         // 检查 HUD 是否启用
         if (!ModConfig.HUD_ENABLED.get()) return;
 
         // 只在渲染完所有原生 GUI 后渲染（例如热栏之后）
-        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
@@ -47,7 +45,7 @@ public class DGLabCraftHUD {
         int[] pos = calculatePosition(textWidth, screenWidth, screenHeight);
 
         // 渲染文本
-        PoseStack poseStack = event.getPoseStack();
+        PoseStack poseStack = event.getMatrixStack();
         mc.font.drawShadow(poseStack, text, pos[0], pos[1], 0xFFFFFF);
     }
 
