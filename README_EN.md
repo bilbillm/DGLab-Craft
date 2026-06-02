@@ -4,135 +4,143 @@
 
 [中文说明](./README.md)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)
-![NeoForge](https://img.shields.io/badge/NeoForge-21.1.61+-orange)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.21.4-brightgreen)
+![NeoForge](https://img.shields.io/badge/NeoForge-21.4.157+-orange)
 ![Java](https://img.shields.io/badge/Java-21-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
-## ⬇️ Download
+DGLab Craft is a Minecraft mod that converts in-game damage, low-health states, and environment changes into DGLab device feedback. It connects to the DGLab mobile app through a local WebSocket server.
 
-[![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
-[![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
+Current branch: `1.21.4-NeoForge`
+Target version: Minecraft `1.21.4` / NeoForge `21.4.157+` / Java `21`
+> Note: this release is marked as not field-tested. If you only want a stable play setup, prefer a release that exactly matches your Minecraft version and has been tested.
 
-> Branch target: `1.21.1-NeoForge`
+## Part 1: Install and Play
 
-DGLab Craft is a Minecraft NeoForge mod that starts a local WebSocket service and converts damage, environment changes, and low-health states into DGLab device feedback.
+### 1. Check your Minecraft version first
 
-## Branch Scope
+This branch only targets:
 
-This branch is specifically for:
-
-- Minecraft `1.21.1`
-- NeoForge `21.1.61+`
+- Minecraft `1.21.4`
+- NeoForge `21.4.157+`
 - Java `21`
 
-If you need another version:
+If your Minecraft version is different, use the matching branch and release below. Do not mix jars built for different Minecraft versions.
 
-- use branch `1.19.2` for Minecraft 1.19.2 Forge
-- use branch `1.20.1` for Minecraft 1.20.1 Forge
+| Minecraft | Loader | Branch | Latest release |
+| --- | --- | --- | --- |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
-## Branch Highlights
+### 2. Download the Mod from GitHub
 
-This is the modern NeoForge line of the project. It includes:
+1. Open this release: [`DGLabCraft-1.21.4-1.0.7.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge)
+2. Scroll to **Assets**.
+3. Download `DGLabCraft-1.21.4-1.0.7.jar`.
+4. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
 
-- migration from Forge to NeoForge
-- Java 21 runtime alignment
-- updated UI/config implementation for 1.21.1
-- maintained fixes for multiplayer and modpack damage-feedback behavior
+You can also start from the project [Releases page](https://github.com/bilbillm/DGLab-Craft/releases) and choose the release that matches your Minecraft version.
 
-## Features
+### 3. Install it into Minecraft
+
+1. Create or select a Minecraft `1.21.4` instance in your launcher.
+2. Install NeoForge `21.4.157+` for that instance.
+3. Open the instance's `mods` folder. A common path is `.minecraft/mods`.
+4. Put `DGLabCraft-1.21.4-1.0.7.jar` into that folder.
+5. Start the game and check the Mods screen for `DGLab Craft`.
+
+If you cannot find the instance folder, most launchers provide an “Open Folder” or “Open Game Directory” action for each instance.
+
+### 4. Connect the DGLab App for the first time
+
+1. Enter a single-player world or server.
+2. Press `K` to open the DGLab Craft screen.
+3. Open the connection screen and generate the QR code.
+4. Open the DGLab mobile app and use SOCKET / QR connection.
+5. Your phone and PC must be on the same LAN, usually the same Wi-Fi.
+
+If connection fails, check these first:
+
+- The phone and PC are on the same Wi-Fi.
+- Windows Firewall is not blocking Java or Minecraft.
+- The shown IP looks like a LAN address, such as `192.168.x.x`, `10.x.x.x`, or `172.16-31.x.x`.
+- If a virtual-adapter IP is shown, manually set the PC's real LAN IP in the config.
+
+### 5. What the mod reacts to
 
 - Low-health heartbeat feedback
-- Environment feedback (Nether, End, portal, powder snow, etc.)
 - Damage feedback with waveform mapping by damage source
-- A/B channel sync or split behavior
-- QR-code based DGLab App connection
-- Fade-out handling after stimulus ends
+- Nether, End, portal, powder snow, and other environment feedback
+- A/B channel sync or split control
+- Fade-out after feedback ends
+- In-game HUD and connection state display
 
-## Requirements
+## Part 2: Developers and Maintainers
 
-- Minecraft `1.21.1`
-- NeoForge `21.1.61` or newer in the same major line
+### Branch target
+
+This branch maintains:
+
+- Minecraft `1.21.4`
+- NeoForge `21.4.157+`
 - Java `21`
-- DGLab device and mobile app
+- Mod version `1.0.7`
 
-## Installation
+When maintaining multiple versions, put fixes on the matching Minecraft branch first. Do not blindly copy Forge and NeoForge code between branches because their events, registration APIs, and build flows differ.
 
-1. Download the `.jar` built for this branch
-2. Put it into `.minecraft/mods`
-3. Launch the game with NeoForge 1.21.1
-
-## Quick Start
-
-1. Enter a single-player world or multiplayer server
-2. Press `K` to open the main UI
-3. Open the connection screen and generate the QR code
-4. Use the DGLab App SOCKET mode to scan the QR code
-5. Make sure the phone and PC are on the same LAN
-
-## Current Branch Notes
-
-The 1.21.1-NeoForge branch is currently focused on:
-
-- NeoForge compatibility
-- connection-path stability
-- multiplayer and modpack damage-feedback fixes
-
-When reporting bugs for this branch, it helps to include whether you are using:
-
-- a clean NeoForge setup or a modpack
-- single-player or multiplayer client mode
-- iOS or Android
-- the exact Java version and launcher
-
-## Main Configuration
-
-You can configure:
-
-- Global intensity limit
-- Heartbeat trigger threshold
-- Environment intensity settings
-- Damage multipliers
-- HUD visibility and position
-- A/B channel sync
-- WebSocket port
-
-## Build
-
-This branch uses the NeoForge / ModDevGradle build flow.
+### Build
 
 ```bash
-git clone https://github.com/bilbillm/DGLab-Craft.git
+git clone -b 1.21.4-NeoForge https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
 ./gradlew build
 ```
 
 Artifacts are generated in `build/libs/`.
 
-## Notes
+For release uploads, use the full jar, normally the one without `-slim` in its filename.
 
-- This branch does not target legacy Forge
-- Java 21 is required at runtime
-- This documentation only applies to the 1.21.1 NeoForge branch
+### Maintained branches
 
-## Bug Reports
+| Minecraft | Loader | Branch | Latest release |
+| --- | --- | --- | --- |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
-Please include:
+### Useful bug report details
 
-- branch / mod version
-- Minecraft / NeoForge version
+Ask users to include:
+
+- Minecraft version
+- Forge / NeoForge version
+- DGLab Craft version
 - Java version
+- single-player, multiplayer, or modpack environment
+- iOS or Android DGLab App
 - `latest.log`
-- whether the issue happens in single-player, multiplayer, or a modpack
+- for connection issues, the IP and port shown by the connection screen
+
+### Common maintenance checks
+
+- Keep `gradle.properties` Minecraft, loader, and mod versions aligned with the release.
+- Keep `META-INF/mods.toml` or NeoForge metadata version ranges aligned with the branch.
+- Keep README download links and jar filenames aligned with the latest release.
+- For connection bugs, first check whether WebSocket started and whether the QR code uses a reachable LAN IP.
+
+## License
+
+GPL 3.0
 
 ## Credits
 
 - [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
 - [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
-
-## License
-
-GPL 3.0
 
 ## Author
 
