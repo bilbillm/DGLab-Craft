@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 class WebSocketServerManagerTest {
 
@@ -182,5 +183,47 @@ class WebSocketServerManagerTest {
         manager.parseStrengthMessage("pulse-A:[\"0A0A0A0A0A0A0A0A\"]");
         assertEquals(aBefore, manager.getAppAMaxStrength());
         assertEquals(bBefore, manager.getAppBMaxStrength());
+    }
+
+    // ===== chooseBestLocalIpAddress =====
+
+    @Test
+    void chooseBestLocalIpAddress_prefersPhysicalLanOverVirtualAdapter() {
+        var vmwareAddress = new WebSocketServerManager.LocalAddressCandidate(
+            "192.168.6.1",
+            "eth7",
+            "VMware Network Adapter VMnet1",
+            true,
+            false
+        );
+        var wlanAddress = new WebSocketServerManager.LocalAddressCandidate(
+            "192.168.31.25",
+            "wlan0",
+            "Intel(R) Wi-Fi 6 AX201",
+            false,
+            true
+        );
+
+        assertEquals("192.168.31.25", WebSocketServerManager.chooseBestLocalIpAddress(List.of(vmwareAddress, wlanAddress)));
+    }
+
+    @Test
+    void chooseBestLocalIpAddress_ignoresPublicAndLoopbackAddresses() {
+        var publicAddress = new WebSocketServerManager.LocalAddressCandidate(
+            "8.8.8.8",
+            "eth0",
+            "Ethernet",
+            false,
+            true
+        );
+        var loopbackAddress = new WebSocketServerManager.LocalAddressCandidate(
+            "127.0.0.1",
+            "lo",
+            "Loopback",
+            false,
+            false
+        );
+
+        assertNull(WebSocketServerManager.chooseBestLocalIpAddress(List.of(publicAddress, loopbackAddress)));
     }
 }
