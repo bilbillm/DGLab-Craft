@@ -9,127 +9,138 @@
 ![Java](https://img.shields.io/badge/Java-17-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
-## ⬇️ 下载 Download
+DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量、环境变化等事件转换成 DGLab 设备反馈，并通过本地 WebSocket 和 DGLab App 连接。
 
-[![Modrinth](https://img.shields.io/badge/Modrinth-dglab--craft-00AF5C?logo=modrinth&logoColor=white)](https://modrinth.com/mod/dglab-craft)
-[![CurseForge](https://img.shields.io/badge/CurseForge-dglab--craft-F16436?logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
+当前分支：`1.20.1`
+适配版本：Minecraft `1.20.1` / Forge `47.2.0+` / Java `17`
 
-> 当前分支：`1.20.1`
 
-DGLab Craft 是一个适用于 Minecraft Forge 的体感反馈模组。它通过本地 WebSocket 服务与 DGLab App 连接，并将游戏中的伤害、环境变化、低血量状态等事件转换成设备反馈。
+## 第一部分：我只是想安装使用
 
-## 分支定位
+### 1. 先确认你的 MC 版本
 
-这个分支对应：
+这个分支只适合：
 
 - Minecraft `1.20.1`
 - Forge `47.2.0+`
 - Java `17`
 
-如果你要使用其他版本：
+如果你的 Minecraft 版本不一样，请先在下面表格里找对应分支，不要混装不同 MC 版本的 jar。
 
-- `1.19.2` 请切换到 `1.19.2` 分支
-- `1.21.1 NeoForge` 请切换到 `1.21.1-NeoForge` 分支
+| MC 版本 | 加载器 | 分支 | 最新 release |
+| --- | --- | --- | --- |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
-## 功能概览
+### 2. 在 GitHub 下载 Mod
+
+1. 打开这个版本的 release：[`DGLabCraft-1.20.1-1.0.9.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1)
+2. 在页面下方找到 **Assets**。
+3. 下载 `DGLabCraft-1.20.1-1.0.9.jar`。
+4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
+
+也可以从项目的 [Releases 页面](https://github.com/bilbillm/DGLab-Craft/releases) 进入，按自己的 Minecraft 版本选择 release。
+
+### 3. 安装到 Minecraft
+
+1. 用启动器创建或选择一个 Minecraft `1.20.1` 实例。
+2. 给这个实例安装 Forge `47.2.0+`。
+3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
+4. 把刚下载的 `DGLabCraft-1.20.1-1.0.9.jar` 放进去。
+5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
+
+如果你不知道实例目录在哪：在启动器里通常可以右键实例，选择“打开文件夹”或“打开游戏目录”。
+
+### 4. 第一次连接 DGLab App
+
+1. 进入单人世界或服务器。
+2. 按默认快捷键 `K` 打开 DGLab Craft 主界面。
+3. 打开连接界面，生成二维码。
+4. 手机打开 DGLab App，使用 SOCKET 控制/扫码连接。
+5. 手机和电脑必须在同一个局域网里，通常就是连同一个 Wi-Fi。
+
+连不上时先检查这几件事：
+
+- 手机和电脑是不是同一个 Wi-Fi。
+- Windows 防火墙有没有拦截 Java 或 Minecraft。
+- README 或界面里显示的 IP 是否像 `192.168.x.x`、`10.x.x.x`、`172.16-31.x.x` 这样的局域网地址。
+- 如果显示的是虚拟网卡地址，可以在配置里手动填写电脑真实局域网 IP。
+
+### 5. 它会反馈哪些内容
 
 - 低血量心跳反馈
-- 环境反馈（下界、末地、传送门、细雪等）
-- 伤害反馈（按伤害来源映射不同波形）
-- A / B 通道同步或独立控制
-- 二维码连接 DGLab App
-- 强度渐变淡出
+- 受伤反馈，并按伤害来源选择不同波形
+- 下界、末地、传送门、细雪等环境反馈
+- A/B 通道同步或独立控制
+- 反馈结束后的强度淡出
+- 游戏内 HUD 和连接状态显示
 
-## 运行要求
+## 第二部分：开发者和维护者
+
+### 分支目标
+
+当前分支维护：
 
 - Minecraft `1.20.1`
-- Forge `47.2.0` 或更高版本（同大版本）
+- Forge `47.2.0+`
 - Java `17`
-- DGLab 设备与手机 App
+- Mod 版本 `1.0.9`
 
-## 安装方法
+维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
 
-1. 下载本分支对应的 `.jar`
-2. 放入 `.minecraft/mods` 文件夹
-3. 使用 Forge 1.20.1 启动游戏
-
-## 快速使用
-
-1. 进入单人世界或多人服务器
-2. 按默认快捷键 `K` 打开设置界面
-3. 在连接界面中生成二维码
-4. 使用 DGLab App 的 SOCKET 控制扫描二维码
-5. 确保手机和电脑位于同一局域网
-
-## 分支现状
-
-`1.20.1` 分支目前已经包含多轮兼容性修复，重点包括：
-
-- 联机客机伤害反馈触发问题修复
-- 伤害事件在复杂环境下改为基于真实掉血触发
-- iOS 设备下波形指令格式兼容修复
-
-如果你遇到问题，建议优先在 issue 中注明：
-
-- 是否为整合包环境
-- 是否为联机客机
-- 是否为 iOS / Android 设备
-
-## 主要配置
-
-可在游戏内调整：
-
-- 全局强度上限
-- 心跳触发阈值
-- 环境强度
-- 各类伤害倍率
-- HUD 显示与位置
-- A/B 通道同步
-- WebSocket 端口
-
-## 开发与构建
+### 构建
 
 ```bash
-git clone https://github.com/bilbillm/DGLab-Craft.git
+git clone -b 1.20.1 https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
 ./gradlew build
 ```
 
-如需 IDE 运行配置：
+构建产物在：`build/libs/`
 
-```bash
-./gradlew genEclipseRuns
-# 或
-./gradlew genIntellijRuns
-```
+发布 release 时，通常上传不带 `-slim` 的完整 jar。
 
-构建产物位于：`build/libs/`
+### 维护分支一览
 
-## 已知说明
+| MC 版本 | 加载器 | 分支 | 最新 release |
+| --- | --- | --- | --- |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
-- 本分支只针对 Forge 1.20.1
-- 文档不适用于 NeoForge 1.21.1
-- 当前版本依然建议在复杂整合包环境中做实机验证，尤其是联机与设备连接链路
+### 报 bug 时需要的信息
 
-## 问题反馈
+请尽量让用户附上：
 
-提交 issue 时请附带：
-
-- 分支 / 模组版本
-- Minecraft / Forge 版本
+- Minecraft 版本
+- Forge / NeoForge 版本
+- DGLab Craft 版本
 - Java 版本
-- 设备平台（iOS / Android）
+- 单人、联机还是整合包
+- DGLab App 是 iOS 还是 Android
 - `latest.log`
-- 单人 / 联机 / 整合包环境说明
+- 如果是连接问题，请附上界面里显示的 IP 和端口
+
+### 常见维护点
+
+- `gradle.properties` 里的 MC、加载器和 mod 版本要和 release 对齐。
+- `META-INF/mods.toml` 或 NeoForge 对应 metadata 里的版本范围要和分支一致。
+- README 的下载链接和 jar 文件名要跟最新 release 同步。
+- 连接问题优先看 WebSocket 是否启动、二维码 IP 是否是可访问的局域网地址。
+
+## 许可证
+
+GPL 3.0
 
 ## 致谢
 
 - [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
 - [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
-
-## 许可证
-
-GPL 3.0
 
 ## 作者
 
