@@ -1,5 +1,13 @@
 # DGLab Craft Changelog
 
+## [1.0.10] - 2026-06-18
+
+### 修复
+- 修复 Minecraft 1.20.1 / Forge 47.2.0 下主 Mod 类缺少无参构造器导致加载失败的问题。
+- 新增回归测试，确认 Forge 能通过反射找到 `DGLabCraft()` 构造器。
+
+---
+
 ## [1.0.8-beta] - 2026-05-12
 
 > ⚠️ **此为 Beta 版本，未经实机测试。** 包含架构加固（线程安全、资源清理、死代码删除）、75 个单元测试和日志规范化改动。如需稳定版本请使用 [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.20.1)。
