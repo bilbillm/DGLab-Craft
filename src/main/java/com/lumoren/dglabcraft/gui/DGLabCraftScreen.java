@@ -81,7 +81,8 @@ public class DGLabCraftScreen extends Screen {
         super.init();
 
         // 创建滚动列表
-        this.list = new SettingsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
+        int listHeight = this.height - 64;
+        this.list = new SettingsList(this.minecraft, this.width, listHeight, 32, 25);
         this.addWidget(this.list);
 
         // 构建设置项
@@ -649,10 +650,11 @@ public class DGLabCraftScreen extends Screen {
      */
     static class SettingsList extends ContainerObjectSelectionList<SettingsList.Entry> {
 
-        public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
-            super(minecraft, width, height, top, bottom, itemHeight);
+        public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int itemHeight) {
+            super(minecraft, width, height, top, itemHeight);
         }
 
+        @Override
         protected int getScrollbarPosition() {
             return this.width - 10;
         }
