@@ -1,0 +1,186 @@
+name: Publish Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing GitHub release tag to publish"
+        required: true
+      release_type:
+        description: "CurseForge release type"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - release
+          - beta
+          - alpha
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release-${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish release assets
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+      RELEASE_TYPE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'auto' }}
+      RELEASE_PRERELEASE: ${{ github.event_name == 'release' && github.event.release.prerelease || false }}
+
+    steps:
+      - name: Validate secrets
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "${CF_API_TOKEN}" ]; then
+            echo "::error::Missing CF_API_TOKEN repository secret"
+            exit 1
+          fi
+
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Read release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read_property() {
+            sed -n "s/^$1=//p" gradle.properties | head -n 1 | tr -d '\r'
+          }
+
+          minecraft_version="$(read_property minecraft_version)"
+          mod_version="$(read_property mod_version)"
+          if [ -z "${minecraft_version}" ] || [ -z "${mod_version}" ]; then
+            echo "::error::Could not read minecraft_version or mod_version from gradle.properties"
+            exit 1
+          fi
+
+          if grep -q '^neoforge_version=' gradle.properties; then
+            loader="NeoForge"
+          else
+            loader="Forge"
+          fi
+          java_version="$(sed -n 's/.*JavaLanguageVersion\.of(\([0-9][0-9]*\)).*/\1/p' build.gradle | head -n 1 | tr -d '\r')"
+          if [ -z "${java_version}" ]; then
+            if [ "${loader}" = "NeoForge" ]; then
+              java_version="21"
+            else
+              java_version="17"
+            fi
+          fi
+
+          minecraft_minor="${minecraft_version%.*}"
+          game_versions="Minecraft ${minecraft_minor}:${minecraft_version},Java ${java_version},${loader}"
+          artifact="build/libs/DGLabCraft-${minecraft_version}-${mod_version}.jar"
+          display_name="DGLabCraft ${mod_version} for Minecraft ${minecraft_version}"
+
+          tag_lower="$(printf '%s' "${RELEASE_TAG}" | tr '[:upper:]' '[:lower:]')"
+          release_type="${RELEASE_TYPE_INPUT}"
+          if [ "${release_type}" = "auto" ]; then
+            if [[ "${tag_lower}" == *alpha* ]]; then
+              release_type="alpha"
+            elif [[ "${tag_lower}" == *beta* ]] || [ "${RELEASE_PRERELEASE}" = "true" ]; then
+              release_type="beta"
+            else
+              release_type="release"
+            fi
+          fi
+
+          {
+            echo "minecraft_version=${minecraft_version}"
+            echo "mod_version=${mod_version}"
+            echo "loader=${loader}"
+            echo "java_version=${java_version}"
+            echo "game_versions=${game_versions}"
+            echo "artifact=${artifact}"
+            echo "display_name=${display_name}"
+            echo "release_type=${release_type}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.meta.outputs.java_version }}
+          cache: gradle
+
+      - name: Build jar
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build
+
+      - name: Locate release jar
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          artifact="${{ steps.meta.outputs.artifact }}"
+          if [ ! -f "${artifact}" ]; then
+            mapfile -t candidates < <(
+              find build/libs -maxdepth 1 -type f -name '*.jar' \
+                ! -name '*-slim.jar' \
+                ! -name '*-sources.jar' \
+                ! -name '*-javadoc.jar' \
+                ! -name '*-dev.jar' \
+                ! -name '*-all.jar' \
+                | sort
+            )
+            if [ "${#candidates[@]}" -ne 1 ]; then
+              echo "::error::Expected ${artifact}, found ${#candidates[@]} release jar candidates"
+              printf '%s\n' "${candidates[@]}"
+              exit 1
+            fi
+            artifact="${candidates[0]}"
+          fi
+
+          echo "path=${artifact}" >> "${GITHUB_OUTPUT}"
+
+      - name: Read GitHub release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="$(gh release view "${RELEASE_TAG}" --json body --jq '.body // ""' 2>/dev/null || true)"
+          if [ -z "${body}" ]; then
+            body="Release ${RELEASE_TAG}"
+          fi
+
+          delimiter="CHANGELOG_$(date +%s%N)"
+          {
+            echo "changelog<<${delimiter}"
+            printf '%s\n' "${body}"
+            echo "${delimiter}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Upload jar to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${RELEASE_TAG}" "${{ steps.artifact.outputs.path }}" --clobber
+
+      - name: Upload jar to CurseForge
+        uses: itsmeow/curseforge-upload@v3
+        with:
+          token: ${{ secrets.CF_API_TOKEN }}
+          project_id: "1538053"
+          game_endpoint: minecraft
+          file_path: ${{ steps.artifact.outputs.path }}
+          game_versions: ${{ steps.meta.outputs.game_versions }}
+          release_type: ${{ steps.meta.outputs.release_type }}
+          display_name: ${{ steps.meta.outputs.display_name }}
+          changelog: ${{ steps.notes.outputs.changelog }}
+          changelog_type: markdown
