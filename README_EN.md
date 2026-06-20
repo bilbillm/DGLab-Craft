@@ -32,14 +32,14 @@ If your Minecraft version is different, use the matching branch and release belo
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
 ### 2. Download the Mod from GitHub
 
-1. Open this release: [`DGLabCraft-1.21.1-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1)
+1. Open this release: [`DGLabCraft-1.21.1-1.0.7.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge)
 2. Scroll to **Assets**.
-3. Download `DGLabCraft-1.21.1-1.0.6.jar`.
+3. Download `DGLabCraft-1.21.1-1.0.7.jar`.
 4. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
 
 You can also start from the project [Releases page](https://github.com/bilbillm/DGLab-Craft/releases) and choose the release that matches your Minecraft version.
@@ -49,7 +49,7 @@ You can also start from the project [Releases page](https://github.com/bilbillm/
 1. Create or select a Minecraft `1.21.1` instance in your launcher.
 2. Install NeoForge `21.1.61+` for that instance.
 3. Open the instance's `mods` folder. A common path is `.minecraft/mods`.
-4. Put `DGLabCraft-1.21.1-1.0.6.jar` into that folder.
+4. Put `DGLabCraft-1.21.1-1.0.7.jar` into that folder.
 5. Start the game and check the Mods screen for `DGLab Craft`.
 
 If you cannot find the instance folder, most launchers provide an “Open Folder” or “Open Game Directory” action for each instance.
@@ -110,7 +110,7 @@ For release uploads, use the full jar, normally the one without `-slim` in its f
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
 ### Useful bug report details
