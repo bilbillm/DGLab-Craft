@@ -109,7 +109,42 @@ jobs:
             echo "release_type=${release_type}"
           } >> "${GITHUB_OUTPUT}"
 
+      - name: Download existing GitHub release jar
+        id: existing_artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p release-assets
+          if gh release download "${RELEASE_TAG}" --pattern "*.jar" --dir release-assets --clobber; then
+            mapfile -t candidates < <(
+              find release-assets -maxdepth 1 -type f -name '*.jar' \
+                ! -name '*-slim.jar' \
+                ! -name '*-sources.jar' \
+                ! -name '*-javadoc.jar' \
+                ! -name '*-dev.jar' \
+                ! -name '*-all.jar' \
+                | sort
+            )
+            if [ "${#candidates[@]}" -eq 1 ]; then
+              echo "found=true" >> "${GITHUB_OUTPUT}"
+              echo "path=${candidates[0]}" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+            if [ "${#candidates[@]}" -gt 1 ]; then
+              echo "::error::Found multiple existing release jar candidates"
+              printf '%s\n' "${candidates[@]}"
+              exit 1
+            fi
+          fi
+
+          echo "found=false" >> "${GITHUB_OUTPUT}"
+          echo "path=" >> "${GITHUB_OUTPUT}"
+
       - name: Set up Java
+        if: steps.existing_artifact.outputs.found != 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -117,11 +152,13 @@ jobs:
           cache: gradle
 
       - name: Remove local-only Gradle proxy
+        if: steps.existing_artifact.outputs.found != 'true'
         run: |
           sed -i '/^systemProp\.\(http\|https\)\.proxyHost=/d' gradle.properties
           sed -i '/^systemProp\.\(http\|https\)\.proxyPort=/d' gradle.properties
 
       - name: Build jar
+        if: steps.existing_artifact.outputs.found != 'true'
         run: |
           chmod +x ./gradlew
           ./gradlew build
@@ -131,6 +168,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          if [ "${{ steps.existing_artifact.outputs.found }}" = "true" ]; then
+            echo "path=${{ steps.existing_artifact.outputs.path }}" >> "${GITHUB_OUTPUT}"
+            echo "built=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
 
           artifact="${{ steps.meta.outputs.artifact }}"
           if [ ! -f "${artifact}" ]; then
@@ -152,6 +195,7 @@ jobs:
           fi
 
           echo "path=${artifact}" >> "${GITHUB_OUTPUT}"
+          echo "built=true" >> "${GITHUB_OUTPUT}"
 
       - name: Read GitHub release notes
         id: notes
@@ -173,6 +217,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Upload jar to GitHub Release
+        if: steps.artifact.outputs.built == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "${RELEASE_TAG}" "${{ steps.artifact.outputs.path }}" --clobber
