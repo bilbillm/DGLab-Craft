@@ -206,14 +206,31 @@ jobs:
           echo "path=${artifact}" >> "${GITHUB_OUTPUT}"
           echo "built=true" >> "${GITHUB_OUTPUT}"
 
-      - name: Read GitHub release notes
+      - name: Read CurseForge changelog
         id: notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          body="$(gh release view "${RELEASE_TAG}" --json body --jq '.body // ""' 2>/dev/null || true)"
+
+          version="${{ steps.meta.outputs.mod_version }}"
+          body=""
+          if [ -f changelog.txt ]; then
+            body="$(
+              awk -v version="${version}" '
+                BEGIN { in_section = 0 }
+                index($0, "## [" version "]") == 1 { in_section = 1 }
+                in_section && $0 == "---" { exit }
+                in_section && $0 ~ "^## \\[" && index($0, "## [" version "]") != 1 { exit }
+                in_section { print }
+              ' changelog.txt
+            )"
+          fi
+
+          if [ -z "${body}" ]; then
+            body="$(gh release view "${RELEASE_TAG}" --json body --jq '.body // ""' 2>/dev/null || true)"
+          fi
           if [ -z "${body}" ]; then
             body="Release ${RELEASE_TAG}"
           fi
