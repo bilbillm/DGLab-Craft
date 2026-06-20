@@ -19,6 +19,7 @@ public class MainScreen extends Screen {
 
     private Button settingsButton;
     private Button connectionButton;
+    private Button diagnosticButton;
     private Button waveformButton;
     private Button hudToggleButton;
     private Button hudPositionButton;
@@ -40,21 +41,27 @@ public class MainScreen extends Screen {
         int startY = this.height / 2 - 40;
 
         // 强度设置按钮
-        this.settingsButton = Button.builder(Component.literal("强度设置"), button -> {
+        this.settingsButton = Button.builder(Component.translatable("button.dglabcraft.strength_settings"), button -> {
             this.minecraft.setScreen(new DGLabCraftScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.settingsButton);
 
         // 连接设置按钮
-        this.connectionButton = Button.builder(Component.literal("连接设置"), button -> {
+        this.connectionButton = Button.builder(Component.translatable("button.dglabcraft.connection_settings"), button -> {
             this.minecraft.setScreen(new ConnectionScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.connectionButton);
 
-        // 波形设置按钮 (敬请期待)
-        this.waveformButton = Button.builder(Component.literal("波形设置 (敬请期待)"), button -> {
-            // TODO: 波形设置界面
+        // 连接诊断按钮
+        this.diagnosticButton = Button.builder(Component.translatable("button.dglabcraft.diagnostics"), button -> {
+            this.minecraft.setScreen(new DiagnosticScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight).build();
+        this.addRenderableWidget(this.diagnosticButton);
+
+        // 波形设置按钮 (敬请期待)
+        this.waveformButton = Button.builder(Component.translatable("button.dglabcraft.waveform_settings_soon"), button -> {
+            // TODO: 波形设置界面
+        }).bounds(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.waveformButton);
 
         // HUD 开关按钮 + HUD 位置切换按钮 + 关闭界面按钮（三列并排，总宽度200与上方按钮对齐）
@@ -62,51 +69,56 @@ public class MainScreen extends Screen {
         int btnGap = 1;     // 间距
         int startX = centerX - buttonWidth / 2;
         boolean hudEnabled = DGLabConfig.HUD_ENABLED.get();
-        String hudText = hudEnabled ? "HUD: 开启" : "HUD: 关闭";
-        this.hudToggleButton = Button.builder(Component.literal(hudText), button -> {
+        this.hudToggleButton = Button.builder(hudToggleText(hudEnabled), button -> {
             boolean newState = !DGLabConfig.HUD_ENABLED.get();
             DGLabConfig.HUD_ENABLED.set(newState);
             DGLabConfig.save();
-            button.setMessage(Component.literal(newState ? "HUD: 开启" : "HUD: 关闭"));
-        }).bounds(startX, startY + spacing * 3, btnWidth, buttonHeight).build();
+            button.setMessage(hudToggleText(newState));
+        }).bounds(startX, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudToggleButton);
 
         // HUD 位置切换按钮
         int currentPos = DGLabConfig.HUD_POSITION.get();
-        String posText = "位置: " + getPositionText(currentPos);
-        this.hudPositionButton = Button.builder(Component.literal(posText), button -> {
+        this.hudPositionButton = Button.builder(hudPositionText(currentPos), button -> {
             int newPos = (DGLabConfig.HUD_POSITION.get() + 1) % 4;
             DGLabConfig.HUD_POSITION.set(newPos);
             DGLabConfig.save();
-            button.setMessage(Component.literal("位置: " + getPositionText(newPos)));
-        }).bounds(startX + btnWidth + btnGap, startY + spacing * 3, btnWidth, buttonHeight).build();
+            button.setMessage(hudPositionText(newPos));
+        }).bounds(startX + btnWidth + btnGap, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudPositionButton);
 
         // 关闭界面按钮
-        this.closeButton = Button.builder(Component.literal("关闭界面"), button -> this.onClose())
-            .bounds(startX + (btnWidth + btnGap) * 2, startY + spacing * 3, btnWidth, buttonHeight).build();
+        this.closeButton = Button.builder(Component.translatable("button.dglabcraft.close_screen"), button -> this.onClose())
+            .bounds(startX + (btnWidth + btnGap) * 2, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.closeButton);
     }
 
     /**
      * 获取 HUD 位置对应的中文文本
      */
-    private String getPositionText(int pos) {
+    private Component getPositionText(int pos) {
         switch (pos) {
-            case 0: return "左上";
-            case 1: return "右上";
-            case 2: return "左下";
-            case 3: return "右下";
-            default: return "未知";
+            case 0: return Component.translatable("position.dglabcraft.top_left");
+            case 1: return Component.translatable("position.dglabcraft.top_right");
+            case 2: return Component.translatable("position.dglabcraft.bottom_left");
+            case 3: return Component.translatable("position.dglabcraft.bottom_right");
+            default: return Component.translatable("position.dglabcraft.unknown");
         }
+    }
+
+    private Component hudToggleText(boolean enabled) {
+        return Component.translatable("button.dglabcraft.hud_toggle",
+            Component.translatable(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
+    }
+
+    private Component hudPositionText(int pos) {
+        return Component.translatable("button.dglabcraft.hud_position", getPositionText(pos));
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        // 1. 先让父类把毛玻璃背景和所有的按钮都画好
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        this.renderBackground(guiGraphics);
 
-        // 2. 然后在最顶层，画我们极其清晰的文字！
         int centerX = this.width / 2;
 
         // 标题
@@ -119,10 +131,10 @@ public class MainScreen extends Screen {
         Component statusText;
         int statusColor;
         if (isConnected) {
-            statusText = Component.literal("已连接");
+            statusText = Component.translatable("status.dglabcraft.connected");
             statusColor = 0x00FF00;
         } else {
-            statusText = Component.literal("等待连接...");
+            statusText = Component.translatable("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
         guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
@@ -130,6 +142,8 @@ public class MainScreen extends Screen {
         // 服务器信息
         String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
         guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
+
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     @Override
