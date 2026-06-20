@@ -1,6 +1,5 @@
 package com.lumoren.dglabcraft;
 
-import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
@@ -10,19 +9,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.ModLoadingContext;
 
 @Mod(DGLabCraft.MODID)
 public class DGLabCraft
 {
     public static final String MODID = "dglabcraft";
 
-    public DGLabCraft(FMLJavaModLoadingContext context)
+    public DGLabCraft()
     {
-        IEventBus modEventBus = context.getModEventBus();
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // 注册通用设置
         modEventBus.addListener(this::commonSetup);
