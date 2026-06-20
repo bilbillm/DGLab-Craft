@@ -31,7 +31,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 | --- | --- | --- | --- |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
@@ -109,7 +109,7 @@ cd DGLab-Craft
 | --- | --- | --- | --- |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
