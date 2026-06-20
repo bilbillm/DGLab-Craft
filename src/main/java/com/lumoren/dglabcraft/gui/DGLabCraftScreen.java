@@ -36,8 +36,44 @@ public class DGLabCraftScreen extends Screen {
     private boolean lastConnected = false;
 
     public DGLabCraftScreen(Screen parent) {
-        super(Component.literal("DGLab 强度与倍率设置"));
+        super(Component.translatable("screen.dglabcraft.strength_settings"));
         this.parent = parent;
+    }
+
+    private static Component t(String key, Object... args) {
+        return Component.translatable(key, args);
+    }
+
+    private static Component setting(String key) {
+        return t(key).copy().append(": ");
+    }
+
+    private static Component onOff(boolean value) {
+        return t(value ? "status.dglabcraft.on" : "status.dglabcraft.off");
+    }
+
+    private static Component syncButtonText(boolean value) {
+        return t("button.dglabcraft.sync_channels", onOff(value));
+    }
+
+    private static Component appStrengthDisconnectedText() {
+        return t("label.dglabcraft.app_strength.disconnected");
+    }
+
+    private static Component effectiveStrengthDisconnectedText() {
+        return t("label.dglabcraft.effective_strength.disconnected");
+    }
+
+    private static Component appStrengthText(int strengthA, int strengthB) {
+        return t("label.dglabcraft.app_strength", strengthA, strengthB);
+    }
+
+    private static Component effectiveStrengthText(int strengthA, int strengthB) {
+        return t("label.dglabcraft.effective_strength", strengthA, strengthB);
+    }
+
+    private static Component heartbeatTriggerText(int health) {
+        return t("label.dglabcraft.heartbeat_trigger", health);
     }
 
     @Override
@@ -58,12 +94,12 @@ public class DGLabCraftScreen extends Screen {
         int centerX = this.width / 2;
 
         // 完成按钮 - 居中偏左
-        this.doneButton = Button.builder(Component.literal("完成"), button -> this.onClose())
+        this.doneButton = Button.builder(t("button.dglabcraft.done"), button -> this.onClose())
             .bounds(centerX - buttonWidth - 5, bottomY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(doneButton);
 
         // 重置按钮 - 居中偏右
-        this.resetButton = Button.builder(Component.literal("重置为默认"), button -> resetToDefaults())
+        this.resetButton = Button.builder(t("button.dglabcraft.reset_defaults"), button -> resetToDefaults())
             .bounds(centerX + 5, bottomY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(resetButton);
     }
@@ -73,24 +109,24 @@ public class DGLabCraftScreen extends Screen {
      */
     private void buildSettings() {
         // ===== 通用与心跳设置 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("通用与心跳设置"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.general_heartbeat")));
 
         // 手机APP强度上限（只读显示）
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         boolean isConnected = ws.isConnected();
         if (!isConnected) {
-            this.appStrengthLabel = new SettingsList.LabelEntry("APP强度上限: 未连接设备");
-            this.effectiveStrengthLabel = new SettingsList.LabelEntry("实际强度上限: 未连接设备");
+            this.appStrengthLabel = new SettingsList.LabelEntry(appStrengthDisconnectedText());
+            this.effectiveStrengthLabel = new SettingsList.LabelEntry(effectiveStrengthDisconnectedText());
         } else {
             int appMaxStrengthA = ws.getAppAMaxStrength();
             int appMaxStrengthB = ws.getAppBMaxStrength();
-            this.appStrengthLabel = new SettingsList.LabelEntry("APP强度上限: A: " + appMaxStrengthA + ", B: " + appMaxStrengthB);
+            this.appStrengthLabel = new SettingsList.LabelEntry(appStrengthText(appMaxStrengthA, appMaxStrengthB));
 
             // 全局强度上限百分比 + 实际强度上限
             int percentage = ModConfig.MAX_INTENSITY_PERCENTAGE.get().intValue();
             int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(appMaxStrengthA);
             int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(appMaxStrengthB);
-            this.effectiveStrengthLabel = new SettingsList.LabelEntry("实际强度上限: A: " + effectiveMaxA + ", B: " + effectiveMaxB);
+            this.effectiveStrengthLabel = new SettingsList.LabelEntry(effectiveStrengthText(effectiveMaxA, effectiveMaxB));
         }
         this.list.addEntry(this.appStrengthLabel);
         this.list.addEntry(this.effectiveStrengthLabel);
@@ -106,7 +142,7 @@ public class DGLabCraftScreen extends Screen {
         // 全局强度上限百分比滑块
         int percentage = ModConfig.MAX_INTENSITY_PERCENTAGE.get().intValue();
         Slider percentageSlider = new Slider(
-            0, 0, 190, 20, Component.literal("全局强度上限%: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.max_intensity_percentage"),
             0, 100, percentage, 1.0, "%", value -> {
                 ModConfig.MAX_INTENSITY_PERCENTAGE.set((double) value);
                 ModConfig.save();
@@ -115,12 +151,12 @@ public class DGLabCraftScreen extends Screen {
 
         // A/B通道同步
         Button syncButton = Button.builder(
-            Component.literal("A/B 通道同步: " + (ModConfig.SYNC_CHANNELS.get() ? "开" : "关")),
+            syncButtonText(ModConfig.SYNC_CHANNELS.get()),
             (button) -> {
                 boolean newValue = !ModConfig.SYNC_CHANNELS.get();
                 ModConfig.SYNC_CHANNELS.set(newValue);
                 ModConfig.save();
-                button.setMessage(Component.literal("A/B 通道同步: " + (newValue ? "开" : "关")));
+                button.setMessage(syncButtonText(newValue));
             }
         ).bounds(0, 0, 190, 20).build();
 
@@ -128,7 +164,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 心跳阈值 + 心跳倍率
         Slider thresholdSlider = new Slider(
-            0, 0, 190, 20, Component.literal("心跳阈值: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.heartbeat_threshold"),
             0, 100, ModConfig.HEARTBEAT_THRESHOLD.get(), 1.0, "%", value -> {
                 ModConfig.HEARTBEAT_THRESHOLD.set(value);
                 ModConfig.save();
@@ -139,10 +175,10 @@ public class DGLabCraftScreen extends Screen {
         float maxHealth = HeartbeatHandler.getCurrentMaxHealth();
         int thresholdPercent = ModConfig.HEARTBEAT_THRESHOLD.get().intValue();
         int triggerHealth = (int) Math.ceil(maxHealth * thresholdPercent / 100.0);
-        this.heartbeatThresholdLabel = new SettingsList.LabelEntry("心跳触发: ≤ " + triggerHealth + " 生命值");
+        this.heartbeatThresholdLabel = new SettingsList.LabelEntry(heartbeatTriggerText(triggerHealth));
 
         Slider heartbeatSlider = new Slider(
-            0, 0, 190, 20, Component.literal("心跳倍率: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.heartbeat_multiplier"),
             0, 5.0, ModConfig.HEARTBEAT_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.HEARTBEAT_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -153,11 +189,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(this.heartbeatThresholdLabel);
 
         // ===== 锐器与穿刺倍率 (fast_pinch) =====
-        this.list.addEntry(new SettingsList.HeaderEntry("锐器与穿刺倍率 (fast_pinch)"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.fast_pinch")));
 
         // 仙人掌 + 甜浆果丛
         Slider cactusSlider = new Slider(
-            0, 0, 190, 20, Component.literal("仙人掌: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.cactus"),
             0, 5.0, ModConfig.CACTUS_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.CACTUS_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -165,7 +201,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider sweetberrySlider = new Slider(
-            0, 0, 190, 20, Component.literal("甜浆果丛: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.sweetberry_bush"),
             0, 5.0, ModConfig.SWEETBERRY_BUSH_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.SWEETBERRY_BUSH_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -176,7 +212,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 弓箭 + 三叉戟
         Slider arrowSlider = new Slider(
-            0, 0, 190, 20, Component.literal("弓箭: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.arrow"),
             0, 5.0, ModConfig.ARROW_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ARROW_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -184,7 +220,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider tridentSlider = new Slider(
-            0, 0, 190, 20, Component.literal("三叉戟: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.trident"),
             0, 5.0, ModConfig.TRIDENT_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.TRIDENT_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -195,7 +231,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 钟乳石 + (空)
         Slider stalagmiteSlider = new Slider(
-            0, 0, 190, 20, Component.literal("钟乳石: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.stalagmite"),
             0, 5.0, ModConfig.STALAGMITE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.STALAGMITE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -205,11 +241,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(new SettingsList.RowEntry(stalagmiteSlider, null));
 
         // ===== 钝器与撞击倍率 (beat) =====
-        this.list.addEntry(new SettingsList.HeaderEntry("钝器与撞击倍率 (beat)"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.beat")));
 
         // 跌落 + 生物攻击
         Slider fallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("跌落: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.fall"),
             0, 5.0, ModConfig.FALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -217,7 +253,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider mobAttackSlider = new Slider(
-            0, 0, 190, 20, Component.literal("生物攻击: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.mob_attack"),
             0, 5.0, ModConfig.MOB_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.MOB_ATTACK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -228,7 +264,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 玩家攻击 + 撞墙
         Slider playerAttackSlider = new Slider(
-            0, 0, 190, 20, Component.literal("玩家攻击: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.player_attack"),
             0, 5.0, ModConfig.PLAYER_ATTACK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.PLAYER_ATTACK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -236,7 +272,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider flyIntoWallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("撞墙: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.fly_into_wall"),
             0, 5.0, ModConfig.FLY_INTO_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FLY_INTO_WALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -247,7 +283,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 爆炸 + 烟花
         Slider explosionSlider = new Slider(
-            0, 0, 190, 20, Component.literal("爆炸: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.explosion"),
             0, 5.0, ModConfig.EXPLOSION_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.EXPLOSION_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -255,7 +291,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider fireworksSlider = new Slider(
-            0, 0, 190, 20, Component.literal("烟花: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.fireworks"),
             0, 5.0, ModConfig.FIREWORKS_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FIREWORKS_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -265,11 +301,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(new SettingsList.RowEntry(explosionSlider, fireworksSlider));
 
         // ===== 高温与灼烧倍率 (burn) =====
-        this.list.addEntry(new SettingsList.HeaderEntry("高温与灼烧倍率 (burn)"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.burn")));
 
         // 着火 + 火中
         Slider onFireSlider = new Slider(
-            0, 0, 190, 20, Component.literal("着火: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.on_fire"),
             0, 5.0, ModConfig.ON_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ON_FIRE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -277,7 +313,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider inFireSlider = new Slider(
-            0, 0, 190, 20, Component.literal("火中: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.in_fire"),
             0, 5.0, ModConfig.IN_FIRE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.IN_FIRE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -288,7 +324,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 岩浆 + 烫脚
         Slider lavaSlider = new Slider(
-            0, 0, 190, 20, Component.literal("岩浆: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.lava"),
             0, 5.0, ModConfig.LAVA_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.LAVA_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -296,7 +332,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider hotFloorSlider = new Slider(
-            0, 0, 190, 20, Component.literal("烫脚: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.hot_floor"),
             0, 5.0, ModConfig.HOT_FLOOR_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.HOT_FLOOR_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -306,11 +342,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(new SettingsList.RowEntry(lavaSlider, hotFloorSlider));
 
         // ===== 挤压与砸击倍率 (compress) =====
-        this.list.addEntry(new SettingsList.HeaderEntry("挤压与砸击倍率 (compress)"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.compress")));
 
         // 墙内窒息 + 实体挤压
         Slider inWallSlider = new Slider(
-            0, 0, 190, 20, Component.literal("墙内窒息: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.in_wall"),
             0, 5.0, ModConfig.IN_WALL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.IN_WALL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -318,7 +354,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider crammingSlider = new Slider(
-            0, 0, 190, 20, Component.literal("实体挤压: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.cramming"),
             0, 5.0, ModConfig.CRAMMING_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.CRAMMING_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -329,7 +365,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 坠落方块 + 铁砧
         Slider fallingBlockSlider = new Slider(
-            0, 0, 190, 20, Component.literal("坠落方块: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.falling_block"),
             0, 5.0, ModConfig.FALLING_BLOCK_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FALLING_BLOCK_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -337,7 +373,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider anvilSlider = new Slider(
-            0, 0, 190, 20, Component.literal("铁砧: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.anvil"),
             0, 5.0, ModConfig.ANVIL_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.ANVIL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -347,11 +383,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(new SettingsList.RowEntry(fallingBlockSlider, anvilSlider));
 
         // ===== 异常状态与缺氧倍率 (drown & tide) =====
-        this.list.addEntry(new SettingsList.HeaderEntry("异常状态与缺氧倍率 (drown & tide)"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.drown_tide")));
 
         // 溺水 + 细雪冰冻
         Slider drownSlider = new Slider(
-            0, 0, 190, 20, Component.literal("溺水: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.drown"),
             0, 5.0, ModConfig.DROWN_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.DROWN_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -359,7 +395,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider freezeSlider = new Slider(
-            0, 0, 190, 20, Component.literal("细雪冰冻: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.freeze"),
             0, 5.0, ModConfig.FREEZE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.FREEZE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -370,7 +406,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 魔法 + 凋零
         Slider magicSlider = new Slider(
-            0, 0, 190, 20, Component.literal("魔法: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.magic"),
             0, 5.0, ModConfig.MAGIC_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.MAGIC_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -378,7 +414,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider witherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("凋零: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.wither"),
             0, 5.0, ModConfig.WITHER_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.WITHER_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -389,7 +425,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 龙息 + 饥饿
         Slider dragonBreathSlider = new Slider(
-            0, 0, 190, 20, Component.literal("龙息: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.dragon_breath"),
             0, 5.0, ModConfig.DRAGON_BREATH_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.DRAGON_BREATH_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -397,7 +433,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider starveSlider = new Slider(
-            0, 0, 190, 20, Component.literal("饥饿: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.starve"),
             0, 5.0, ModConfig.STARVE_MULTIPLIER.get(), 0.1, "x", value -> {
                 ModConfig.STARVE_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -407,11 +443,11 @@ public class DGLabCraftScreen extends Screen {
         this.list.addEntry(new SettingsList.RowEntry(dragonBreathSlider, starveSlider));
 
         // ===== 环境维度反馈倍率 =====
-        this.list.addEntry(new SettingsList.HeaderEntry("环境维度反馈倍率"));
+        this.list.addEntry(new SettingsList.HeaderEntry(t("header.dglabcraft.environment")));
 
         // 下界 + 末地
         Slider netherSlider = new Slider(
-            0, 0, 190, 20, Component.literal("下界: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.nether"),
             0, 100, ModConfig.NETHER_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.NETHER_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -419,7 +455,7 @@ public class DGLabCraftScreen extends Screen {
         );
 
         Slider endSlider = new Slider(
-            0, 0, 190, 20, Component.literal("末地: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.end"),
             0, 100, ModConfig.END_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.END_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -430,7 +466,7 @@ public class DGLabCraftScreen extends Screen {
 
         // 传送门 + (空)
         Slider portalSlider = new Slider(
-            0, 0, 190, 20, Component.literal("传送门: "),
+            0, 0, 190, 20, setting("setting.dglabcraft.portal"),
             0, 100, ModConfig.PORTAL_MULTIPLIER.get(), 1, "%", value -> {
                 ModConfig.PORTAL_MULTIPLIER.set(value);
                 ModConfig.save();
@@ -514,7 +550,7 @@ public class DGLabCraftScreen extends Screen {
         this.list.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 渲染标题
-        guiGraphics.drawCenteredString(this.font, Component.literal("DGLab 强度与倍率设置"), this.width / 2, 20, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, t("screen.dglabcraft.strength_settings"), this.width / 2, 20, 0xFFFFFF);
 
         // 渲染底部按钮
         super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
@@ -549,11 +585,11 @@ public class DGLabCraftScreen extends Screen {
                 this.lastAppStrengthB = currentAppStrengthB;
 
                 // 更新标签文本
-                this.appStrengthLabel.setText("APP强度上限: A: " + currentAppStrengthA + ", B: " + currentAppStrengthB);
+                this.appStrengthLabel.setText(appStrengthText(currentAppStrengthA, currentAppStrengthB));
 
                 int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(currentAppStrengthA);
                 int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(currentAppStrengthB);
-                this.effectiveStrengthLabel.setText("实际强度上限: A: " + effectiveMaxA + ", B: " + effectiveMaxB);
+                this.effectiveStrengthLabel.setText(effectiveStrengthText(effectiveMaxA, effectiveMaxB));
             }
         }
 
@@ -566,7 +602,7 @@ public class DGLabCraftScreen extends Screen {
                 int appStrengthB = ws.getAppBMaxStrength();
                 int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(appStrengthA);
                 int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(appStrengthB);
-                this.effectiveStrengthLabel.setText("实际强度上限: A: " + effectiveMaxA + ", B: " + effectiveMaxB);
+                this.effectiveStrengthLabel.setText(effectiveStrengthText(effectiveMaxA, effectiveMaxB));
             }
         }
 
@@ -577,7 +613,7 @@ public class DGLabCraftScreen extends Screen {
             // 更新心跳触发阈值显示
             float maxHealth = HeartbeatHandler.getCurrentMaxHealth();
             int triggerHealth = (int) Math.ceil(maxHealth * currentThresholdPercent / 100.0);
-            this.heartbeatThresholdLabel.setText("心跳触发: ≤ " + triggerHealth + " 生命值");
+            this.heartbeatThresholdLabel.setText(heartbeatTriggerText(triggerHealth));
         }
     }
 
@@ -658,9 +694,9 @@ public class DGLabCraftScreen extends Screen {
          * 标题条目 - 用于显示分类标题
          */
         static class HeaderEntry extends Entry {
-            private final String title;
+            private final Component title;
 
-            public HeaderEntry(String title) {
+            public HeaderEntry(Component title) {
                 super();
                 this.title = title;
             }
@@ -690,18 +726,18 @@ public class DGLabCraftScreen extends Screen {
          * 标签条目 - 用于显示只读文本（支持动态更新）
          */
         static class LabelEntry extends Entry {
-            private String text;
+            private Component text;
 
-            public LabelEntry(String text) {
+            public LabelEntry(Component text) {
                 super();
                 this.text = text;
             }
 
-            public void setText(String text) {
+            public void setText(Component text) {
                 this.text = text;
             }
 
-            public String getText() {
+            public Component getText() {
                 return this.text;
             }
 
