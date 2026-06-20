@@ -173,7 +173,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
      * 1. 简单数组: ["0a64...", ...]
      * 2. 对象格式: { "data": ["0a64...", ...] }
      */
-    private List<String> parseWaveformJson(String jsonContent, Gson gson) {
+    List<String> parseWaveformJson(String jsonContent, Gson gson) {
         jsonContent = jsonContent.trim();
 
         // 尝试解析为简单数组
@@ -219,7 +219,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
     /**
      * 将列表分块
      */
-    private List<List<String>> chunkList(List<String> list, int chunkSize) {
+    List<List<String>> chunkList(List<String> list, int chunkSize) {
         List<List<String>> chunks = new ArrayList<>();
         for (int i = 0; i < list.size(); i += chunkSize) {
             chunks.add(list.subList(i, Math.min(i + chunkSize, list.size())));

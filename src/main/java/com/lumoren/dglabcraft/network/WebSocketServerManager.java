@@ -369,8 +369,8 @@ public class WebSocketServerManager {
         }
 
         try {
-            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
-            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+            int channelNum = WebSocketProtocol.channelNumber(channel);
+            String channelStr = WebSocketProtocol.normalizeChannel(channel);
 
             // 根据波形类型决定模式
             int mode;
@@ -507,7 +507,7 @@ public class WebSocketServerManager {
         }
 
         int value = (int) intensity;
-        String normalizedChannel = "A".equalsIgnoreCase(channel) ? "A" : "B";
+        String normalizedChannel = WebSocketProtocol.normalizeChannel(channel);
         ChannelRuntime state = "A".equals(normalizedChannel) ? channelAState : channelBState;
         int newPriority = priorityOf(source);
         boolean currentOwnerValid = isChannelStateActive(state);
@@ -569,10 +569,10 @@ public class WebSocketServerManager {
             return;
         }
 
-        sendMessage("strength-1+2+0");
-        sendMessage("strength-2+2+0");
-        sendMessage("clear-1");
-        sendMessage("clear-2");
+        sendMessage(WebSocketProtocol.strengthCommand(1, 0));
+        sendMessage(WebSocketProtocol.strengthCommand(2, 0));
+        sendMessage(WebSocketProtocol.clearCommand(1));
+        sendMessage(WebSocketProtocol.clearCommand(2));
 
         channelAIntensity = 0;
         channelBIntensity = 0;
@@ -599,13 +599,13 @@ public class WebSocketServerManager {
     private void sendWaveformDataSingleChannel(String channel, String waveId, double intensity) {
         try {
             // 通道转换: A=1, B=2
-            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
-            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+            int channelNum = WebSocketProtocol.channelNumber(channel);
+            String channelStr = WebSocketProtocol.normalizeChannel(channel);
 
             int value = (int) intensity;
 
             // 1. clear-<channelNum>
-            sendMessage("clear-" + channelNum);
+            sendMessage(WebSocketProtocol.clearCommand(channelNum));
 
             // 2. pulse-<A|B>:[...] (分块)
             var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
@@ -614,7 +614,7 @@ public class WebSocketServerManager {
             }
 
             // 3. strength-<channelNum>+2+<value>
-            sendMessage("strength-" + channelNum + "+2+" + value);
+            sendMessage(WebSocketProtocol.strengthCommand(channelNum, value));
 
             // 更新状态
             if (channelNum == 1) {
@@ -632,15 +632,15 @@ public class WebSocketServerManager {
 
     private void resendSingleChannel(String channel, String waveId, double intensity, EffectSource source, String detail) {
         try {
-            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
-            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+            int channelNum = WebSocketProtocol.channelNumber(channel);
+            String channelStr = WebSocketProtocol.normalizeChannel(channel);
             int value = (int) intensity;
 
             var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
             for (List<String> chunk : chunks) {
                 sendPulseMessage(channelStr, chunk);
             }
-            sendMessage("strength-" + channelNum + "+2+" + value);
+            sendMessage(WebSocketProtocol.strengthCommand(channelNum, value));
 
             if (channelNum == 1) {
                 channelAIntensity = intensity;
@@ -668,8 +668,8 @@ public class WebSocketServerManager {
             int value = (int) intensity;
 
             // ===== 第1步: 分别清空双通道 =====
-            sendMessage("clear-1");
-            sendMessage("clear-2");
+            sendMessage(WebSocketProtocol.clearCommand(1));
+            sendMessage(WebSocketProtocol.clearCommand(2));
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
@@ -686,8 +686,8 @@ public class WebSocketServerManager {
 
             // ===== 第3步: 瞬间同时施加强度 =====
             // 注意: DGLab协议可能不支持 strength-3，需要分别发送到通道1和通道2
-            sendMessage("strength-1+2+" + value);
-            sendMessage("strength-2+2+" + value);
+            sendMessage(WebSocketProtocol.strengthCommand(1, value));
+            sendMessage(WebSocketProtocol.strengthCommand(2, value));
             LOGGER.info("发送强度: strength-1+2+{} + strength-2+2+{} (双通道同步)", value, value);
 
             // 更新通道状态
@@ -718,8 +718,8 @@ public class WebSocketServerManager {
             int valueB = (int) intensityB;
 
             // ===== 第1步: 分别清空双通道 =====
-            sendMessage("clear-1");
-            sendMessage("clear-2");
+            sendMessage(WebSocketProtocol.clearCommand(1));
+            sendMessage(WebSocketProtocol.clearCommand(2));
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道不同强度)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
@@ -735,8 +735,8 @@ public class WebSocketServerManager {
             }
 
             // ===== 第3步: 瞬间同时施加强度 (各自不同) =====
-            sendMessage("strength-1+2+" + valueA);
-            sendMessage("strength-2+2+" + valueB);
+            sendMessage(WebSocketProtocol.strengthCommand(1, valueA));
+            sendMessage(WebSocketProtocol.strengthCommand(2, valueB));
             LOGGER.info("发送强度: strength-1+2+{} + strength-2+2+{} (双通道不同强度)", valueA, valueB);
 
             // 更新通道状态
@@ -763,8 +763,8 @@ public class WebSocketServerManager {
                 sendPulseMessage("B", chunk);
             }
 
-            sendMessage("strength-1+2+" + valueA);
-            sendMessage("strength-2+2+" + valueB);
+            sendMessage(WebSocketProtocol.strengthCommand(1, valueA));
+            sendMessage(WebSocketProtocol.strengthCommand(2, valueB));
 
             channelAIntensity = intensityA;
             channelAStatus = waveId;
@@ -800,8 +800,8 @@ public class WebSocketServerManager {
         }
 
         try {
-            int channelNum = "A".equals(channel) ? 1 : 2;
-            sendMessage("strength-" + channelNum + "+2+" + intensity);
+            int channelNum = WebSocketProtocol.channelNumber(channel);
+            sendMessage(WebSocketProtocol.strengthCommand(channelNum, intensity));
             LOGGER.info("发送渐变强度: 通道{} = {}", channel, intensity);
         } catch (Exception e) {
             LOGGER.error("发送强度失败: " + e.getMessage());
@@ -824,8 +824,8 @@ public class WebSocketServerManager {
         }
 
         try {
-            sendMessage("strength-1+2+" + intensityA);
-            sendMessage("strength-2+2+" + intensityB);
+            sendMessage(WebSocketProtocol.strengthCommand(1, intensityA));
+            sendMessage(WebSocketProtocol.strengthCommand(2, intensityB));
             LOGGER.info("发送双通道渐变强度: A={}, B={}", intensityA, intensityB);
         } catch (Exception e) {
             LOGGER.error("发送双通道强度失败: " + e.getMessage());
@@ -853,22 +853,10 @@ public class WebSocketServerManager {
         markPulseSent();
 
         // 将列表转换为协议数组字符串 (紧凑格式，无空格)
-        StringBuilder hexArray = new StringBuilder("[");
-        for (int i = 0; i < chunk.size(); i++) {
-            if (i > 0) hexArray.append(",");
-            // 转换为大写，确保 16 位
-            String hex = chunk.get(i).toUpperCase();
-            // 补齐到 16 位
-            while (hex.length() < 16) hex = "0" + hex;
-            // 截断超过 16 位的内容
-            if (hex.length() > 16) hex = hex.substring(0, 16);
-            hexArray.append("\"").append(hex).append("\"");
-        }
-        hexArray.append("]");
-
         // 发送消息: pulse-A:[...]
-        sendMessage("pulse-" + channelStr + ":" + hexArray.toString());
-        LOGGER.info("发送波形分块: pulse-{}:{}", channelStr, hexArray);
+        String pulseMessage = WebSocketProtocol.pulseCommand(channelStr, chunk);
+        sendMessage(pulseMessage);
+        LOGGER.info("发送波形分块: {}", pulseMessage);
     }
 
     private void markPulseSent() {
@@ -883,7 +871,7 @@ public class WebSocketServerManager {
      * 停止刺激 - 发送强度为0的消息
      */
     public void stopStimulus(String channel) {
-        int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+        int channelNum = WebSocketProtocol.channelNumber(channel);
 
         if (channelNum == 1) {
             channelAIntensity = 0;
@@ -895,7 +883,7 @@ public class WebSocketServerManager {
 
         // 发送强度为0的消息（而不是clear命令）
         if (connectedClient != null && connectedClient.isOpen()) {
-            sendMessage("strength-" + channelNum + "+2+0");
+            sendMessage(WebSocketProtocol.strengthCommand(channelNum, 0));
             LOGGER.info("发送停止刺激(归零): strength-" + channelNum + "+2+0");
         }
     }
@@ -905,12 +893,7 @@ public class WebSocketServerManager {
     }
 
     private int priorityOf(EffectSource source) {
-        return switch (source) {
-            case DAMAGE -> 3;
-            case HEARTBEAT -> 2;
-            case ENVIRONMENT -> 1;
-            case NONE -> -1;
-        };
+        return WebSocketProtocol.priorityOf(source);
     }
 
     private void updateChannelState(ChannelRuntime state, EffectSource source, String detail, String waveId, int intensity) {
@@ -937,20 +920,7 @@ public class WebSocketServerManager {
     }
 
     private int getLeaseTicks(EffectSource source, String detail) {
-        String normalizedDetail = detail == null ? "" : detail.toLowerCase();
-        return switch (source) {
-            case HEARTBEAT -> 55;
-            case ENVIRONMENT -> switch (normalizedDetail) {
-                case "portal", "powder_snow" -> 40;
-                case "nether", "end" -> 55;
-                default -> 45;
-            };
-            case DAMAGE -> switch (normalizedDetail) {
-                case "onfire", "infire", "lava", "hotfloor", "drown", "freeze" -> 30;
-                default -> 12;
-            };
-            case NONE -> 0;
-        };
+        return WebSocketProtocol.leaseTicks(source, detail);
     }
 
     /**
@@ -961,12 +931,12 @@ public class WebSocketServerManager {
             return;
         }
 
-        int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+        int channelNum = WebSocketProtocol.channelNumber(channel);
 
         // 先清除之前的波形
         Map<String, String> clearMsg = new HashMap<>();
         clearMsg.put("type", "msg");
-        clearMsg.put("message", "clear-" + channelNum);
+        clearMsg.put("message", WebSocketProtocol.clearCommand(channelNum));
         clearMsg.put("clientId", sessionId);
         clearMsg.put("targetId", targetId != null ? targetId : "");
         connectedClient.send(gson.toJson(clearMsg));
