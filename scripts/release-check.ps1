@@ -12,6 +12,8 @@ $ErrorActionPreference = 'Stop'
 
 $errors = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
+$minecraftVersion = ''
+$modVersion = ''
 
 function Add-Error {
     param([string]$Message)
@@ -166,6 +168,15 @@ elseif ([string]::IsNullOrWhiteSpace((Get-Content -LiteralPath 'changelog.txt' -
 }
 else {
     Write-Check 'changelog.txt is present.'
+    if (-not [string]::IsNullOrWhiteSpace($modVersion)) {
+        $changelogText = Get-Content -LiteralPath 'changelog.txt' -Raw
+        if ($changelogText -notmatch "(?m)^## \[$([regex]::Escape($modVersion))\]") {
+            Add-Error "changelog.txt does not contain a current section for version '$modVersion'."
+        }
+        else {
+            Write-Check "changelog.txt contains current version section."
+        }
+    }
 }
 
 $workflowPath = '.github/workflows/publish-release.yml'
@@ -174,7 +185,7 @@ if (-not (Test-Path -LiteralPath $workflowPath)) {
 }
 else {
     $workflow = Get-Content -LiteralPath $workflowPath -Raw
-    foreach ($required in @('CF_API_TOKEN', '1538053', 'curseforge-upload')) {
+    foreach ($required in @('CF_API_TOKEN', '1538053', 'curseforge-upload', 'Read CurseForge changelog')) {
         if ($workflow -notmatch [regex]::Escape($required)) {
             Add-Error "$workflowPath does not contain required release workflow marker '$required'."
         }
