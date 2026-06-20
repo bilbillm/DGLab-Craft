@@ -116,6 +116,11 @@ jobs:
           java-version: ${{ steps.meta.outputs.java_version }}
           cache: gradle
 
+      - name: Remove local-only Gradle proxy
+        run: |
+          sed -i '/^systemProp\.\(http\|https\)\.proxyHost=/d' gradle.properties
+          sed -i '/^systemProp\.\(http\|https\)\.proxyPort=/d' gradle.properties
+
       - name: Build jar
         run: |
           chmod +x ./gradlew
