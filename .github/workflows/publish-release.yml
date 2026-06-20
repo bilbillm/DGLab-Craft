@@ -52,7 +52,12 @@ jobs:
 
       - name: Run release preflight checks
         shell: pwsh
-        run: ./scripts/release-check.ps1 -Tag "${env:RELEASE_TAG}"
+        run: |
+          if (Test-Path ./scripts/release-check.ps1) {
+            ./scripts/release-check.ps1 -Tag "${env:RELEASE_TAG}"
+          } else {
+            Write-Warning "scripts/release-check.ps1 is not present in this tag; skipping preflight checks."
+          }
 
       - name: Read release metadata
         id: meta
