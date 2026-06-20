@@ -66,4 +66,34 @@ final class WebSocketProtocol {
             case NONE -> 0;
         };
     }
+
+    static StrengthLimits parseStrengthLimits(String message, int currentA, int currentB) {
+        if (message == null || !message.startsWith("strength-")) {
+            return new StrengthLimits(currentA, currentB);
+        }
+
+        String[] parts = message.substring(9).split("\\+");
+        try {
+            if (parts.length >= 4) {
+                return new StrengthLimits(Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
+            }
+            if (parts.length >= 3) {
+                int channel = Integer.parseInt(parts[0]);
+                int value = Integer.parseInt(parts[2]);
+                if (channel == 1) {
+                    return new StrengthLimits(value, currentB);
+                }
+                if (channel == 2) {
+                    return new StrengthLimits(currentA, value);
+                }
+            }
+        } catch (NumberFormatException ignored) {
+            return new StrengthLimits(currentA, currentB);
+        }
+
+        return new StrengthLimits(currentA, currentB);
+    }
+
+    record StrengthLimits(int channelA, int channelB) {
+    }
 }

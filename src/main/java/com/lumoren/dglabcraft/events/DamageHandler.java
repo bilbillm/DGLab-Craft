@@ -200,7 +200,7 @@ public class DamageHandler {
         return "mob";
     }
 
-    private String normalizeDamageSourceId(String rawId) {
+    String normalizeDamageSourceId(String rawId) {
         if (rawId == null || rawId.isEmpty()) {
             return "mob";
         }
