@@ -25,7 +25,6 @@ public class DiagnosticScreen extends Screen {
     private static final int LINE_HEIGHT = 10;
     private static final int TITLE_HEIGHT = 12;
     private static final int SECTION_GAP = 8;
-    private static final int SCROLL_STEP = 24;
 
     private final Screen parent;
     private Button regenerateQrButton;
@@ -93,15 +92,15 @@ public class DiagnosticScreen extends Screen {
         y += 14;
 
         int viewportTop = y;
-        int viewportBottom = this.height - 62;
+        int viewportBottom = DiagnosticLayout.viewportBottom(this.height);
         List<RenderLine> lines = buildRenderLines(server);
         int contentHeight = lines.stream().mapToInt(line -> line.height).sum();
-        this.maxScroll = Math.max(0, contentHeight - Math.max(0, viewportBottom - viewportTop));
+        this.maxScroll = DiagnosticLayout.maxScroll(contentHeight, viewportTop, viewportBottom);
         clampScroll();
 
         int lineY = viewportTop - this.scrollOffset;
         for (RenderLine line : lines) {
-            if (line.text != null && lineY >= viewportTop && lineY + line.height <= viewportBottom) {
+            if (line.text != null && DiagnosticLayout.isLineFullyVisible(lineY, line.height, viewportTop, viewportBottom)) {
                 this.font.draw(poseStack, line.text, contentX, lineY, line.color);
             }
             lineY += line.height;
@@ -306,18 +305,13 @@ public class DiagnosticScreen extends Screen {
     }
 
     private void clampScroll() {
-        if (this.scrollOffset < 0) {
-            this.scrollOffset = 0;
-        } else if (this.scrollOffset > this.maxScroll) {
-            this.scrollOffset = this.maxScroll;
-        }
+        this.scrollOffset = DiagnosticLayout.clampScroll(this.scrollOffset, this.maxScroll);
     }
 
     @Override
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
         if (this.maxScroll > 0) {
-            this.scrollOffset -= (int) Math.round(pDelta * SCROLL_STEP);
-            clampScroll();
+            this.scrollOffset = DiagnosticLayout.scrollByWheel(this.scrollOffset, pDelta, this.maxScroll);
             return true;
         }
         return super.mouseScrolled(pMouseX, pMouseY, pDelta);
