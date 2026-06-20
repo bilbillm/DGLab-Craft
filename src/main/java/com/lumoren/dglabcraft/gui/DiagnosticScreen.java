@@ -22,6 +22,10 @@ public class DiagnosticScreen extends Screen {
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_GAP = 4;
     private static final int CONTENT_WIDTH = 320;
+    private static final int LINE_HEIGHT = 10;
+    private static final int TITLE_HEIGHT = 12;
+    private static final int SECTION_GAP = 8;
+    private static final int SCROLL_STEP = 24;
 
     private final Screen parent;
     private Button regenerateQrButton;
@@ -29,6 +33,8 @@ public class DiagnosticScreen extends Screen {
     private Button silenceButton;
     private Button doneButton;
     private Component copyStatus = TextComponent.EMPTY;
+    private int scrollOffset;
+    private int maxScroll;
 
     public DiagnosticScreen(Screen parent) {
         super(new TranslatableComponent("screen.dglabcraft.diagnostics"));
@@ -86,11 +92,21 @@ public class DiagnosticScreen extends Screen {
         }
         y += 14;
 
-        y = drawSection(poseStack, contentX, y, new TranslatableComponent("section.dglabcraft.connection_status"), buildConnectionLines(server));
-        y = drawSection(poseStack, contentX, y, new TranslatableComponent("section.dglabcraft.channel_status", "A"), buildChannelLines(server, "A"));
-        y = drawSection(poseStack, contentX, y, new TranslatableComponent("section.dglabcraft.channel_status", "B"), buildChannelLines(server, "B"));
-        y = drawSection(poseStack, contentX, y, new TranslatableComponent("section.dglabcraft.runtime_summary"), buildRuntimeLines(server));
-        drawSection(poseStack, contentX, y, new TranslatableComponent("section.dglabcraft.details"), buildDetailLines(server));
+        int viewportTop = y;
+        int viewportBottom = this.height - 62;
+        List<RenderLine> lines = buildRenderLines(server);
+        int contentHeight = lines.stream().mapToInt(line -> line.height).sum();
+        this.maxScroll = Math.max(0, contentHeight - Math.max(0, viewportBottom - viewportTop));
+        clampScroll();
+
+        int lineY = viewportTop - this.scrollOffset;
+        for (RenderLine line : lines) {
+            if (line.text != null && lineY >= viewportTop && lineY + line.height <= viewportBottom) {
+                this.font.draw(poseStack, line.text, contentX, lineY, line.color);
+            }
+            lineY += line.height;
+        }
+        renderScrollBar(poseStack, contentX + CONTENT_WIDTH + 8, viewportTop, viewportBottom, contentHeight);
 
         this.regenerateQrButton.active = server.isRunning() && !server.isConnected();
         this.silenceButton.active = server.isConnected() && server.hasLiveOutput();
@@ -256,17 +272,55 @@ public class DiagnosticScreen extends Screen {
         return ", waveform=" + waveform + ", remaining=" + formatSeconds(remainingMillis);
     }
 
-    private int drawSection(PoseStack poseStack, int x, int y, Component title, List<Component> lines) {
-        this.font.draw(poseStack, title, x, y, 0xFFFFFF);
-        y += 12;
+    private List<RenderLine> buildRenderLines(WebSocketServerManager server) {
+        List<RenderLine> lines = new ArrayList<>();
+        addSection(lines, new TranslatableComponent("section.dglabcraft.connection_status"), buildConnectionLines(server));
+        addSection(lines, new TranslatableComponent("section.dglabcraft.channel_status", "A"), buildChannelLines(server, "A"));
+        addSection(lines, new TranslatableComponent("section.dglabcraft.channel_status", "B"), buildChannelLines(server, "B"));
+        addSection(lines, new TranslatableComponent("section.dglabcraft.runtime_summary"), buildRuntimeLines(server));
+        addSection(lines, new TranslatableComponent("section.dglabcraft.details"), buildDetailLines(server));
+        return lines;
+    }
+
+    private void addSection(List<RenderLine> renderLines, Component title, List<Component> lines) {
+        renderLines.add(new RenderLine(title.getVisualOrderText(), 0xFFFFFF, TITLE_HEIGHT));
         for (Component line : lines) {
             List<FormattedCharSequence> wrapped = this.font.split(line, CONTENT_WIDTH);
             for (FormattedCharSequence textLine : wrapped) {
-                this.font.draw(poseStack, textLine, x, y, 0xD0D0D0);
-                y += 10;
+                renderLines.add(new RenderLine(textLine, 0xD0D0D0, LINE_HEIGHT));
             }
         }
-        return y + 8;
+        renderLines.add(new RenderLine(null, 0, SECTION_GAP));
+    }
+
+    private void renderScrollBar(PoseStack poseStack, int x, int top, int bottom, int contentHeight) {
+        int viewportHeight = bottom - top;
+        if (this.maxScroll <= 0 || viewportHeight <= 0) {
+            return;
+        }
+
+        fill(poseStack, x, top, x + 4, bottom, 0x66000000);
+        int thumbHeight = Math.max(18, viewportHeight * viewportHeight / Math.max(viewportHeight, contentHeight));
+        int thumbTop = top + (viewportHeight - thumbHeight) * this.scrollOffset / this.maxScroll;
+        fill(poseStack, x, thumbTop, x + 4, thumbTop + thumbHeight, 0xFFAAAAAA);
+    }
+
+    private void clampScroll() {
+        if (this.scrollOffset < 0) {
+            this.scrollOffset = 0;
+        } else if (this.scrollOffset > this.maxScroll) {
+            this.scrollOffset = this.maxScroll;
+        }
+    }
+
+    @Override
+    public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
+        if (this.maxScroll > 0) {
+            this.scrollOffset -= (int) Math.round(pDelta * SCROLL_STEP);
+            clampScroll();
+            return true;
+        }
+        return super.mouseScrolled(pMouseX, pMouseY, pDelta);
     }
 
     private Component toPlainDetail(WebSocketServerManager.EffectSource source, String detail) {
@@ -313,5 +367,17 @@ public class DiagnosticScreen extends Screen {
     @Override
     public void onClose() {
         this.minecraft.setScreen(this.parent);
+    }
+
+    private static final class RenderLine {
+        private final FormattedCharSequence text;
+        private final int color;
+        private final int height;
+
+        private RenderLine(FormattedCharSequence text, int color, int height) {
+            this.text = text;
+            this.color = color;
+            this.height = height;
+        }
     }
 }
