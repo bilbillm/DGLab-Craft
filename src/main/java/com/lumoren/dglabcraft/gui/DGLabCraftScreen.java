@@ -1,4 +1,4 @@
-﻿package com.lumoren.dglabcraft.gui;
+package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;

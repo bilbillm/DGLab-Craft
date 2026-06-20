@@ -5,3 +5,4 @@ src/generated/**/.cache/cache text eol=lf
 src/generated/**/*.json text eol=lf
 .gitattributes text eol=lf
 .github/workflows/*.yml text eol=lf
+*.java text eol=lf

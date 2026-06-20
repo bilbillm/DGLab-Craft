@@ -1,4 +1,4 @@
-﻿package com.lumoren.dglabcraft.gui;
+package com.lumoren.dglabcraft.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
