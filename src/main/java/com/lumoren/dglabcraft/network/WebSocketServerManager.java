@@ -313,39 +313,11 @@ public class WebSocketServerManager {
      * 2. 旧格式: strength-<通道>+<模式>+<值> (如 strength-1+2+50)
      */
     private void parseStrengthMessage(String msg) {
-        if (msg.startsWith("strength-")) {
-            String[] parts = msg.substring(9).split("\\+");
-            if (parts.length >= 4) {
-                // 新格式: strength-0+0+A+B
-                try {
-                    int channel = Integer.parseInt(parts[0]);
-                    int mode = Integer.parseInt(parts[1]);
-                    int strengthA = Integer.parseInt(parts[2]);
-                    int strengthB = Integer.parseInt(parts[3]);
-
-                    appAMaxStrength = strengthA;
-                    appBMaxStrength = strengthB;
-                    LOGGER.info("收到强度设置(双通道): A通道上限={}, B通道上限={}", strengthA, strengthB);
-                } catch (NumberFormatException e) {
-                    LOGGER.error("解析强度值失败(双通道): " + msg);
-                }
-            } else if (parts.length >= 3) {
-                // 旧格式: strength-1+2+50
-                try {
-                    int channel = Integer.parseInt(parts[0]);
-                    int mode = Integer.parseInt(parts[1]);
-                    int value = Integer.parseInt(parts[2]);
-
-                    if (channel == 1) {
-                        appAMaxStrength = value;
-                    } else if (channel == 2) {
-                        appBMaxStrength = value;
-                    }
-                    LOGGER.info("收到强度设置(旧格式): 通道{}, 模式{}, 值{}", channel, mode, value);
-                } catch (NumberFormatException e) {
-                    LOGGER.error("解析强度值失败(旧格式): " + msg);
-                }
-            }
+        WebSocketProtocol.StrengthLimits limits = WebSocketProtocol.parseStrengthLimits(msg, appAMaxStrength, appBMaxStrength);
+        if (limits.channelA() != appAMaxStrength || limits.channelB() != appBMaxStrength) {
+            appAMaxStrength = limits.channelA();
+            appBMaxStrength = limits.channelB();
+            LOGGER.info("收到强度设置: A通道上限={}, B通道上限={}", appAMaxStrength, appBMaxStrength);
         }
     }
 
@@ -966,22 +938,26 @@ public class WebSocketServerManager {
      */
     private String getLocalIpAddress() {
         try {
+            List<LocalAddressSelector.Candidate> candidates = new java.util.ArrayList<>();
             for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 if (ni.isLoopback() || !ni.isUp()) continue;
 
                 for (InetAddress addr : Collections.list(ni.getInetAddresses())) {
                     if (addr instanceof java.net.Inet4Address) {
                         String ip = addr.getHostAddress();
-                        // 只返回局域网IP: 10.x.x.x, 172.16-31.x.x, 192.168.x.x
-                        if (ip.startsWith("10.") ||
-                            (ip.startsWith("172.") &&
-                             Integer.parseInt(ip.split("\\.")[1]) >= 16 &&
-                             Integer.parseInt(ip.split("\\.")[1]) <= 31) ||
-                            ip.startsWith("192.168.")) {
-                            return ip;
-                        }
+                        candidates.add(new LocalAddressSelector.Candidate(
+                            ip,
+                            ni.getName(),
+                            ni.getDisplayName(),
+                            ni.isVirtual(),
+                            ni.supportsMulticast()
+                        ));
                     }
                 }
+            }
+            String selectedIp = LocalAddressSelector.chooseBestLocalIpAddress(candidates);
+            if (selectedIp != null) {
+                return selectedIp;
             }
         } catch (Exception e) {
             LOGGER.error("获取 IP 地址失败: " + e.getMessage());
