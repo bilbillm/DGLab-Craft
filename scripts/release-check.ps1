@@ -124,14 +124,14 @@ else {
         Write-Check "Expected release jar name: $expectedJarPath"
 
         if (Test-Path -LiteralPath 'build/libs') {
-            $jarCandidates = Get-ChildItem -LiteralPath 'build/libs' -File -Filter '*.jar' |
+            $jarCandidates = @(Get-ChildItem -LiteralPath 'build/libs' -File -Filter '*.jar' |
                 Where-Object {
                     $_.Name -notlike '*-slim.jar' -and
                     $_.Name -notlike '*-sources.jar' -and
                     $_.Name -notlike '*-javadoc.jar' -and
                     $_.Name -notlike '*-dev.jar' -and
                     $_.Name -notlike '*-all.jar'
-                }
+                })
 
             if ($jarCandidates.Count -gt 0 -and ($jarCandidates.Name -notcontains $expectedJar)) {
                 $message = "build/libs contains release jar candidates, but not '$expectedJar'. Found: $($jarCandidates.Name -join ', ')."
