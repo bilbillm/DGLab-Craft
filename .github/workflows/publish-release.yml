@@ -50,6 +50,10 @@ jobs:
         with:
           ref: ${{ env.RELEASE_TAG }}
 
+      - name: Run release preflight checks
+        shell: pwsh
+        run: ./scripts/release-check.ps1 -Tag "${env:RELEASE_TAG}"
+
       - name: Read release metadata
         id: meta
         shell: bash
