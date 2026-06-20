@@ -29,7 +29,7 @@ If your Minecraft version is different, use the matching branch and release belo
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
@@ -37,7 +37,7 @@ If your Minecraft version is different, use the matching branch and release belo
 
 ### 2. Download the Mod from GitHub
 
-1. Open this release: [`dglab-craft-1.18.2-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2)
+1. Open this release: [`dglab-craft-1.18.2-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2)
 2. Scroll to **Assets**.
 3. Download `dglab-craft-1.18.2-1.0.6.jar`.
 4. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
@@ -107,7 +107,7 @@ For release uploads, use the full jar, normally the one without `-slim` in its f
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |

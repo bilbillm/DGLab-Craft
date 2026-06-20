@@ -29,7 +29,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
@@ -37,7 +37,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 ### 2. 在 GitHub 下载 Mod
 
-1. 打开这个版本的 release：[`dglab-craft-1.18.2-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2)
+1. 打开这个版本的 release：[`dglab-craft-1.18.2-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2)
 2. 在页面下方找到 **Assets**。
 3. 下载 `dglab-craft-1.18.2-1.0.6.jar`。
 4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
@@ -107,7 +107,7 @@ cd DGLab-Craft
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
