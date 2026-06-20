@@ -45,6 +45,20 @@ dependencies {
     jarJar(group: 'com.google.zxing', name: 'core', version: '[3.5.1,4.0)') {
         // 保留排除 commons-logging (通过上面 implementation 的 exclude 已处理)
     }
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+sourceSets {
+    test {
+        compileClasspath += sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 tasks.named('processResources', ProcessResources).configure {
