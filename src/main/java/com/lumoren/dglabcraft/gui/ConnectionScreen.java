@@ -13,19 +13,14 @@ import net.minecraft.network.chat.Component;
 
 import java.io.File;
 
-/**
- * DGLab Craft 连接设置界面
- * 显示连接状态和二维码
- */
 public class ConnectionScreen extends Screen {
-
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_VERTICAL_SPACING = 4;
     private static final int SECTION_VERTICAL_SPACING = 4;
     private static final int DONE_BUTTON_BOTTOM_MARGIN = 30;
     private static final int QR_BUTTON_COUNT = 3;
 
-    private static final Component MANUAL_IP_HINT = Component.literal("留空则使用自动获取的ip")
+    private static final Component MANUAL_IP_HINT = Component.translatable("hint.dglabcraft.manual_ip")
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 
     private final Screen parent;
@@ -37,7 +32,7 @@ public class ConnectionScreen extends Screen {
     private boolean manualIpInvalid = false;
 
     public ConnectionScreen(Screen parent) {
-        super(Component.literal("连接设置"));
+        super(Component.translatable("screen.dglabcraft.connection_settings"));
         this.parent = parent;
     }
 
@@ -53,7 +48,8 @@ public class ConnectionScreen extends Screen {
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
-        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, manualInputY, buttonWidth, BUTTON_HEIGHT, Component.literal("手动局域网IP"));
+        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, manualInputY, buttonWidth, BUTTON_HEIGHT,
+            Component.translatable("label.dglabcraft.manual_lan_ip"));
         String currentHost = ModConfig.WS_HOST.get();
         if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
             this.manualIpInput.setValue(currentHost);
@@ -64,62 +60,38 @@ public class ConnectionScreen extends Screen {
             ensureQrCodeGenerated();
         }
 
-        // 刷新二维码按钮
-        this.refreshQrButton = new Button(
-            centerX - buttonWidth / 2,
-            getQrButtonY(0, qrButtonStartY),
-            buttonWidth,
-            BUTTON_HEIGHT,
-            Component.literal("刷新二维码"),
-            (button) -> {
+        this.refreshQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(0, qrButtonStartY),
+            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.refresh_qr"),
+            button -> {
                 if (commitManualIpInput()) {
                     ensureQrCodeGenerated();
                 }
-            }
-        );
+            });
         this.addRenderableWidget(this.refreshQrButton);
 
-        // 打开二维码按钮
-        this.openQrButton = new Button(
-            centerX - buttonWidth / 2,
-            getQrButtonY(1, qrButtonStartY),
-            buttonWidth,
-            BUTTON_HEIGHT,
-            Component.literal("打开二维码图片"),
-            (button) -> {
+        this.openQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(1, qrButtonStartY),
+            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.open_qr_image"),
+            button -> {
                 File qrFile = getQrCodeFile();
                 if (qrFile.isFile()) {
                     net.minecraft.Util.getPlatform().openFile(qrFile);
                 }
-            }
-        );
+            });
         this.addRenderableWidget(this.openQrButton);
 
-        this.openQrFolderButton = new Button(
-            centerX - buttonWidth / 2,
-            getQrButtonY(2, qrButtonStartY),
-            buttonWidth,
-            BUTTON_HEIGHT,
-            Component.literal("打开二维码文件夹"),
-            (button) -> {
+        this.openQrFolderButton = new Button(centerX - buttonWidth / 2, getQrButtonY(2, qrButtonStartY),
+            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.open_qr_folder"),
+            button -> {
                 File qrFile = getQrCodeFile();
                 File qrFolder = qrFile.getParentFile();
                 if (qrFolder != null && qrFolder.isDirectory()) {
                     net.minecraft.Util.getPlatform().openFile(qrFolder);
                 }
-            }
-        );
+            });
         this.addRenderableWidget(this.openQrFolderButton);
 
-        // 完成按钮
-        this.doneButton = new Button(
-            centerX - buttonWidth / 2,
-            doneButtonY,
-            buttonWidth,
-            BUTTON_HEIGHT,
-            Component.literal("完成"),
-            (button) -> this.onClose()
-        );
+        this.doneButton = new Button(centerX - buttonWidth / 2, doneButtonY, buttonWidth, BUTTON_HEIGHT,
+            Component.translatable("button.dglabcraft.done"), button -> this.onClose());
         this.addRenderableWidget(this.doneButton);
     }
 
@@ -176,57 +148,43 @@ public class ConnectionScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(pPoseStack);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(poseStack);
 
         int centerX = this.width / 2;
-
-        // 标题
-        drawCenteredString(pPoseStack, this.font, "连接设置", centerX, 30, 0xFFFFFF);
-
-        // 连接状态
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         boolean isConnected = server.isConnected();
 
-        String statusText;
-        int statusColor;
-        if (isConnected) {
-            statusText = "已连接";
-            statusColor = 0x00FF00;
-        } else {
-            statusText = "等待连接...";
-            statusColor = 0xFFFF00;
-        }
-        drawCenteredString(pPoseStack, this.font, statusText, centerX, 50, statusColor);
-
-        // 服务器信息
-        String serverInfo = "地址: " + server.resolveConnectionHost() + ":" + server.getPort();
-        drawCenteredString(pPoseStack, this.font, serverInfo, centerX, 70, 0xAAAAAA);
+        drawCenteredString(poseStack, this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font,
+            Component.translatable(isConnected ? "status.dglabcraft.connected" : "status.dglabcraft.waiting_connection"),
+            centerX, 50, isConnected ? 0x00FF00 : 0xFFFF00);
+        drawCenteredString(poseStack, this.font,
+            Component.translatable("label.dglabcraft.address", server.resolveConnectionHost(), server.getPort()),
+            centerX, 70, 0xAAAAAA);
 
         if (!isConnected) {
-            drawCenteredString(pPoseStack, this.font, "请使用DGLab APP扫描二维码连接", centerX, 82, 0xAAAAAA);
+            drawCenteredString(poseStack, this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
 
             File qrFile = getQrCodeFile();
             if (qrFile.isFile()) {
-                renderQrPath(pPoseStack, centerX, 94, qrFile);
+                renderQrPath(poseStack, centerX, 94, qrFile);
             }
         }
 
         if (manualIpInvalid) {
-            drawCenteredString(pPoseStack, this.font, "手动 IP 无效，请输入正确的 IPv4 地址", centerX, this.height / 2 + 2, 0xFF5555);
-        } else if (this.manualIpInput != null && this.manualIpInput.getValue().isEmpty()) {
-            this.font.drawShadow(pPoseStack, MANUAL_IP_HINT, centerX - 95, this.height / 2 - 4, 0x888888);
+            drawCenteredString(poseStack, this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"),
+                centerX, this.height / 2 + 2, 0xFF5555);
         }
 
-        // 连接信息
         if (isConnected) {
             String clientId = server.getConnectedClientId();
             if (clientId != null) {
-                drawCenteredString(pPoseStack, this.font, "设备: " + clientId, centerX, 90, 0xAAAAAA);
+                drawCenteredString(poseStack, this.font, Component.translatable("label.dglabcraft.device", clientId),
+                    centerX, 90, 0xAAAAAA);
             }
         }
 
-        // 已连接时隐藏二维码按钮
         if (this.refreshQrButton != null) {
             this.refreshQrButton.visible = !isConnected;
         }
@@ -237,7 +195,7 @@ public class ConnectionScreen extends Screen {
             this.openQrFolderButton.visible = !isConnected && hasQrFolder();
         }
 
-        super.render(pPoseStack, pMouseX, pMouseY, pPartialTick);
+        super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
     private File getQrCodeFile() {
@@ -279,9 +237,10 @@ public class ConnectionScreen extends Screen {
         return QR_BUTTON_COUNT * BUTTON_HEIGHT + (QR_BUTTON_COUNT - 1) * BUTTON_VERTICAL_SPACING;
     }
 
-    private void renderQrPath(PoseStack pPoseStack, int centerX, int startY, File qrFile) {
-        drawCenteredString(pPoseStack, this.font, "二维码文件:", centerX, startY, 0xAAAAAA);
-        drawCenteredString(pPoseStack, this.font, fitTextToWidth(qrFile.getAbsolutePath(), Math.max(120, this.width - 40)), centerX, startY + 12, 0xAAAAAA);
+    private void renderQrPath(PoseStack poseStack, int centerX, int startY, File qrFile) {
+        int maxTextWidth = Math.max(120, this.width - 40);
+        drawCenteredString(poseStack, this.font, Component.translatable("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
+        drawCenteredString(poseStack, this.font, fitTextToWidth(qrFile.getAbsolutePath(), maxTextWidth), centerX, startY + 12, 0xAAAAAA);
     }
 
     private String fitTextToWidth(String text, int maxWidth) {
