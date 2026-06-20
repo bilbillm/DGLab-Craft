@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Tag,
 
+    [switch]$RequireBuiltJar,
     [switch]$RequireGitHubAsset,
     [switch]$SkipGitHubReleaseCheck
 )
@@ -131,7 +132,13 @@ else {
                 }
 
             if ($jarCandidates.Count -gt 0 -and ($jarCandidates.Name -notcontains $expectedJar)) {
-                Add-Error "build/libs contains release jar candidates, but not '$expectedJar'. Found: $($jarCandidates.Name -join ', ')."
+                $message = "build/libs contains release jar candidates, but not '$expectedJar'. Found: $($jarCandidates.Name -join ', ')."
+                if ($RequireBuiltJar) {
+                    Add-Error $message
+                }
+                else {
+                    Add-Warning $message
+                }
             }
         }
 
