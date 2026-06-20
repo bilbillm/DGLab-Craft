@@ -225,8 +225,15 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
+def removeSlimJars = tasks.register('removeSlimJars', Delete) {
+    delete fileTree(layout.buildDirectory.dir('libs')) {
+        include '*-slim.jar'
+    }
+}
+
 // 将 jarJar 绑定到默认的 build 流程中
 build.dependsOn 'jarJar'
+build.finalizedBy removeSlimJars
 
 // 确保 jarJar 任务启用
 tasks.named('jarJar') {
