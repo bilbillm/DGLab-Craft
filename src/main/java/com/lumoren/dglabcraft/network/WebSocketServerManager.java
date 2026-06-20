@@ -1016,6 +1016,48 @@ public class WebSocketServerManager {
     public String getLocalIp() { return localIp; }
     public int getPort() { return port; }
     public String getConnectedClientId() { return connectedClientId; }
+    public String getTargetId() { return targetId; }
+    public boolean hasClientSocketConnection() { return connectedClient != null && connectedClient.isOpen(); }
+    public boolean isWaitingForAppBind() { return hasClientSocketConnection() && !isBound; }
+    public boolean hasLiveOutput() { return hasActiveEffects() || channelAIntensity > 0 || channelBIntensity > 0; }
+
+    public boolean isChannelRuntimeActive(String channel) {
+        return isChannelStateActive(channelState(channel));
+    }
+
+    public int getChannelRuntimeIntensity(String channel) {
+        return channelState(channel).currentIntensity;
+    }
+
+    public EffectSource getChannelRuntimeSource(String channel) {
+        return channelState(channel).source;
+    }
+
+    public String getChannelRuntimeDetail(String channel) {
+        return channelState(channel).detail;
+    }
+
+    public String getChannelRuntimeWaveform(String channel) {
+        return channelState(channel).waveformId;
+    }
+
+    public long getChannelRuntimeRemainingMillis(String channel) {
+        return remainingMillis(channelState(channel).leaseUntilAt);
+    }
+
+    public boolean isSyncRuntimeActive() { return isSyncStateActive(); }
+    public EffectSource getSyncRuntimeSource() { return syncSource; }
+    public String getSyncRuntimeDetail() { return syncDetail; }
+    public String getSyncRuntimeWaveform() { return syncWaveform; }
+    public long getSyncRuntimeRemainingMillis() { return remainingMillis(syncLeaseUntilAt); }
+
+    private ChannelRuntime channelState(String channel) {
+        return "A".equalsIgnoreCase(channel) ? channelAState : channelBState;
+    }
+
+    private long remainingMillis(long leaseUntilAt) {
+        return Math.max(0L, leaseUntilAt - System.currentTimeMillis());
+    }
 
     // 获取 App 设置的最大强度
     public int getAppAMaxStrength() { return appAMaxStrength; }

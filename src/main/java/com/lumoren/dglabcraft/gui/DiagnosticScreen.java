@@ -67,7 +67,7 @@ public class DiagnosticScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         int centerX = this.width / 2;
@@ -193,7 +193,7 @@ public class DiagnosticScreen extends Screen {
             modVersion("dglabcraft"),
             SharedConstants.getCurrentVersion().getName(),
             "NeoForge",
-            modVersion("NeoForge"),
+            modVersion("neoforge"),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown"),
             System.getProperty("os.version", "unknown"),
