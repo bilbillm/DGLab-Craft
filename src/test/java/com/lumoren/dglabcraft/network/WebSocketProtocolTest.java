@@ -40,4 +40,22 @@ class WebSocketProtocolTest {
         assertEquals(12, WebSocketProtocol.leaseTicks(WebSocketServerManager.EffectSource.DAMAGE, "arrow"));
         assertEquals(0, WebSocketProtocol.leaseTicks(WebSocketServerManager.EffectSource.NONE, null));
     }
+
+    @Test
+    void parsesDualChannelStrengthLimits() {
+        assertEquals(new WebSocketProtocol.StrengthLimits(30, 10), WebSocketProtocol.parseStrengthLimits("strength-0+0+30+10", 100, 100));
+    }
+
+    @Test
+    void parsesLegacySingleChannelStrengthLimits() {
+        assertEquals(new WebSocketProtocol.StrengthLimits(50, 20), WebSocketProtocol.parseStrengthLimits("strength-1+2+50", 10, 20));
+        assertEquals(new WebSocketProtocol.StrengthLimits(10, 75), WebSocketProtocol.parseStrengthLimits("strength-2+2+75", 10, 20));
+    }
+
+    @Test
+    void keepsCurrentStrengthLimitsForInvalidMessages() {
+        assertEquals(new WebSocketProtocol.StrengthLimits(10, 20), WebSocketProtocol.parseStrengthLimits("pulse-A:[]", 10, 20));
+        assertEquals(new WebSocketProtocol.StrengthLimits(10, 20), WebSocketProtocol.parseStrengthLimits("strength-xyz", 10, 20));
+        assertEquals(new WebSocketProtocol.StrengthLimits(10, 20), WebSocketProtocol.parseStrengthLimits(null, 10, 20));
+    }
 }
