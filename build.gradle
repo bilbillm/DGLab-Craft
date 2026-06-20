@@ -107,6 +107,7 @@ tasks.withType(JavaCompile).configureEach {
 def removeLegacyAllJars = tasks.register('removeLegacyAllJars', Delete) {
     delete fileTree(layout.buildDirectory.dir('libs')) {
         include '*-all.jar'
+        include '*-slim.jar'
     }
 }
 
