@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 /**
  * 自定义滑动条组件 - 使用 Minecraft 原版 AbstractSliderButton
@@ -114,7 +115,7 @@ public class Slider extends AbstractSliderButton {
         }
 
         // 使用保存的原始前缀文本构建显示文本
-        Component fullMessage = Component.translatable("slider.dglabcraft.value", prefix, valueStr, suffix);
+        Component fullMessage = new TranslatableComponent("slider.dglabcraft.value", prefix, valueStr, suffix);
         this.setMessage(fullMessage);
     }
 

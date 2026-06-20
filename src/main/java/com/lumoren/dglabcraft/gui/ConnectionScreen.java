@@ -10,6 +10,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.io.File;
 
@@ -20,7 +21,7 @@ public class ConnectionScreen extends Screen {
     private static final int DONE_BUTTON_BOTTOM_MARGIN = 30;
     private static final int QR_BUTTON_COUNT = 3;
 
-    private static final Component MANUAL_IP_HINT = Component.translatable("hint.dglabcraft.manual_ip")
+    private static final Component MANUAL_IP_HINT = new TranslatableComponent("hint.dglabcraft.manual_ip")
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 
     private final Screen parent;
@@ -32,7 +33,7 @@ public class ConnectionScreen extends Screen {
     private boolean manualIpInvalid = false;
 
     public ConnectionScreen(Screen parent) {
-        super(Component.translatable("screen.dglabcraft.connection_settings"));
+        super(new TranslatableComponent("screen.dglabcraft.connection_settings"));
         this.parent = parent;
     }
 
@@ -49,7 +50,7 @@ public class ConnectionScreen extends Screen {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
         this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, manualInputY, buttonWidth, BUTTON_HEIGHT,
-            Component.translatable("label.dglabcraft.manual_lan_ip"));
+            new TranslatableComponent("label.dglabcraft.manual_lan_ip"));
         String currentHost = ModConfig.WS_HOST.get();
         if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
             this.manualIpInput.setValue(currentHost);
@@ -61,7 +62,7 @@ public class ConnectionScreen extends Screen {
         }
 
         this.refreshQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(0, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.refresh_qr"),
+            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.refresh_qr"),
             button -> {
                 if (commitManualIpInput()) {
                     ensureQrCodeGenerated();
@@ -70,7 +71,7 @@ public class ConnectionScreen extends Screen {
         this.addRenderableWidget(this.refreshQrButton);
 
         this.openQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(1, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.open_qr_image"),
+            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.open_qr_image"),
             button -> {
                 File qrFile = getQrCodeFile();
                 if (qrFile.isFile()) {
@@ -80,7 +81,7 @@ public class ConnectionScreen extends Screen {
         this.addRenderableWidget(this.openQrButton);
 
         this.openQrFolderButton = new Button(centerX - buttonWidth / 2, getQrButtonY(2, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, Component.translatable("button.dglabcraft.open_qr_folder"),
+            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.open_qr_folder"),
             button -> {
                 File qrFile = getQrCodeFile();
                 File qrFolder = qrFile.getParentFile();
@@ -91,7 +92,7 @@ public class ConnectionScreen extends Screen {
         this.addRenderableWidget(this.openQrFolderButton);
 
         this.doneButton = new Button(centerX - buttonWidth / 2, doneButtonY, buttonWidth, BUTTON_HEIGHT,
-            Component.translatable("button.dglabcraft.done"), button -> this.onClose());
+            new TranslatableComponent("button.dglabcraft.done"), button -> this.onClose());
         this.addRenderableWidget(this.doneButton);
     }
 
@@ -155,16 +156,16 @@ public class ConnectionScreen extends Screen {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         boolean isConnected = server.isConnected();
 
-        drawCenteredString(poseStack, this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, new TranslatableComponent("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
         drawCenteredString(poseStack, this.font,
-            Component.translatable(isConnected ? "status.dglabcraft.connected" : "status.dglabcraft.waiting_connection"),
+            new TranslatableComponent(isConnected ? "status.dglabcraft.connected" : "status.dglabcraft.waiting_connection"),
             centerX, 50, isConnected ? 0x00FF00 : 0xFFFF00);
         drawCenteredString(poseStack, this.font,
-            Component.translatable("label.dglabcraft.address", server.resolveConnectionHost(), server.getPort()),
+            new TranslatableComponent("label.dglabcraft.address", server.resolveConnectionHost(), server.getPort()),
             centerX, 70, 0xAAAAAA);
 
         if (!isConnected) {
-            drawCenteredString(poseStack, this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
+            drawCenteredString(poseStack, this.font, new TranslatableComponent("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
 
             File qrFile = getQrCodeFile();
             if (qrFile.isFile()) {
@@ -173,14 +174,14 @@ public class ConnectionScreen extends Screen {
         }
 
         if (manualIpInvalid) {
-            drawCenteredString(poseStack, this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"),
+            drawCenteredString(poseStack, this.font, new TranslatableComponent("error.dglabcraft.invalid_manual_ip"),
                 centerX, this.height / 2 + 2, 0xFF5555);
         }
 
         if (isConnected) {
             String clientId = server.getConnectedClientId();
             if (clientId != null) {
-                drawCenteredString(poseStack, this.font, Component.translatable("label.dglabcraft.device", clientId),
+                drawCenteredString(poseStack, this.font, new TranslatableComponent("label.dglabcraft.device", clientId),
                     centerX, 90, 0xAAAAAA);
             }
         }
@@ -239,7 +240,7 @@ public class ConnectionScreen extends Screen {
 
     private void renderQrPath(PoseStack poseStack, int centerX, int startY, File qrFile) {
         int maxTextWidth = Math.max(120, this.width - 40);
-        drawCenteredString(poseStack, this.font, Component.translatable("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
+        drawCenteredString(poseStack, this.font, new TranslatableComponent("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
         drawCenteredString(poseStack, this.font, fitTextToWidth(qrFile.getAbsolutePath(), maxTextWidth), centerX, startY + 12, 0xAAAAAA);
     }
 

@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +37,12 @@ public class DGLabCraftScreen extends Screen {
     private boolean lastConnected = false;
 
     public DGLabCraftScreen(Screen parent) {
-        super(Component.translatable("screen.dglabcraft.strength_settings"));
+        super(new TranslatableComponent("screen.dglabcraft.strength_settings"));
         this.parent = parent;
     }
 
     private static Component t(String key, Object... args) {
-        return Component.translatable(key, args);
+        return new TranslatableComponent(key, args);
     }
 
     private static Component setting(String key) {
@@ -543,7 +544,7 @@ public class DGLabCraftScreen extends Screen {
         ModConfig.save();
 
         // 重新初始化界面以反映新值
-        this.rebuildWidgets();
+        this.init();
     }
 
     @Override
@@ -578,7 +579,7 @@ public class DGLabCraftScreen extends Screen {
                 this.lastAppStrengthB = ws.getAppBMaxStrength();
             }
             // 重建整个界面以反映连接状态变化
-            this.rebuildWidgets();
+            this.init();
             return;
         }
 

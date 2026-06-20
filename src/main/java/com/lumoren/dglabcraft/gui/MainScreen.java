@@ -6,11 +6,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public class MainScreen extends Screen {
 
     public MainScreen() {
-        super(Component.literal("DGLab Craft"));
+        super(new TextComponent("DGLab Craft"));
     }
 
     private Button settingsButton;
@@ -37,22 +39,22 @@ public class MainScreen extends Screen {
         int startY = this.height / 2 - 40;
 
         this.settingsButton = new Button(centerX - buttonWidth / 2, startY, buttonWidth, buttonHeight,
-            Component.translatable("button.dglabcraft.strength_settings"),
+            new TranslatableComponent("button.dglabcraft.strength_settings"),
             button -> this.minecraft.setScreen(new DGLabCraftScreen(this)));
         this.addRenderableWidget(this.settingsButton);
 
         this.connectionButton = new Button(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight,
-            Component.translatable("button.dglabcraft.connection_settings"),
+            new TranslatableComponent("button.dglabcraft.connection_settings"),
             button -> this.minecraft.setScreen(new ConnectionScreen(this)));
         this.addRenderableWidget(this.connectionButton);
 
         this.diagnosticButton = new Button(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight,
-            Component.translatable("button.dglabcraft.diagnostics"),
+            new TranslatableComponent("button.dglabcraft.diagnostics"),
             button -> this.minecraft.setScreen(new DiagnosticScreen(this)));
         this.addRenderableWidget(this.diagnosticButton);
 
         this.waveformButton = new Button(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight,
-            Component.translatable("button.dglabcraft.waveform_settings_soon"),
+            new TranslatableComponent("button.dglabcraft.waveform_settings_soon"),
             button -> {
             });
         this.addRenderableWidget(this.waveformButton);
@@ -83,28 +85,28 @@ public class MainScreen extends Screen {
         this.addRenderableWidget(this.hudPositionButton);
 
         this.closeButton = new Button(startX + (btnWidth + btnGap) * 2, startY + spacing * 4, btnWidth, buttonHeight,
-            Component.translatable("button.dglabcraft.close_screen"),
+            new TranslatableComponent("button.dglabcraft.close_screen"),
             button -> this.onClose());
         this.addRenderableWidget(this.closeButton);
     }
 
     private Component getPositionText(int pos) {
         switch (pos) {
-            case 0: return Component.translatable("position.dglabcraft.top_left");
-            case 1: return Component.translatable("position.dglabcraft.top_right");
-            case 2: return Component.translatable("position.dglabcraft.bottom_left");
-            case 3: return Component.translatable("position.dglabcraft.bottom_right");
-            default: return Component.translatable("position.dglabcraft.unknown");
+            case 0: return new TranslatableComponent("position.dglabcraft.top_left");
+            case 1: return new TranslatableComponent("position.dglabcraft.top_right");
+            case 2: return new TranslatableComponent("position.dglabcraft.bottom_left");
+            case 3: return new TranslatableComponent("position.dglabcraft.bottom_right");
+            default: return new TranslatableComponent("position.dglabcraft.unknown");
         }
     }
 
     private Component hudToggleText(boolean enabled) {
-        return Component.translatable("button.dglabcraft.hud_toggle",
-            Component.translatable(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
+        return new TranslatableComponent("button.dglabcraft.hud_toggle",
+            new TranslatableComponent(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
     }
 
     private Component hudPositionText(int pos) {
-        return Component.translatable("button.dglabcraft.hud_position", getPositionText(pos));
+        return new TranslatableComponent("button.dglabcraft.hud_position", getPositionText(pos));
     }
 
     @Override
@@ -112,16 +114,16 @@ public class MainScreen extends Screen {
         this.renderBackground(poseStack);
 
         int centerX = this.width / 2;
-        drawCenteredString(poseStack, this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, new TextComponent("DGLab Craft"), centerX, 30, 0xFFFFFF);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         Component statusText;
         int statusColor;
         if (server.isConnected()) {
-            statusText = Component.translatable("status.dglabcraft.connected");
+            statusText = new TranslatableComponent("status.dglabcraft.connected");
             statusColor = 0x00FF00;
         } else {
-            statusText = Component.translatable("status.dglabcraft.waiting_connection");
+            statusText = new TranslatableComponent("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
         drawCenteredString(poseStack, this.font, statusText, centerX, 50, statusColor);

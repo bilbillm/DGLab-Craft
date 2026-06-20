@@ -28,7 +28,37 @@ import java.util.TimerTask;
  */
 public class WebSocketServerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
+    private static final long TICK_MS = 50L;
     private static WebSocketServerManager instance;
+
+    public enum EffectSource {
+        NONE,
+        ENVIRONMENT,
+        HEARTBEAT,
+        DAMAGE
+    }
+
+    private static final class ChannelRuntime {
+        private EffectSource source = EffectSource.NONE;
+        private String detail = "";
+        private String waveformId = "";
+        private int priority = -1;
+        private boolean active = false;
+        private int currentIntensity = 0;
+        private long lastUpdateAt = 0L;
+        private long leaseUntilAt = 0L;
+
+        private void reset() {
+            source = EffectSource.NONE;
+            detail = "";
+            waveformId = "";
+            priority = -1;
+            active = false;
+            currentIntensity = 0;
+            lastUpdateAt = 0L;
+            leaseUntilAt = 0L;
+        }
+    }
 
     private WebSocketServer server;
     private int port;
@@ -56,6 +86,13 @@ public class WebSocketServerManager {
     private double channelBIntensity = 0;
     private String channelAStatus = "Idle";
     private String channelBStatus = "Idle";
+    private final ChannelRuntime channelAState = new ChannelRuntime();
+    private final ChannelRuntime channelBState = new ChannelRuntime();
+    private boolean syncEffectActive = false;
+    private EffectSource syncSource = EffectSource.NONE;
+    private String syncDetail = "";
+    private String syncWaveform = "";
+    private long syncLeaseUntilAt = 0L;
 
     private final Gson gson = new Gson();
 
@@ -674,6 +711,27 @@ public class WebSocketServerManager {
         if (connectedClient != null && connectedClient.isOpen()) {
             sendMessage("strength-" + channelNum + "+2+0");
             LOGGER.info("发送停止刺激(归零): strength-" + channelNum + "+2+0");
+        }
+    }
+
+    public void safeSilenceAll() {
+        channelAIntensity = 0;
+        channelBIntensity = 0;
+        channelAStatus = "Idle";
+        channelBStatus = "Idle";
+        channelAState.reset();
+        channelBState.reset();
+        syncEffectActive = false;
+        syncSource = EffectSource.NONE;
+        syncDetail = "";
+        syncWaveform = "";
+        syncLeaseUntilAt = 0L;
+
+        if (connectedClient != null && connectedClient.isOpen()) {
+            sendMessage("strength-1+2+0");
+            sendMessage("strength-2+2+0");
+            sendMessage("clear-1");
+            sendMessage("clear-2");
         }
     }
 
