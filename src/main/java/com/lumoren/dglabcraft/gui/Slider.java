@@ -13,7 +13,7 @@ public class Slider extends AbstractSliderButton {
     private final double maxValue;
     private final double stepSize;
     private final String suffix;
-    private final String prefixText;  // 保存原始前缀文本
+    private final Component prefix;  // 保存原始前缀文本
     private final java.util.function.Consumer<Double> onValueChangeComplete;  // 释放鼠标时回调（保存配置）
 
     /**
@@ -39,7 +39,7 @@ public class Slider extends AbstractSliderButton {
         this.maxValue = maxValue;
         this.stepSize = stepSize;
         this.suffix = suffix;
-        this.prefixText = prefix.getString();  // 保存原始前缀文本
+        this.prefix = prefix;  // 保存原始前缀文本
         this.onValueChangeComplete = onValueChangeComplete;
 
         this.updateMessage();
@@ -114,7 +114,7 @@ public class Slider extends AbstractSliderButton {
         }
 
         // 使用保存的原始前缀文本构建显示文本
-        Component fullMessage = new net.minecraft.network.chat.TextComponent(prefixText + valueStr + suffix);
+        Component fullMessage = Component.translatable("slider.dglabcraft.value", prefix, valueStr, suffix);
         this.setMessage(fullMessage);
     }
 
