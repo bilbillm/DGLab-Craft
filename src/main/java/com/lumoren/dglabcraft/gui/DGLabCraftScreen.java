@@ -541,7 +541,7 @@ public class DGLabCraftScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
@@ -651,11 +651,8 @@ public class DGLabCraftScreen extends Screen {
 
         public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
             super(minecraft, width, height, top, bottom, itemHeight);
-            this.setRenderBackground(true);
-            this.setRenderTopAndBottom(true);
         }
 
-        @Override
         protected int getScrollbarPosition() {
             return this.width - 10;
         }
