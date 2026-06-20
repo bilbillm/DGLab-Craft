@@ -30,16 +30,16 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
 
 ### 2. 在 GitHub 下载 Mod
 
-1. 打开这个版本的 release：[`DGLabCraft-1.19.2-1.0.6.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2)
+1. 打开这个版本的 release：[`DGLabCraft-1.19.2-1.0.7.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2)
 2. 在页面下方找到 **Assets**。
-3. 下载 `DGLabCraft-1.19.2-1.0.6.jar`。
+3. 下载 `DGLabCraft-1.19.2-1.0.7.jar`。
 4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
 
 也可以从项目的 [Releases 页面](https://github.com/bilbillm/DGLab-Craft/releases) 进入，按自己的 Minecraft 版本选择 release。
@@ -49,7 +49,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 1. 用启动器创建或选择一个 Minecraft `1.19.2` 实例。
 2. 给这个实例安装 Forge `43.5.0`。
 3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
-4. 把刚下载的 `DGLabCraft-1.19.2-1.0.6.jar` 放进去。
+4. 把刚下载的 `DGLabCraft-1.19.2-1.0.7.jar` 放进去。
 5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
 
 如果你不知道实例目录在哪：在启动器里通常可以右键实例，选择“打开文件夹”或“打开游戏目录”。
@@ -108,7 +108,7 @@ cd DGLab-Craft
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
