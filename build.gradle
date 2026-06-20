@@ -9,7 +9,7 @@ version = mod_version
 group = 'com.lumoren.dglabcraft'
 
 base {
-    archivesName = "dglab-craft-${minecraft_version}"
+    archivesName = "DGLabCraft-${minecraft_version}"
 }
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
