@@ -1,5 +1,19 @@
 # DGLab Craft Changelog
 
+## [1.0.11] - 2026-06-20
+
+### Fixed
+- Made the diagnostics page content scrollable so long text no longer overlaps the fixed buttons.
+
+### Changed
+- Keep release builds to the final installable jar only; slim jars are removed from build outputs.
+- Expanded GUI localization and issue-report copy support across maintained branches.
+
+### Tests
+- Added coverage for diagnostics scrolling, WebSocket protocol helpers, strength parsing, language files, issue-report redaction, waveform parsing, and key pure logic.
+
+---
+
 ## [1.0.10] - 2026-06-18
 
 ### 修复
