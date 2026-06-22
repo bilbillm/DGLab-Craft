@@ -1,0 +1,70 @@
+name: Bug report
+description: Report a connection, feedback, crash, or compatibility problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open the in-game DGLab Craft screen, go to Connection Diagnostics, click "Copy issue info", and paste it below.
+        Do not paste QR URLs, full client IDs, or full target IDs.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the visible problem and what you expected instead.
+      placeholder: "Example: The QR code appears, but the mobile app never binds after scanning."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest steps that reproduce the problem.
+      placeholder: |
+        1. Install DGLabCraft-...
+        2. Start Minecraft ...
+        3. Press K and generate QR code
+        4. Scan with DGLab App
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostic_info
+    attributes:
+      label: Diagnostic information
+      description: Paste the text copied from the in-game diagnostics page.
+      placeholder: |
+        ## DGLab Craft Issue Info
+
+        ### Environment
+        - Mod version: ...
+        - Minecraft version: ...
+    validations:
+      required: true
+  - type: dropdown
+    id: app_platform
+    attributes:
+      label: DGLab App platform
+      options:
+        - Android
+        - iOS
+        - Unknown / not tested
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or crash report
+      description: Paste the relevant `latest.log` excerpt or attach the crash report if there is one.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I used the DGLab Craft jar that exactly matches my Minecraft version and loader.
+          required: true
+        - label: I checked that the phone and PC are on the same LAN for connection issues.
+          required: false
