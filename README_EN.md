@@ -13,7 +13,12 @@ DGLab Craft is a Minecraft mod that converts in-game damage, low-health states, 
 
 Current branch: `1.21.4-NeoForge`
 Target version: Minecraft `1.21.4` / NeoForge `21.4.157+` / Java `21`
-> Note: this release is marked as not field-tested. If you only want a stable play setup, prefer a release that exactly matches your Minecraft version and has been tested.
+> Note: use the jar that exactly matches your Minecraft version and loader. Do not mix Minecraft, Forge, or NeoForge builds.
+
+Download pages:
+
+- [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
 ## Part 1: Install and Play
 
@@ -29,11 +34,11 @@ If your Minecraft version is different, use the matching branch and release belo
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
 
 ### 2. Download the Mod from GitHub
 
@@ -87,7 +92,7 @@ This branch maintains:
 - Minecraft `1.21.4`
 - NeoForge `21.4.157+`
 - Java `21`
-- Mod version `1.0.7`
+- Mod version `1.0.8`
 
 When maintaining multiple versions, put fixes on the matching Minecraft branch first. Do not blindly copy Forge and NeoForge code between branches because their events, registration APIs, and build flows differ.
 
@@ -103,20 +108,30 @@ Artifacts are generated in `build/libs/`.
 
 For release uploads, use the full jar, normally the one without `-slim` in its filename.
 
+Release checks:
+
+```bash
+pwsh scripts/release-check.ps1 -Tag v1.0.8-1.21.4-NeoForge -SkipGitHubReleaseCheck
+pwsh scripts/release-postcheck.ps1 -Tag v1.0.8-1.21.4-NeoForge
+```
+
+You can manually run the `Release Rehearsal` GitHub Action to validate release metadata and build output without creating a GitHub Release or uploading to CurseForge.
+
 ### Maintained branches
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.9](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.9-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.21.1) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
 
 ### Useful bug report details
 
 Ask users to include:
 
+- the full text from the diagnostics page's "Copy issue info" button
 - Minecraft version
 - Forge / NeoForge version
 - DGLab Craft version
