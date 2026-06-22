@@ -1,0 +1,137 @@
+name: Release Rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Expected release tag. Leave empty to derive from gradle.properties."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  rehearse:
+    name: Rehearse release build and metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Read release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read_property() {
+            sed -n "s/^$1=//p" gradle.properties | head -n 1 | tr -d '\r'
+          }
+
+          minecraft_version="$(read_property minecraft_version)"
+          mod_version="$(read_property mod_version)"
+          if [ -z "${minecraft_version}" ] || [ -z "${mod_version}" ]; then
+            echo "::error::Could not read minecraft_version or mod_version from gradle.properties"
+            exit 1
+          fi
+
+          if grep -q '^neoforge_version=' gradle.properties; then
+            loader="NeoForge"
+            expected_tag="v${mod_version}-${minecraft_version}-NeoForge"
+          else
+            loader="Forge"
+            expected_tag="v${mod_version}-${minecraft_version}"
+          fi
+
+          input_tag="${{ inputs.tag }}"
+          if [ -n "${input_tag}" ]; then
+            expected_tag="${input_tag}"
+          fi
+
+          java_version="$(sed -n 's/.*JavaLanguageVersion\.of(\([0-9][0-9]*\)).*/\1/p' build.gradle | head -n 1 | tr -d '\r')"
+          if [ -z "${java_version}" ]; then
+            if [ "${loader}" = "NeoForge" ]; then
+              java_version="21"
+            else
+              java_version="17"
+            fi
+          fi
+
+          {
+            echo "minecraft_version=${minecraft_version}"
+            echo "mod_version=${mod_version}"
+            echo "loader=${loader}"
+            echo "java_version=${java_version}"
+            echo "expected_tag=${expected_tag}"
+            echo "artifact=build/libs/DGLabCraft-${minecraft_version}-${mod_version}.jar"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Run release preflight checks
+        shell: pwsh
+        run: ./scripts/release-check.ps1 -Tag "${{ steps.meta.outputs.expected_tag }}" -SkipGitHubReleaseCheck
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.meta.outputs.java_version }}
+          cache: gradle
+
+      - name: Remove local-only Gradle proxy
+        run: |
+          sed -i '/^systemProp\.\(http\|https\)\.proxyHost=/d' gradle.properties
+          sed -i '/^systemProp\.\(http\|https\)\.proxyPort=/d' gradle.properties
+
+      - name: Build release jar
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build
+
+      - name: Verify release artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact="${{ steps.meta.outputs.artifact }}"
+          if [ ! -f "${artifact}" ]; then
+            echo "::error::Expected release artifact '${artifact}' was not built."
+            find build/libs -maxdepth 1 -type f -name '*.jar' -print | sort || true
+            exit 1
+          fi
+
+          unexpected="$(find build/libs -maxdepth 1 -type f \( -name '*-slim.jar' -o -name '*-sources.jar' -o -name '*-javadoc.jar' -o -name '*-dev.jar' -o -name '*-all.jar' \) -print)"
+          if [ -n "${unexpected}" ]; then
+            echo "::error::Unexpected non-release jar(s) found:"
+            printf '%s\n' "${unexpected}"
+            exit 1
+          fi
+
+          echo "Release artifact OK: ${artifact}"
+
+      - name: Verify CurseForge changelog section
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.meta.outputs.mod_version }}"
+          body="$(
+            awk -v version="${version}" '
+              BEGIN { in_section = 0 }
+              index($0, "## [" version "]") == 1 { in_section = 1 }
+              in_section && $0 == "---" { exit }
+              in_section && $0 ~ "^## \\[" && index($0, "## [" version "]") != 1 { exit }
+              in_section { print }
+            ' changelog.txt
+          )"
+
+          if [ -z "${body}" ]; then
+            echo "::error::Could not extract current changelog section for ${version}."
+            exit 1
+          fi
+
+          if printf '%s\n' "${body}" | grep -q 'Changelog$'; then
+            echo "::error::Extracted changelog appears to include historical Forge changelog text."
+            exit 1
+          fi
+
+          printf '%s\n' "${body}"
