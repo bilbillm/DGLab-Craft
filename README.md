@@ -12,8 +12,14 @@
 DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量、环境变化等事件转换成 DGLab 设备反馈，并通过本地 WebSocket 和 DGLab App 连接。
 
 当前分支：`1.21.1-NeoForge`
-适配版本：Minecraft `1.21.1` / NeoForge `21.1.61+` / Java `21`
+适配版本：Minecraft `1.21.1` / NeoForge `21.1.61` / Java `21`
 
+> 提醒：请优先选择与你 MC 版本完全一致的 jar；不要混装不同 Minecraft、Forge 或 NeoForge 版本。
+
+下载页面：
+
+- [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
 ## 第一部分：我只是想安装使用
 
@@ -29,11 +35,11 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
 
 ### 2. 在 GitHub 下载 Mod
 
@@ -87,7 +93,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 - Minecraft `1.21.1`
 - NeoForge `21.1.61+`
 - Java `21`
-- Mod 版本 `1.0.6`
+- Mod 版本 `1.0.7`
 
 维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
 
@@ -103,20 +109,30 @@ cd DGLab-Craft
 
 发布 release 时，通常上传不带 `-slim` 的完整 jar。
 
+发布前后检查：
+
+```bash
+pwsh scripts/release-check.ps1 -Tag v1.0.7-1.21.1-NeoForge -SkipGitHubReleaseCheck
+pwsh scripts/release-postcheck.ps1 -Tag v1.0.7-1.21.1-NeoForge
+```
+
+GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证发布元数据，不创建 GitHub Release，也不会上传 CurseForge。
+
 ### 维护分支一览
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.6-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.10](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.10-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.6](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.4-NeoForge) |
+| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
+| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
+| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
+| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
+| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
 
 ### 报 bug 时需要的信息
 
 请尽量让用户附上：
 
+- 诊断页一键复制反馈信息的完整内容
 - Minecraft 版本
 - Forge / NeoForge 版本
 - DGLab Craft 版本
