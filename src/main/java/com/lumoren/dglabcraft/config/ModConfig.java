@@ -40,6 +40,11 @@ public class ModConfig {
     public static final ForgeConfigSpec.ConfigValue<Double> MAX_INTENSITY_PERCENTAGE;
     public static final ForgeConfigSpec.ConfigValue<Boolean> HUD_ENABLED;
     public static final ForgeConfigSpec.ConfigValue<Integer> HUD_POSITION;
+    public static final ForgeConfigSpec.ConfigValue<Double> HUD_X_RATIO;
+    public static final ForgeConfigSpec.ConfigValue<Double> HUD_Y_RATIO;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> WAVEFORM_OVERLAY_ENABLED;
+    public static final ForgeConfigSpec.ConfigValue<Double> WAVEFORM_X_RATIO;
+    public static final ForgeConfigSpec.ConfigValue<Double> WAVEFORM_Y_RATIO;
     public static final ForgeConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
 
     // ========== WebSocket 设置 ==========
@@ -111,6 +116,16 @@ public class ModConfig {
                 .define("hudEnabled", true);
         HUD_POSITION = builder.comment("HUD位置 (0=左上, 1=右上, 2=左下, 3=右下)")
                 .define("hudPosition", 0);
+        HUD_X_RATIO = builder.comment("HUD 横向位置比例 (0.0-1.0, -1 表示按旧 hudPosition 迁移)")
+                .define("hudXRatio", -1.0);
+        HUD_Y_RATIO = builder.comment("HUD 纵向位置比例 (0.0-1.0, -1 表示按旧 hudPosition 迁移)")
+                .define("hudYRatio", -1.0);
+        WAVEFORM_OVERLAY_ENABLED = builder.comment("是否显示波形可视化叠加层")
+                .define("waveformOverlayEnabled", true);
+        WAVEFORM_X_RATIO = builder.comment("波形叠加层横向位置比例 (0.0-1.0)")
+                .define("waveformXRatio", 0.5);
+        WAVEFORM_Y_RATIO = builder.comment("波形叠加层纵向位置比例 (0.0-1.0)")
+                .define("waveformYRatio", 0.12);
         SYNC_CHANNELS = builder.comment("A/B 通道同步")
                 .define("syncChannels", true);
         builder.pop();
