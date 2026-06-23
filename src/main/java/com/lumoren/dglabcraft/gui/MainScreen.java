@@ -22,7 +22,8 @@ public class MainScreen extends Screen {
     private Button diagnosticButton;
     private Button waveformButton;
     private Button hudToggleButton;
-    private Button hudPositionButton;
+    private Button waveformOverlayButton;
+    private Button editOverlaysButton;
     private Button closeButton;
 
     @Override
@@ -64,9 +65,9 @@ public class MainScreen extends Screen {
         }).bounds(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.waveformButton);
 
-        // HUD 开关按钮 + HUD 位置切换按钮 + 关闭界面按钮（三列并排，总宽度200与上方按钮对齐）
-        int btnWidth = 66;  // 66*3 + 1*2 = 200
-        int btnGap = 1;     // 间距
+        // HUD 开关、波形开关、叠加层编辑和关闭界面按钮
+        int btnWidth = 98;
+        int btnGap = 4;
         int startX = centerX - buttonWidth / 2;
         boolean hudEnabled = ModConfig.HUD_ENABLED.get();
         this.hudToggleButton = Button.builder(hudToggleText(hudEnabled), button -> {
@@ -77,19 +78,22 @@ public class MainScreen extends Screen {
         }).bounds(startX, startY + spacing * 4, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.hudToggleButton);
 
-        // HUD 位置切换按钮
-        int currentPos = ModConfig.HUD_POSITION.get();
-        this.hudPositionButton = Button.builder(hudPositionText(currentPos), button -> {
-            int newPos = (ModConfig.HUD_POSITION.get() + 1) % 4;
-            ModConfig.HUD_POSITION.set(newPos);
+        boolean waveformEnabled = ModConfig.WAVEFORM_OVERLAY_ENABLED.get();
+        this.waveformOverlayButton = Button.builder(waveformOverlayText(waveformEnabled), button -> {
+            boolean newState = !ModConfig.WAVEFORM_OVERLAY_ENABLED.get();
+            ModConfig.WAVEFORM_OVERLAY_ENABLED.set(newState);
             ModConfig.save();
-            button.setMessage(hudPositionText(newPos));
+            button.setMessage(waveformOverlayText(newState));
         }).bounds(startX + btnWidth + btnGap, startY + spacing * 4, btnWidth, buttonHeight).build();
-        this.addRenderableWidget(this.hudPositionButton);
+        this.addRenderableWidget(this.waveformOverlayButton);
 
-        // 关闭界面按钮
+        this.editOverlaysButton = Button.builder(Component.translatable("button.dglabcraft.edit_overlays"), button -> {
+            this.minecraft.setScreen(new OverlayEditScreen(this));
+        }).bounds(startX, startY + spacing * 5, btnWidth, buttonHeight).build();
+        this.addRenderableWidget(this.editOverlaysButton);
+
         this.closeButton = Button.builder(Component.translatable("button.dglabcraft.close_screen"), button -> this.onClose())
-            .bounds(startX + (btnWidth + btnGap) * 2, startY + spacing * 4, btnWidth, buttonHeight).build();
+            .bounds(startX + btnWidth + btnGap, startY + spacing * 5, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.closeButton);
     }
 
@@ -113,6 +117,11 @@ public class MainScreen extends Screen {
 
     private Component hudPositionText(int pos) {
         return Component.translatable("button.dglabcraft.hud_position", getPositionText(pos));
+    }
+
+    private Component waveformOverlayText(boolean enabled) {
+        return Component.translatable("button.dglabcraft.waveform_overlay",
+            Component.translatable(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
     }
 
     @Override
