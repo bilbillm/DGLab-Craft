@@ -42,7 +42,8 @@ public class OverlayEditScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        DGLabScreenBackground.render(guiGraphics, this.width, this.height);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.fill(0, 0, this.width, this.height, 0x66000000);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
         guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.drag_overlay_hint"),
             this.width / 2, 32, 0xCCCCCC);

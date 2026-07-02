@@ -151,7 +151,7 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        DGLabScreenBackground.render(guiGraphics, this.width, this.height);
+        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
 
