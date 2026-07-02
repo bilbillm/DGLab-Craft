@@ -47,4 +47,54 @@ class OverlayLayoutTest {
         assertFalse(OverlayLayout.hasSavedRatio(0.2D, -1.0D));
         assertTrue(OverlayLayout.hasSavedRatio(0.2D, 0.3D));
     }
+
+    @Test
+    void scaledRectKeepsAspectRatio() {
+        OverlayLayout.Rect rect = OverlayLayout.scaledRectFromRatio(0.0D, 0.0D,
+            OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT, 1.5D, 640, 360);
+
+        assertEquals(288, rect.width());
+        assertEquals(129, rect.height());
+    }
+
+    @Test
+    void resizeRightEdgeKeepsAspectRatio() {
+        OverlayLayout.Rect start = new OverlayLayout.Rect(20, 20, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT);
+        OverlayLayout.ResizeHandle handle = new OverlayLayout.ResizeHandle(false, true, false, false);
+
+        OverlayLayout.Rect resized = OverlayLayout.resize(start, 20 + OverlayLayout.HUD_WIDTH * 2.0D, 40,
+            handle, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, 640, 360);
+
+        assertEquals(308, resized.width());
+        assertEquals(108, resized.height());
+        assertEquals(20, resized.x());
+        assertEquals(20, resized.y());
+    }
+
+    @Test
+    void resizeLeftEdgeAnchorsRightSide() {
+        OverlayLayout.Rect start = new OverlayLayout.Rect(300, 20, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT);
+        OverlayLayout.ResizeHandle handle = new OverlayLayout.ResizeHandle(true, false, false, false);
+
+        OverlayLayout.Rect resized = OverlayLayout.resize(start, 300 - OverlayLayout.HUD_WIDTH, 40,
+            handle, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, 640, 360);
+
+        assertEquals(308, resized.width());
+        assertEquals(108, resized.height());
+        assertEquals(300 + OverlayLayout.HUD_WIDTH - 308, resized.x());
+    }
+
+    @Test
+    void resizeHandleDetectsPanelBorderOnly() {
+        OverlayLayout.Rect rect = new OverlayLayout.Rect(20, 30, 100, 60);
+
+        assertEquals(OverlayLayout.ResizeHandle.NONE, OverlayLayout.resizeHandle(rect, 60, 60, 8));
+        assertEquals(new OverlayLayout.ResizeHandle(true, false, true, false), OverlayLayout.resizeHandle(rect, 22, 32, 8));
+        assertEquals(new OverlayLayout.ResizeHandle(false, true, false, true), OverlayLayout.resizeHandle(rect, 118, 88, 8));
+    }
+
+    @Test
+    void scaleFromRectUsesBaseWidth() {
+        assertEquals(1.5D, OverlayLayout.scaleFromRect(new OverlayLayout.Rect(0, 0, 231, 81), OverlayLayout.HUD_WIDTH), 0.0001D);
+    }
 }

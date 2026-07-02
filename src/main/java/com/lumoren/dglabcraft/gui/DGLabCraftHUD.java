@@ -50,15 +50,23 @@ public class DGLabCraftHUD {
 
     static OverlayLayout.Rect hudRect(int screenWidth, int screenHeight) {
         if (!OverlayLayout.hasSavedRatio(DGLabConfig.HUD_X_RATIO.get(), DGLabConfig.HUD_Y_RATIO.get())) {
-            return OverlayLayout.defaultHudRect(DGLabConfig.HUD_POSITION.get(), screenWidth, screenHeight);
+            OverlayLayout.Rect rect = OverlayLayout.defaultHudRect(DGLabConfig.HUD_POSITION.get(), screenWidth, screenHeight);
+            double scale = DGLabConfig.HUD_SCALE.get();
+            if (Math.abs(scale - 1.0D) < 0.0001D) {
+                return rect;
+            }
+            return OverlayLayout.scaledRectFromRatio(
+                OverlayLayout.ratioFromPixel(rect.x(), rect.width(), screenWidth),
+                OverlayLayout.ratioFromPixel(rect.y(), rect.height(), screenHeight),
+                OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, scale, screenWidth, screenHeight);
         }
-        return OverlayLayout.rectFromRatio(DGLabConfig.HUD_X_RATIO.get(), DGLabConfig.HUD_Y_RATIO.get(),
-            OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, screenWidth, screenHeight);
+        return OverlayLayout.scaledRectFromRatio(DGLabConfig.HUD_X_RATIO.get(), DGLabConfig.HUD_Y_RATIO.get(),
+            OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, DGLabConfig.HUD_SCALE.get(), screenWidth, screenHeight);
     }
 
     static OverlayLayout.Rect waveformRect(int screenWidth, int screenHeight) {
-        return OverlayLayout.rectFromRatio(DGLabConfig.WAVEFORM_X_RATIO.get(), DGLabConfig.WAVEFORM_Y_RATIO.get(),
-            OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT, screenWidth, screenHeight);
+        return OverlayLayout.scaledRectFromRatio(DGLabConfig.WAVEFORM_X_RATIO.get(), DGLabConfig.WAVEFORM_Y_RATIO.get(),
+            OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT, DGLabConfig.WAVEFORM_SCALE.get(), screenWidth, screenHeight);
     }
 
     static void renderHudPanel(GuiGraphics guiGraphics, Font font, WebSocketServerManager server,
@@ -162,6 +170,12 @@ public class DGLabCraftHUD {
         guiGraphics.fill(rect.x() + rect.width() - 1, rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
         if (editing) {
             guiGraphics.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 12, 0x44E8D57A);
+            int grip = 6;
+            guiGraphics.fill(rect.x(), rect.y(), rect.x() + grip, rect.y() + grip, PANEL_BORDER);
+            guiGraphics.fill(rect.x() + rect.width() - grip, rect.y(), rect.x() + rect.width(), rect.y() + grip, PANEL_BORDER);
+            guiGraphics.fill(rect.x(), rect.y() + rect.height() - grip, rect.x() + grip, rect.y() + rect.height(), PANEL_BORDER);
+            guiGraphics.fill(rect.x() + rect.width() - grip, rect.y() + rect.height() - grip,
+                rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
         }
     }
 
