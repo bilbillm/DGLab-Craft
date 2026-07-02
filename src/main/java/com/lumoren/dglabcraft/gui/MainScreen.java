@@ -99,7 +99,7 @@ public class MainScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        DGLabScreenBackground.render(guiGraphics, this.width, this.height);
 
         int centerX = this.width / 2;
         guiGraphics.drawCenteredString(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);

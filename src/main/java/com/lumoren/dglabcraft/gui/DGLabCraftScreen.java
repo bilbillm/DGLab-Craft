@@ -542,12 +542,12 @@ public class DGLabCraftScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        DGLabScreenBackground.render(guiGraphics, this.width, this.height);
 
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
 
-        // 渲染列表（原版泥土背景、阴影、滚动条由列表自动处理）
+        // 渲染列表
         this.list.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 渲染标题
@@ -703,7 +703,7 @@ public class DGLabCraftScreen extends Screen {
             @Override
             public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染深色背景条
-                guiGraphics.fill(left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
+                guiGraphics.fill(left + 10, top, left + entryWidth - 10, top + entryHeight, DGLabScreenBackground.listHeaderColor());
 
                 // 渲染居中标题文本（带阴影）
                 int textWidth = this.minecraft.font.width(this.title);
