@@ -154,49 +154,8 @@ public class ConnectionScreen extends Screen {
         this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
-
-        // 标题
-        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
-
-        // 连接状态
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         boolean isConnected = server.isConnected();
-
-        Component statusText;
-        int statusColor;
-        if (isConnected) {
-            statusText = Component.translatable("status.dglabcraft.connected");
-            statusColor = 0x00FF00;
-        } else {
-            statusText = Component.translatable("status.dglabcraft.waiting_connection");
-            statusColor = 0xFFFF00;
-        }
-        guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
-
-        // 服务器信息
-        guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.address",
-            server.resolveConnectionHost(), server.getPort()), centerX, 70, 0xAAAAAA);
-
-        if (!isConnected) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
-
-            File qrFile = getQrCodeFile();
-            if (qrFile.isFile()) {
-                renderQrPath(guiGraphics, centerX, 94, qrFile);
-            }
-        }
-
-        if (manualIpInvalid) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"), centerX, this.height / 2 + 2, 0xFF5555);
-        }
-
-        // 连接信息
-        if (isConnected) {
-            String clientId = server.getConnectedClientId();
-            if (clientId != null) {
-                guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
-            }
-        }
 
         // 已连接时隐藏二维码按钮
         if (this.refreshQrButton != null) {
@@ -210,6 +169,42 @@ public class ConnectionScreen extends Screen {
         }
 
         super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+
+        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
+
+        Component statusText;
+        int statusColor;
+        if (isConnected) {
+            statusText = Component.translatable("status.dglabcraft.connected");
+            statusColor = 0x00FF00;
+        } else {
+            statusText = Component.translatable("status.dglabcraft.waiting_connection");
+            statusColor = 0xFFFF00;
+        }
+        guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
+
+        guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.address",
+            server.resolveConnectionHost(), server.getPort()), centerX, 70, 0xAAAAAA);
+
+        if (!isConnected) {
+            guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
+
+            File qrFile = getQrCodeFile();
+            if (qrFile.isFile()) {
+                renderQrPath(guiGraphics, centerX, 94, qrFile);
+            }
+        }
+
+        if (manualIpInvalid) {
+            guiGraphics.drawCenteredString(this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"), centerX, getManualInputY() - 12, 0xFF5555);
+        }
+
+        if (isConnected) {
+            String clientId = server.getConnectedClientId();
+            if (clientId != null) {
+                guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
+            }
+        }
     }
 
     private File getQrCodeFile() {

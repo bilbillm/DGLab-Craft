@@ -100,6 +100,7 @@ public class MainScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
         guiGraphics.drawCenteredString(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
@@ -118,8 +119,6 @@ public class MainScreen extends Screen {
 
         String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
         guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
-
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     @Override
