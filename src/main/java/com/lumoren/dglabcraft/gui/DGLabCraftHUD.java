@@ -72,35 +72,39 @@ public class DGLabCraftHUD {
     static void renderHudPanel(GuiGraphics guiGraphics, Font font, WebSocketServerManager server,
                                OverlayLayout.Rect rect, boolean editing) {
         drawPanel(guiGraphics, rect, editing);
-        int x = rect.x() + 8;
-        int y = rect.y() + 6;
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.hud_title"), x, y, YELLOW, false);
+        renderScaled(guiGraphics, rect, OverlayLayout.HUD_WIDTH, () -> {
+            int x = 8;
+            int y = 6;
+            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.hud_title"), x, y, YELLOW, false);
 
-        if (!server.isConnected()) {
-            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.disconnected"), x, y + 14, RED, false);
-            String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getKey().getDisplayName().getString();
-            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.open_settings_hint", keyName), x, y + 28, MUTED, false);
-            return;
-        }
+            if (!server.isConnected()) {
+                guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.disconnected"), x, y + 14, RED, false);
+                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getKey().getDisplayName().getString();
+                guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.open_settings_hint", keyName), x, y + 28, MUTED, false);
+                return;
+            }
 
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.connected"), x, y + 14, GREEN, false);
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.channel_state",
-            "A", (int) server.getChannelAIntensity(), server.getChannelAStatus()), x, y + 28, TEXT, false);
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.channel_state",
-            "B", (int) server.getChannelBIntensity(), server.getChannelBStatus()), x, y + 40, TEXT, false);
+            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.connected"), x, y + 14, GREEN, false);
+            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.channel_state",
+                "A", (int) server.getChannelAIntensity(), server.getChannelAStatus()), x, y + 28, TEXT, false);
+            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.channel_state",
+                "B", (int) server.getChannelBIntensity(), server.getChannelBStatus()), x, y + 40, TEXT, false);
+        });
     }
 
     static void renderWaveformPanel(GuiGraphics guiGraphics, Font font, WebSocketServerManager server,
                                     OverlayLayout.Rect rect, boolean editing) {
         drawPanel(guiGraphics, rect, editing);
-        int x = rect.x() + 8;
-        int y = rect.y() + 6;
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.waveform_title"), x, y, YELLOW, false);
+        renderScaled(guiGraphics, rect, OverlayLayout.WAVEFORM_WIDTH, () -> {
+            int x = 8;
+            int y = 6;
+            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.waveform_title"), x, y, YELLOW, false);
 
-        ChannelPreview channelA = channelPreview(server, "A");
-        ChannelPreview channelB = channelPreview(server, "B");
-        renderChannelWaveform(guiGraphics, font, channelA, rect.x() + 8, rect.y() + 22, rect.width() - 16, "A");
-        renderChannelWaveform(guiGraphics, font, channelB, rect.x() + 8, rect.y() + 52, rect.width() - 16, "B");
+            ChannelPreview channelA = channelPreview(server, "A");
+            ChannelPreview channelB = channelPreview(server, "B");
+            renderChannelWaveform(guiGraphics, font, channelA, 8, 22, OverlayLayout.WAVEFORM_WIDTH - 16, "A");
+            renderChannelWaveform(guiGraphics, font, channelB, 8, 52, OverlayLayout.WAVEFORM_WIDTH - 16, "B");
+        });
     }
 
     private static void renderChannelWaveform(GuiGraphics guiGraphics, Font font, ChannelPreview preview,
@@ -177,6 +181,15 @@ public class DGLabCraftHUD {
             guiGraphics.fill(rect.x() + rect.width() - grip, rect.y() + rect.height() - grip,
                 rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
         }
+    }
+
+    private static void renderScaled(GuiGraphics guiGraphics, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
+        float scale = (float) Math.max(0.01D, rect.width() / (double) baseWidth);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(rect.x(), rect.y(), 0.0D);
+        guiGraphics.pose().scale(scale, scale, 1.0F);
+        draw.run();
+        guiGraphics.pose().popPose();
     }
 
     private static String formatSeconds(long millis) {
