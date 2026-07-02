@@ -1,5 +1,15 @@
 # DGLab Craft Changelog
 
+## [1.0.8] - 2026-07-02
+
+### Fixed
+- Fixed blurry custom GUI text on Minecraft 1.21.x NeoForge screens by rendering screen text after widgets.
+
+### Notes
+- The new draggable/resizable overlay UI for Minecraft 1.21.1 is still in development and is not included in this hotfix. A formal overlay UI release will be published later.
+
+---
+
 ## [1.0.7] - 2026-06-20
 
 ### Fixed
