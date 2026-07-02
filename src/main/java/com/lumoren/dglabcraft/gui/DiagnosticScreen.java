@@ -79,13 +79,8 @@ public class DiagnosticScreen extends Screen {
         int contentX = centerX - CONTENT_WIDTH / 2;
         int y = 20;
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.diagnostics"), centerX, y, 0xFFFFFF);
         y += 18;
-        guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.diagnostics_summary"), centerX, y, 0xAAAAAA);
         y += 20;
-        if (!copyStatus.getString().isEmpty()) {
-            guiGraphics.drawCenteredString(this.font, copyStatus, centerX, y, 0x55FF55);
-        }
         y += 14;
 
         int viewportTop = y;
@@ -95,6 +90,17 @@ public class DiagnosticScreen extends Screen {
         this.maxScroll = DiagnosticLayout.maxScroll(contentHeight, viewportTop, viewportBottom);
         clampScroll();
 
+        this.regenerateQrButton.active = server.isRunning() && !server.isConnected();
+        this.silenceButton.active = server.isConnected() && server.hasLiveOutput();
+
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+
+        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.diagnostics"), centerX, 20, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.diagnostics_summary"), centerX, 38, 0xAAAAAA);
+        if (!copyStatus.getString().isEmpty()) {
+            guiGraphics.drawCenteredString(this.font, copyStatus, centerX, 58, 0x55FF55);
+        }
+
         int lineY = viewportTop - this.scrollOffset;
         for (RenderLine line : lines) {
             if (line.text != null && DiagnosticLayout.isLineFullyVisible(lineY, line.height, viewportTop, viewportBottom)) {
@@ -103,11 +109,6 @@ public class DiagnosticScreen extends Screen {
             lineY += line.height;
         }
         renderScrollBar(guiGraphics, contentX + CONTENT_WIDTH + 8, viewportTop, viewportBottom, contentHeight);
-
-        this.regenerateQrButton.active = server.isRunning() && !server.isConnected();
-        this.silenceButton.active = server.isConnected() && server.hasLiveOutput();
-
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     private List<Component> buildConnectionLines(WebSocketServerManager server) {

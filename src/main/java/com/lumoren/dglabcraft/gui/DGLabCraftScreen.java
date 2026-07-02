@@ -80,10 +80,9 @@ public class DGLabCraftScreen extends Screen {
     protected void init() {
         super.init();
 
-        // 创建滚动列表
         int listHeight = this.height - 64;
         this.list = new SettingsList(this.minecraft, this.width, listHeight, 32, 25);
-        this.addWidget(this.list);
+        this.addRenderableWidget(this.list);
 
         // 构建设置项
         buildSettings();
@@ -547,14 +546,11 @@ public class DGLabCraftScreen extends Screen {
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
 
-        // 渲染列表（原版泥土背景、阴影、滚动条由列表自动处理）
-        this.list.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        // 渲染列表和底部按钮
+        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 渲染标题
         guiGraphics.drawCenteredString(this.font, t("screen.dglabcraft.strength_settings"), this.width / 2, 20, 0xFFFFFF);
-
-        // 渲染底部按钮
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
     }
 
     /**
