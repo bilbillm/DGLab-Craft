@@ -6,7 +6,7 @@ public final class OverlayLayout {
     public static final int WAVEFORM_WIDTH = 192;
     public static final int WAVEFORM_HEIGHT = 86;
     private static final int MARGIN = 5;
-    private static final double MIN_SCALE = 0.75D;
+    private static final double MIN_SCALE = 0.375D;
     private static final double MAX_SCALE = 4.0D;
 
     private OverlayLayout() {

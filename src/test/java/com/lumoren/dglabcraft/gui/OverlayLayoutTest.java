@@ -97,4 +97,9 @@ class OverlayLayoutTest {
     void scaleFromRectUsesBaseWidth() {
         assertEquals(1.5D, OverlayLayout.scaleFromRect(new OverlayLayout.Rect(0, 0, 231, 81), OverlayLayout.HUD_WIDTH), 0.0001D);
     }
+
+    @Test
+    void scaleClampsToCompactMinimum() {
+        assertEquals(0.375D, OverlayLayout.clampScale(0.1D, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, 640, 360), 0.0001D);
+    }
 }
