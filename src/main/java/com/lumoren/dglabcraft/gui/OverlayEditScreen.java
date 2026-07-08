@@ -36,8 +36,8 @@ public class OverlayEditScreen extends Screen {
             DGLabConfig.HUD_X_RATIO.set(-1.0D);
             DGLabConfig.HUD_Y_RATIO.set(-1.0D);
             DGLabConfig.HUD_SCALE.set(1.0D);
-            DGLabConfig.WAVEFORM_X_RATIO.set(0.5D);
-            DGLabConfig.WAVEFORM_Y_RATIO.set(0.12D);
+            DGLabConfig.WAVEFORM_X_RATIO.set(-1.0D);
+            DGLabConfig.WAVEFORM_Y_RATIO.set(-1.0D);
             DGLabConfig.WAVEFORM_SCALE.set(1.0D);
             DGLabConfig.save();
         }).bounds(centerX - buttonWidth - gap / 2, y, buttonWidth, buttonHeight).build());

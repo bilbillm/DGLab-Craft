@@ -1,11 +1,12 @@
 package com.lumoren.dglabcraft.gui;
 
 public final class OverlayLayout {
-    public static final int HUD_WIDTH = 154;
-    public static final int HUD_HEIGHT = 54;
+    public static final int HUD_WIDTH = 88;
+    public static final int HUD_HEIGHT = 64;
     public static final int WAVEFORM_WIDTH = 192;
     public static final int WAVEFORM_HEIGHT = 86;
     private static final int MARGIN = 5;
+    private static final int DEFAULT_OVERLAY_GAP = 3;
     private static final double MIN_SCALE = 0.375D;
     private static final double MAX_SCALE = 4.0D;
 
@@ -33,7 +34,8 @@ public final class OverlayLayout {
     }
 
     public static Rect defaultWaveformRect(int screenWidth, int screenHeight) {
-        return rectFromRatio(0.5D, 0.12D, WAVEFORM_WIDTH, WAVEFORM_HEIGHT, screenWidth, screenHeight);
+        return clampRect(new Rect(MARGIN + HUD_WIDTH + DEFAULT_OVERLAY_GAP, MARGIN, WAVEFORM_WIDTH, WAVEFORM_HEIGHT),
+            screenWidth, screenHeight);
     }
 
     public static Rect resize(Rect start, double mouseX, double mouseY, ResizeHandle handle,

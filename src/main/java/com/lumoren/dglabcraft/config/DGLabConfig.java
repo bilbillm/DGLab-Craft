@@ -125,10 +125,10 @@ public class DGLabConfig {
                 .define("hudScale", 1.0);
         WAVEFORM_OVERLAY_ENABLED = builder.comment("是否显示波形可视化叠加层")
                 .define("waveformOverlayEnabled", true);
-        WAVEFORM_X_RATIO = builder.comment("波形叠加层横向位置比例 (0.0-1.0)")
-                .define("waveformXRatio", 0.5);
-        WAVEFORM_Y_RATIO = builder.comment("波形叠加层纵向位置比例 (0.0-1.0)")
-                .define("waveformYRatio", 0.12);
+        WAVEFORM_X_RATIO = builder.comment("波形叠加层横向位置比例 (0.0-1.0, -1 表示使用默认初始布局)")
+                .define("waveformXRatio", -1.0);
+        WAVEFORM_Y_RATIO = builder.comment("波形叠加层纵向位置比例 (0.0-1.0, -1 表示使用默认初始布局)")
+                .define("waveformYRatio", -1.0);
         WAVEFORM_SCALE = builder.comment("波形叠加层缩放比例，保持固定宽高比")
                 .define("waveformScale", 1.0);
         SYNC_CHANNELS = builder.comment("A/B 通道同步")

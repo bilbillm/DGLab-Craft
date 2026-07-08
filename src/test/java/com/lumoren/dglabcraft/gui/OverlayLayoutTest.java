@@ -11,12 +11,18 @@ class OverlayLayoutTest {
     void migratesLegacyHudCornersToDefaultRects() {
         assertEquals(new OverlayLayout.Rect(5, 5, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
             OverlayLayout.defaultHudRect(0, 320, 180));
-        assertEquals(new OverlayLayout.Rect(161, 5, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
+        assertEquals(new OverlayLayout.Rect(227, 5, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
             OverlayLayout.defaultHudRect(1, 320, 180));
-        assertEquals(new OverlayLayout.Rect(5, 121, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
+        assertEquals(new OverlayLayout.Rect(5, 111, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
             OverlayLayout.defaultHudRect(2, 320, 180));
-        assertEquals(new OverlayLayout.Rect(161, 121, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
+        assertEquals(new OverlayLayout.Rect(227, 111, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT),
             OverlayLayout.defaultHudRect(3, 320, 180));
+    }
+
+    @Test
+    void defaultWaveformStartsNextToDefaultHud() {
+        assertEquals(new OverlayLayout.Rect(96, 5, OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT),
+            OverlayLayout.defaultWaveformRect(640, 360));
     }
 
     @Test
@@ -65,8 +71,8 @@ class OverlayLayoutTest {
         OverlayLayout.Rect resized = OverlayLayout.resize(start, 20 + OverlayLayout.HUD_WIDTH * 2.0D, 40,
             handle, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, 640, 360);
 
-        assertEquals(308, resized.width());
-        assertEquals(108, resized.height());
+        assertEquals(176, resized.width());
+        assertEquals(128, resized.height());
         assertEquals(20, resized.x());
         assertEquals(20, resized.y());
     }
@@ -79,9 +85,9 @@ class OverlayLayoutTest {
         OverlayLayout.Rect resized = OverlayLayout.resize(start, 300 - OverlayLayout.HUD_WIDTH, 40,
             handle, OverlayLayout.HUD_WIDTH, OverlayLayout.HUD_HEIGHT, 640, 360);
 
-        assertEquals(308, resized.width());
-        assertEquals(108, resized.height());
-        assertEquals(300 + OverlayLayout.HUD_WIDTH - 308, resized.x());
+        assertEquals(176, resized.width());
+        assertEquals(128, resized.height());
+        assertEquals(300 + OverlayLayout.HUD_WIDTH - 176, resized.x());
     }
 
     @Test
@@ -95,7 +101,7 @@ class OverlayLayoutTest {
 
     @Test
     void scaleFromRectUsesBaseWidth() {
-        assertEquals(1.5D, OverlayLayout.scaleFromRect(new OverlayLayout.Rect(0, 0, 231, 81), OverlayLayout.HUD_WIDTH), 0.0001D);
+        assertEquals(1.5D, OverlayLayout.scaleFromRect(new OverlayLayout.Rect(0, 0, 132, 96), OverlayLayout.HUD_WIDTH), 0.0001D);
     }
 
     @Test
