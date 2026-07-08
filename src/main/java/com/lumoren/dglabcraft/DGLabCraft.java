@@ -22,9 +22,9 @@ public class DGLabCraft
 {
     public static final String MODID = "dglabcraft";
 
-    public DGLabCraft(FMLJavaModLoadingContext context)
+    public DGLabCraft()
     {
-        IEventBus modEventBus = context.getModEventBus();
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // 注册通用设置
         modEventBus.addListener(this::commonSetup);
