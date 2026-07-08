@@ -175,7 +175,23 @@ public class DGLabCraftHUD {
             return ChannelPreview.active(waveform, server.getChannelRuntimeRemainingMillis(channel), samplesFor(waveform));
         }
 
+        String fallbackWaveform = fallbackWaveformFromStatus(
+            "A".equalsIgnoreCase(channel) ? server.getChannelAIntensity() : server.getChannelBIntensity(),
+            "A".equalsIgnoreCase(channel) ? server.getChannelAStatus() : server.getChannelBStatus());
+        if (!fallbackWaveform.isBlank()) {
+            return ChannelPreview.active(fallbackWaveform, WaveformPreview.STRENGTH_BAR_MILLIS * TIMELINE_LIMIT,
+                samplesFor(fallbackWaveform));
+        }
+
         return ChannelPreview.idle();
+    }
+
+    static String fallbackWaveformFromStatus(double intensity, String status) {
+        if (intensity <= 0.0D || status == null || status.isBlank() || "Idle".equalsIgnoreCase(status)
+            || "increase".equalsIgnoreCase(status) || "decrease".equalsIgnoreCase(status)) {
+            return "";
+        }
+        return status;
     }
 
     private static List<Integer> samplesFor(String waveform) {
