@@ -10,8 +10,12 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 
 public class OverlayEditScreen extends Screen {
+    private static final int RESIZE_BORDER = 8;
+
     private final Screen parent;
     private DragTarget dragTarget = DragTarget.NONE;
+    private OverlayLayout.ResizeHandle resizeHandle = OverlayLayout.ResizeHandle.NONE;
+    private OverlayLayout.Rect dragStartRect;
     private double grabOffsetX;
     private double grabOffsetY;
 
@@ -35,8 +39,10 @@ public class OverlayEditScreen extends Screen {
             button -> {
                 ModConfig.HUD_X_RATIO.set(-1.0D);
                 ModConfig.HUD_Y_RATIO.set(-1.0D);
-                ModConfig.WAVEFORM_X_RATIO.set(0.5D);
-                ModConfig.WAVEFORM_Y_RATIO.set(0.12D);
+                ModConfig.HUD_SCALE.set(1.0D);
+                ModConfig.WAVEFORM_X_RATIO.set(-1.0D);
+                ModConfig.WAVEFORM_Y_RATIO.set(-1.0D);
+                ModConfig.WAVEFORM_SCALE.set(1.0D);
                 ModConfig.save();
             }));
 
@@ -91,6 +97,8 @@ public class OverlayEditScreen extends Screen {
         if (button == 0 && this.dragTarget != DragTarget.NONE) {
             saveDraggedPosition(mouseX, mouseY);
             this.dragTarget = DragTarget.NONE;
+            this.resizeHandle = OverlayLayout.ResizeHandle.NONE;
+            this.dragStartRect = null;
             ModConfig.save();
             return true;
         }
@@ -109,25 +117,33 @@ public class OverlayEditScreen extends Screen {
 
     private void beginDrag(DragTarget target, OverlayLayout.Rect rect, double mouseX, double mouseY) {
         this.dragTarget = target;
+        this.dragStartRect = rect;
+        this.resizeHandle = OverlayLayout.resizeHandle(rect, mouseX, mouseY, RESIZE_BORDER);
         this.grabOffsetX = mouseX - rect.x();
         this.grabOffsetY = mouseY - rect.y();
     }
 
     private void saveDraggedPosition(double mouseX, double mouseY) {
-        OverlayLayout.Rect current = this.dragTarget == DragTarget.HUD
+        OverlayLayout.Rect current = this.dragStartRect != null ? this.dragStartRect : (this.dragTarget == DragTarget.HUD
             ? DGLabCraftHUD.hudRect(this.width, this.height)
-            : DGLabCraftHUD.waveformRect(this.width, this.height);
-        OverlayLayout.Rect dragged = OverlayLayout.drag(current, mouseX, mouseY, this.grabOffsetX, this.grabOffsetY,
-            this.width, this.height);
+            : DGLabCraftHUD.waveformRect(this.width, this.height));
+        int baseWidth = this.dragTarget == DragTarget.HUD ? OverlayLayout.HUD_WIDTH : OverlayLayout.WAVEFORM_WIDTH;
+        int baseHeight = this.dragTarget == DragTarget.HUD ? OverlayLayout.HUD_HEIGHT : OverlayLayout.WAVEFORM_HEIGHT;
+        OverlayLayout.Rect dragged = this.resizeHandle == OverlayLayout.ResizeHandle.NONE
+            ? OverlayLayout.drag(current, mouseX, mouseY, this.grabOffsetX, this.grabOffsetY, this.width, this.height)
+            : OverlayLayout.resize(current, mouseX, mouseY, this.resizeHandle, baseWidth, baseHeight, this.width, this.height);
         double xRatio = OverlayLayout.ratioFromPixel(dragged.x(), dragged.width(), this.width);
         double yRatio = OverlayLayout.ratioFromPixel(dragged.y(), dragged.height(), this.height);
+        double scale = OverlayLayout.scaleFromRect(dragged, baseWidth);
 
         if (this.dragTarget == DragTarget.HUD) {
             ModConfig.HUD_X_RATIO.set(xRatio);
             ModConfig.HUD_Y_RATIO.set(yRatio);
+            ModConfig.HUD_SCALE.set(scale);
         } else if (this.dragTarget == DragTarget.WAVEFORM) {
             ModConfig.WAVEFORM_X_RATIO.set(xRatio);
             ModConfig.WAVEFORM_Y_RATIO.set(yRatio);
+            ModConfig.WAVEFORM_SCALE.set(scale);
         }
     }
 
