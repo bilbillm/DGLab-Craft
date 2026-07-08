@@ -1,5 +1,23 @@
 # DGLab Craft Changelog
 
+## [1.1.0] - 2026-07-08
+
+### Added
+- Added draggable and resizable in-game overlay panels for the HUD and waveform preview.
+- Added a DG-LAB style scrolling waveform preview that follows sent pulse data.
+- Added the updated centered HUD layout with Chinese waveform names.
+
+### Fixed
+- Fixed stale waveform preview playback during strength-only fade periods.
+- Fixed 1.18.2 startup compatibility and release artifact naming issues.
+- Fixed NeoForge 1.21.x GUI text clarity on blurred vanilla screen backgrounds.
+
+### Changed
+- Standardized final release jar naming across maintained branches.
+- Updated release automation to publish GitHub and CurseForge releases from the same tag.
+
+---
+
 ## [1.0.7] - 2026-06-20
 
 ### Fixed
