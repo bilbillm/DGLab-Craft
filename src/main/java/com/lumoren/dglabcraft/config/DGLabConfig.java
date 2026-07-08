@@ -41,9 +41,11 @@ public class DGLabConfig {
     public static final ModConfigSpec.ConfigValue<Integer> HUD_POSITION;
     public static final ModConfigSpec.ConfigValue<Double> HUD_X_RATIO;
     public static final ModConfigSpec.ConfigValue<Double> HUD_Y_RATIO;
+    public static final ModConfigSpec.ConfigValue<Double> HUD_SCALE;
     public static final ModConfigSpec.ConfigValue<Boolean> WAVEFORM_OVERLAY_ENABLED;
     public static final ModConfigSpec.ConfigValue<Double> WAVEFORM_X_RATIO;
     public static final ModConfigSpec.ConfigValue<Double> WAVEFORM_Y_RATIO;
+    public static final ModConfigSpec.ConfigValue<Double> WAVEFORM_SCALE;
     public static final ModConfigSpec.ConfigValue<Boolean> SYNC_CHANNELS;
 
     // ========== WebSocket 设置 ==========
@@ -119,12 +121,16 @@ public class DGLabConfig {
                 .define("hudXRatio", -1.0);
         HUD_Y_RATIO = builder.comment("HUD 纵向位置比例 (0.0-1.0, -1 表示按旧 hudPosition 迁移)")
                 .define("hudYRatio", -1.0);
+        HUD_SCALE = builder.comment("HUD 叠加层缩放比例，保持固定宽高比")
+                .define("hudScale", 1.0);
         WAVEFORM_OVERLAY_ENABLED = builder.comment("是否显示波形可视化叠加层")
                 .define("waveformOverlayEnabled", true);
-        WAVEFORM_X_RATIO = builder.comment("波形叠加层横向位置比例 (0.0-1.0)")
-                .define("waveformXRatio", 0.5);
-        WAVEFORM_Y_RATIO = builder.comment("波形叠加层纵向位置比例 (0.0-1.0)")
-                .define("waveformYRatio", 0.12);
+        WAVEFORM_X_RATIO = builder.comment("波形叠加层横向位置比例 (0.0-1.0, -1 表示使用默认初始布局)")
+                .define("waveformXRatio", -1.0);
+        WAVEFORM_Y_RATIO = builder.comment("波形叠加层纵向位置比例 (0.0-1.0, -1 表示使用默认初始布局)")
+                .define("waveformYRatio", -1.0);
+        WAVEFORM_SCALE = builder.comment("波形叠加层缩放比例，保持固定宽高比")
+                .define("waveformScale", 1.0);
         SYNC_CHANNELS = builder.comment("A/B 通道同步")
                 .define("syncChannels", true);
         builder.pop();
