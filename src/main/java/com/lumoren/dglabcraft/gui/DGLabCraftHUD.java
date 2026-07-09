@@ -9,11 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Mod.EventBusSubscriber(modid = "dglabcraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class DGLabCraftHUD {
     private static final int PANEL_BG = 0xCC101014;
     private static final int PANEL_BORDER = 0xAAE8D57A;
@@ -37,16 +31,12 @@ public class DGLabCraftHUD {
     private static final int TIMELINE_LIMIT = 96;
     private static final Map<String, ChannelTimeline> WAVEFORM_TIMELINES = new HashMap<>();
 
-    @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) return;
-
+    public static void render(PoseStack poseStack) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || mc.screen != null) return;
 
-        int screenWidth = event.getWindow().getGuiScaledWidth();
-        int screenHeight = event.getWindow().getGuiScaledHeight();
-        PoseStack poseStack = event.getPoseStack();
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
         if (ModConfig.HUD_ENABLED.get()) {
@@ -97,9 +87,9 @@ public class DGLabCraftHUD {
             int centerX = OverlayLayout.HUD_WIDTH / 2;
             drawCentered(poseStack, font, Component.translatable("overlay.dglabcraft.hud_title"), centerX, 7, YELLOW);
 
-           if (!server.isConnected()) {
+            if (!server.isConnected()) {
                 drawCentered(poseStack, font, Component.translatable("overlay.dglabcraft.disconnected"), centerX, 23, RED);
-                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getKey().getDisplayName().getString();
+                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getTranslatedKeyMessage().getString();
                 drawCentered(poseStack, font, Component.translatable("overlay.dglabcraft.open_settings_hint", keyName), centerX, 39, MUTED);
                 return;
             }

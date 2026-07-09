@@ -10,7 +10,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraftforge.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,8 @@ public class DiagnosticScreen extends Screen {
         this.copyIssueButton = new Button(startX + BUTTON_WIDTH + BUTTON_GAP, firstRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
             Component.translatable("button.dglabcraft.copy_issue_info"),
             button -> {
-                this.minecraft.keyboardHandler.setClipboard(buildIssueReport(WebSocketServerManager.getInstance()));
+                String report = buildIssueReport(WebSocketServerManager.getInstance());
+                this.minecraft.keyboardHandler.setClipboard(report);
                 this.copyStatus = Component.translatable("status.dglabcraft.issue_info_copied").withStyle(ChatFormatting.GREEN);
             });
         this.addRenderableWidget(this.copyIssueButton);
@@ -72,7 +73,7 @@ public class DiagnosticScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+    public void render(PoseStack poseStack, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(poseStack);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
@@ -108,11 +109,12 @@ public class DiagnosticScreen extends Screen {
         this.regenerateQrButton.active = server.isRunning() && !server.isConnected();
         this.silenceButton.active = server.isConnected() && server.hasLiveOutput();
 
-        super.render(poseStack, mouseX, mouseY, partialTick);
+        super.render(poseStack, pMouseX, pMouseY, pPartialTick);
     }
 
     private List<Component> buildConnectionLines(WebSocketServerManager server) {
         List<Component> lines = new ArrayList<>();
+
         if (server.isConnected()) {
             lines.add(Component.translatable("diagnostic.dglabcraft.connection.connected"));
             lines.add(Component.translatable("diagnostic.dglabcraft.connection.check_channels"));
@@ -126,6 +128,7 @@ public class DiagnosticScreen extends Screen {
             lines.add(Component.translatable("diagnostic.dglabcraft.connection.service_stopped"));
             lines.add(Component.translatable("diagnostic.dglabcraft.connection.check_port"));
         }
+
         return lines;
     }
 
@@ -134,10 +137,12 @@ public class DiagnosticScreen extends Screen {
         boolean active = server.isChannelRuntimeActive(channel);
         int intensity = server.getChannelRuntimeIntensity(channel);
         Component detail = toPlainDetail(server.getChannelRuntimeSource(channel), server.getChannelRuntimeDetail(channel));
+
         if (!server.isConnected()) {
             lines.add(Component.translatable("diagnostic.dglabcraft.channel.disconnected"));
             return lines;
         }
+
         if (active) {
             lines.add(Component.translatable("diagnostic.dglabcraft.channel.active", channel));
             lines.add(Component.translatable("diagnostic.dglabcraft.channel.active_detail", intensity, detail));
@@ -146,16 +151,19 @@ public class DiagnosticScreen extends Screen {
             lines.add(Component.translatable("diagnostic.dglabcraft.channel.idle", channel));
             lines.add(Component.translatable("diagnostic.dglabcraft.channel.waiting_event"));
         }
+
         return lines;
     }
 
     private List<Component> buildRuntimeLines(WebSocketServerManager server) {
         List<Component> lines = new ArrayList<>();
+
         if (!server.isConnected()) {
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.none_disconnected"));
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.connect_first"));
             return lines;
         }
+
         if (server.isSyncRuntimeActive()) {
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.sync_active"));
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.current_source",
@@ -163,6 +171,7 @@ public class DiagnosticScreen extends Screen {
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.remaining", formatSeconds(server.getSyncRuntimeRemainingMillis())));
             return lines;
         }
+
         if (server.hasActiveEffects()) {
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.active_effects"));
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.check_channels"));
@@ -171,6 +180,7 @@ public class DiagnosticScreen extends Screen {
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.no_event_now"));
             lines.add(Component.translatable("diagnostic.dglabcraft.runtime.stop_if_device_continues"));
         }
+
         return lines;
     }
 
@@ -180,12 +190,14 @@ public class DiagnosticScreen extends Screen {
         lines.add(Component.translatable("diagnostic.dglabcraft.detail.service", statusKey(server.isRunning())).withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable("diagnostic.dglabcraft.detail.socket", statusKey(server.hasClientSocketConnection())).withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable("diagnostic.dglabcraft.detail.bind", bindStatus(server)).withStyle(ChatFormatting.GRAY));
+
         if (server.getConnectedClientId() != null) {
             lines.add(Component.translatable("diagnostic.dglabcraft.detail.client_id", IssueReportBuilder.redactId(server.getConnectedClientId())).withStyle(ChatFormatting.GRAY));
         }
         if (server.getTargetId() != null) {
             lines.add(Component.translatable("diagnostic.dglabcraft.detail.target_id", IssueReportBuilder.redactId(server.getTargetId())).withStyle(ChatFormatting.GRAY));
         }
+
         lines.add(Component.literal("A: status=" + server.getChannelAStatus() + ", intensity=" + (int) server.getChannelAIntensity() + "%"
             + formatWaveformDetail(server, "A")).withStyle(ChatFormatting.GRAY));
         lines.add(Component.literal("B: status=" + server.getChannelBStatus() + ", intensity=" + (int) server.getChannelBIntensity() + "%"
@@ -197,8 +209,8 @@ public class DiagnosticScreen extends Screen {
         IssueReportBuilder.EnvironmentInfo environment = new IssueReportBuilder.EnvironmentInfo(
             modVersion("dglabcraft"),
             SharedConstants.getCurrentVersion().getName(),
-            "Forge",
-            modVersion("forge"),
+            "Fabric",
+            modVersion("fabricloader"),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown"),
             System.getProperty("os.version", "unknown"),
@@ -213,6 +225,7 @@ public class DiagnosticScreen extends Screen {
             server.getConnectedClientId(),
             server.getTargetId()
         );
+
         return IssueReportBuilder.build(
             environment,
             channelInfo(server, "A", server.getChannelAStatus(), (int) server.getChannelAIntensity()),
@@ -241,8 +254,8 @@ public class DiagnosticScreen extends Screen {
     }
 
     private String modVersion(String modId) {
-        return ModList.get().getModContainerById(modId)
-            .map(container -> container.getModInfo().getVersion().toString())
+        return FabricLoader.getInstance().getModContainer(modId)
+            .map(container -> container.getMetadata().getVersion().getFriendlyString())
             .orElse("unknown");
     }
 

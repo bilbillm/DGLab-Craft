@@ -4,8 +4,6 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 濒死心跳处理
@@ -27,17 +25,9 @@ public class HeartbeatHandler {
         return currentMaxHealth;
     }
 
-    @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null) return;
-
-        // 使用 UUID 比较
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
-        Player player = (Player) event.getEntity();
+    public void onClientTick(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
+        Player player = mc.player;
 
         tickCounter++;
 

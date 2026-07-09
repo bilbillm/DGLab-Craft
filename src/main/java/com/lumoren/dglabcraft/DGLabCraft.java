@@ -1,64 +1,48 @@
 package com.lumoren.dglabcraft;
 
-import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
 import com.lumoren.dglabcraft.events.FadeManager;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
-import com.lumoren.dglabcraft.events.StatusEffectHandler;
+import com.lumoren.dglabcraft.gui.DGLabCraftHUD;
 import com.lumoren.dglabcraft.gui.MainScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-@Mod(DGLabCraft.MODID)
-public class DGLabCraft
-{
+public class DGLabCraft implements ClientModInitializer {
     public static final String MODID = "dglabcraft";
+    public static final DamageHandler DAMAGE_HANDLER = new DamageHandler();
 
-    public DGLabCraft(FMLJavaModLoadingContext context)
-    {
-        IEventBus modEventBus = context.getModEventBus();
+    private final EnvironmentHandler environmentHandler = new EnvironmentHandler();
+    private final HeartbeatHandler heartbeatHandler = new HeartbeatHandler();
 
-        // 注册通用设置
-        modEventBus.addListener(this::commonSetup);
+    @Override
+    public void onInitializeClient() {
+        ClientModEvents.register();
 
-        // 注册 Forge 配置
-        context.registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON,
-            com.lumoren.dglabcraft.config.ModConfig.SPEC);
-
-        // 注册事件总线
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new DamageHandler());
-        MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
-        MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
-        MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
-        MinecraftForge.EVENT_BUS.register(FadeManager.class);
-    }
-
-    private void commonSetup(final FMLCommonSetupEvent event)
-    {
-        // 启动 WebSocket 服务器
         WebSocketServerManager.getInstance().start();
+        Runtime.getRuntime().addShutdownHook(new Thread(
+            () -> WebSocketServerManager.getInstance().stop(),
+            "DGLabCraft-Shutdown"));
 
-        // 波形管理器使用懒加载，首次使用时自动初始化
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            handleOpenSettings(client);
+            DAMAGE_HANDLER.onClientTick(client);
+            environmentHandler.onClientTick(client);
+            heartbeatHandler.onClientTick(client);
+            FadeManager.onClientTick(client);
+        });
+
+        HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> DGLabCraftHUD.render(guiGraphics));
     }
 
-    /**
-     * 输入处理 - 每 tick 检查按键
-     */
-    @SubscribeEvent
-    public void onClientTick(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
-        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
-        if (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.screen == null) {
-                mc.setScreen(new MainScreen());
+    private void handleOpenSettings(Minecraft minecraft) {
+        while (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
+            if (minecraft.screen == null) {
+                minecraft.setScreen(new MainScreen());
             }
         }
     }
