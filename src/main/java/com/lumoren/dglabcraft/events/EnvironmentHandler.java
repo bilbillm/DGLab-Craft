@@ -8,8 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 环境反馈处理
@@ -25,20 +23,9 @@ public class EnvironmentHandler {
     private boolean wasInCold = false;
     private boolean wasInNetherPortal = false;
 
-    @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
-        if (!event.getEntity().level().isClientSide()) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null) return;
-
-        // 使用 UUID 比较
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
-        Player player = (Player) event.getEntity();
-        handleClientEnvironment(player, mc);
+    public void onClientTick(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
+        handleClientEnvironment(mc.player, mc);
     }
 
     private void handleClientEnvironment(Player player, Minecraft mc) {

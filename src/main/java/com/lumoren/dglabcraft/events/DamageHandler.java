@@ -14,9 +14,6 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,27 +36,13 @@ public class DamageHandler {
     private String pendingFallingBlockSource;
     private int pendingFallingBlockTick = Integer.MIN_VALUE;
 
-    @SubscribeEvent
-    @SuppressWarnings("deprecation")
-    public void onLivingDamage(LivingDamageEvent event) {
-        cacheDamageSource(event);
-    }
-
-    @SubscribeEvent
-    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
-        if (!event.getEntity().level().isClientSide()) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
+    public void onClientTick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
 
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
         tickCounter++;
-        updatePendingFallingBlockSource(eventPlayer, mc);
+        updatePendingFallingBlockSource(mc.player, mc);
 
-        Player player = eventPlayer;
+        Player player = mc.player;
         float currentHealth = player.getHealth();
 
         if (lastHealth < 0.0f) {
@@ -85,17 +68,11 @@ public class DamageHandler {
     }
 
     @SuppressWarnings("deprecation")
-    private void cacheDamageSource(LivingDamageEvent event) {
-        if (!event.getEntity().level().isClientSide()) return;
-
+    public void cacheDamageSource(Player player, DamageSource source) {
+        if (player == null || !player.level().isClientSide()) return;
         Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
         if (mc.player == null) return;
-
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
-        DamageSource source = event.getSource();
+        if (!player.getUUID().equals(mc.player.getUUID())) return;
         if (source == null) return;
 
         String normalizedSource = normalizeDamageSourceId(source.getMsgId());

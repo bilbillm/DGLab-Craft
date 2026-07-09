@@ -9,7 +9,6 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -302,7 +301,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
     }
 
     @Override
-    public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
+    public void onResourceManagerReload(ResourceManager resourceManager) {
         // 重新加载波形
         initialized = false;
         init(resourceManager);
