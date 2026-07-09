@@ -9,7 +9,6 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -137,11 +136,9 @@ public class WaveformManager implements ResourceManagerReloadListener {
         };
 
         for (String fileName : waveformFiles) {
-            try {
-                // 从 classpath 加载
-                String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
-                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath);
-
+            // 从 classpath 加载
+            String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
+            try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
                     String jsonContent = new String(is.readAllBytes());
                     List<String> waveformData = parseWaveformJson(jsonContent, gson);
@@ -150,7 +147,6 @@ public class WaveformManager implements ResourceManagerReloadListener {
                         waveformPool.put(fileName, waveformData);
                         LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
                     }
-                    is.close();
                 } else {
                     LOGGER.warn("找不到资源: {}", resourcePath);
                 }
@@ -173,6 +169,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
      * 1. 简单数组: ["0a64...", ...]
      * 2. 对象格式: { "data": ["0a64...", ...] }
      */
+    // package-private for testing
     List<String> parseWaveformJson(String jsonContent, Gson gson) {
         jsonContent = jsonContent.trim();
 
@@ -304,7 +301,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
     }
 
     @Override
-    public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
+    public void onResourceManagerReload(ResourceManager resourceManager) {
         // 重新加载波形
         initialized = false;
         init(resourceManager);

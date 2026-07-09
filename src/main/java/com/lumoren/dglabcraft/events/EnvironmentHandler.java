@@ -8,8 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * 环境反馈处理
@@ -25,20 +23,9 @@ public class EnvironmentHandler {
     private boolean wasInCold = false;
     private boolean wasInNetherPortal = false;
 
-    @SubscribeEvent
-    public void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!event.getEntity().level().isClientSide()) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null) return;
-
-        // 使用 UUID 比较
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
-        Player player = (Player) event.getEntity();
-        handleClientEnvironment(player, mc);
+    public void onClientTick(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
+        handleClientEnvironment(mc.player, mc);
     }
 
     private void handleClientEnvironment(Player player, Minecraft mc) {
@@ -193,21 +180,21 @@ public class EnvironmentHandler {
         if (feetBlock == Blocks.POWDER_SNOW) {
             // 每 30 tick (1.5秒) 发送一次
             if (tickCounter % 30 == 0) {
-                    int intensityA;
-                    int intensityB;
-                    if (DGLabConfig.SYNC_CHANNELS.get()) {
-                        intensityA = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
-                        intensityA = Math.min(intensityA, maxIntensityA);
-                        intensityB = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
-                        intensityB = Math.min(intensityB, maxIntensityB);
-                        ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
-                    } else {
-                        intensityB = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
-                        intensityB = Math.min(intensityB, maxIntensityB);
-                        intensityA = 0;
-                        ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
-                    }
-                    FadeManager.updateEnvironment(intensityA, intensityB);
+                int intensityA;
+                int intensityB;
+                if (DGLabConfig.SYNC_CHANNELS.get()) {
+                    intensityA = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
+                    intensityA = Math.min(intensityA, maxIntensityA);
+                    intensityB = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
+                } else {
+                    intensityB = (int)(10.0 * DGLabConfig.FREEZE_MULTIPLIER.get());
+                    intensityB = Math.min(intensityB, maxIntensityB);
+                    intensityA = 0;
+                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
+                }
+                FadeManager.updateEnvironment(intensityA, intensityB);
             }
             wasInSnow = true;
         } else {

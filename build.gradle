@@ -1,59 +1,58 @@
-plugins {
-    id 'eclipse'
-    id 'idea'
-    id 'maven-publish'
-    id 'net.neoforged.moddev' version '1.0.17'
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabricmc.net/' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.fabricmc:fabric-loom:1.17.13'
+        classpath 'com.google.code.gson:gson:2.11.0'
+    }
+    configurations.classpath {
+        resolutionStrategy.force 'com.google.code.gson:gson:2.11.0'
+    }
 }
+
+apply plugin: 'fabric-loom'
+apply plugin: 'maven-publish'
 
 version = mod_version
 group = 'com.lumoren.dglabcraft'
 
-neoForge {
-    version = "21.1.61"
-}
-
 base {
-    archivesName = "DGLabCraft-${minecraft_version}"
+    archivesName = "DGLabCraft-${minecraft_version}-Fabric"
 }
 
-// Java 17
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'ja  va.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-
-// NeoForge configuration
-neoForge {
-    version = '21.1.61'
-}
 
 repositories {
     mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
 }
 
 dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
-    // 开发环境依赖
     implementation 'org.java-websocket:Java-WebSocket:1.5.4'
     implementation('com.google.zxing:core:3.5.1') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-
-    // jarJar 打包 - 保留 exclude commons-logging 和 jarJar 配置
-    jarJar(group: 'org.java-websocket', name: 'Java-WebSocket', version: '[1.5.4,2.0)') {
-        // 保留排除 commons-logging
-    }
-    jarJar(group: 'com.google.zxing', name: 'core', version: '[3.5.1,4.0)') {
-        // 保留排除 commons-logging (通过上面 implementation 的 exclude 已处理)
-    }
+    include 'org.java-websocket:Java-WebSocket:1.5.4'
+    include 'com.google.zxing:core:3.5.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-sourceSets {
-    test {
-        compileClasspath += sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.runtimeClasspath
+loom {
+    runs {
+        client {
+            client()
+            runDir 'run'
+        }
     }
 }
 
@@ -63,21 +62,27 @@ test {
 
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
-            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            neoforge_version: neoforge_version, loader_version_range: loader_version_range,
-            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-            mod_authors: mod_authors, mod_description: mod_description,
+            minecraft_version: minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            loader_version_range: loader_version_range,
+            fabric_loader_version: fabric_loader_version,
+            fabric_api_version: fabric_api_version,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_license: mod_license,
+            mod_version: mod_version,
+            mod_authors: mod_authors,
+            mod_description: mod_description,
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties + [project: project]
+    filesMatching(['fabric.mod.json']) {
+        expand replaceProperties
     }
 }
 
-// 配置 jar 任务
 tasks.named('jar', Jar).configure {
-    archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}.jar"
+    archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}-Fabric.jar"
 
     manifest {
         attributes([
@@ -85,17 +90,21 @@ tasks.named('jar', Jar).configure {
                 'Specification-Vendor'    : mod_authors,
                 'Specification-Version'   : '1',
                 'Implementation-Title'    : project.name,
-                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Version'  : project.version,
                 'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
 
+tasks.named('remapJar').configure {
+    archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}-Fabric.jar"
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact jar
+            artifact remapJar
         }
     }
     repositories {
@@ -108,14 +117,3 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
-
-def removeLegacyAllJars = tasks.register('removeLegacyAllJars', Delete) {
-    delete fileTree(layout.buildDirectory.dir('libs')) {
-        include '*-all.jar'
-        include '*-slim.jar'
-    }
-}
-
-// 将 jarJar 绑定到默认的 build 流程中
-build.dependsOn 'jarJar'
-build.finalizedBy removeLegacyAllJars

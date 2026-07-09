@@ -10,7 +10,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.neoforged.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,8 +208,8 @@ public class DiagnosticScreen extends Screen {
         IssueReportBuilder.EnvironmentInfo environment = new IssueReportBuilder.EnvironmentInfo(
             modVersion("dglabcraft"),
             SharedConstants.getCurrentVersion().getName(),
-            "NeoForge",
-            modVersion("neoforge"),
+            "Fabric",
+            modVersion("fabricloader"),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown"),
             System.getProperty("os.version", "unknown"),
@@ -253,8 +253,8 @@ public class DiagnosticScreen extends Screen {
     }
 
     private String modVersion(String modId) {
-        return ModList.get().getModContainerById(modId)
-            .map(container -> container.getModInfo().getVersion().toString())
+        return FabricLoader.getInstance().getModContainer(modId)
+            .map(container -> container.getMetadata().getVersion().getFriendlyString())
             .orElse("unknown");
     }
 

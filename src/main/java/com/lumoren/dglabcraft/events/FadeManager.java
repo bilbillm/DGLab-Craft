@@ -2,10 +2,6 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 
 /**
  * 安全归零管理器
@@ -13,24 +9,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * 该类不再负责复杂的来源渐变仲裁，
  * 只在 heartbeat / damage / environment 全部静默时统一执行安全归零。
  */
-@EventBusSubscriber
 public class FadeManager {
 
     private static int tickCounter = 0;
     private static boolean idleResetSent = false;
     private static final int CHECK_INTERVAL = 10;
 
-    @SubscribeEvent
-    public static void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!event.getEntity().level().isClientSide()) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
-        if (mc.player == null) return;
-
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
+    public static void onClientTick(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
         tickCounter++;
 
         if (tickCounter % CHECK_INTERVAL != 0) {

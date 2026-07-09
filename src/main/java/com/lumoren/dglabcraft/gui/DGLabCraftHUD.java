@@ -8,11 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@EventBusSubscriber(modid = "dglabcraft", bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class DGLabCraftHUD {
     private static final int PANEL_BG = 0xCC101014;
     private static final int PANEL_BORDER = 0xAAE8D57A;
@@ -36,16 +30,12 @@ public class DGLabCraftHUD {
     private static final int TIMELINE_LIMIT = 96;
     private static final Map<String, ChannelTimeline> WAVEFORM_TIMELINES = new HashMap<>();
 
-    @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGuiLayerEvent.Post event) {
-        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
-
+    public static void render(GuiGraphics guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || mc.screen != null) return;
 
-        GuiGraphics guiGraphics = event.getGuiGraphics();
-        int screenWidth = guiGraphics.guiWidth();
-        int screenHeight = guiGraphics.guiHeight();
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
         if (DGLabConfig.HUD_ENABLED.get()) {
@@ -98,7 +88,7 @@ public class DGLabCraftHUD {
 
             if (!server.isConnected()) {
                 drawCentered(guiGraphics, font, Component.translatable("overlay.dglabcraft.disconnected"), centerX, 23, RED);
-                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getKey().getDisplayName().getString();
+                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getTranslatedKeyMessage().getString();
                 drawCentered(guiGraphics, font, Component.translatable("overlay.dglabcraft.open_settings_hint", keyName), centerX, 39, MUTED);
                 return;
             }
