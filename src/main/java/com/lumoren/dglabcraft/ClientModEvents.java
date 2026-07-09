@@ -1,27 +1,31 @@
 package com.lumoren.dglabcraft;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
-@Mod.EventBusSubscriber(modid = DGLabCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+import java.util.function.Supplier;
+
 public class ClientModEvents {
+    private static final KeyMapping OPEN_SETTINGS_KEY_INSTANCE = new KeyMapping(
+        "key.dglabcraft.open_settings",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_K,
+        "key.categories.dglabcraft"
+    );
 
-    // 使用 Lazy 延迟加载 KeyMapping，确保在被请求时已实例化
-    public static final Lazy<KeyMapping> OPEN_SETTINGS_KEY = Lazy.of(() -> new KeyMapping(
-            "key.dglabcraft.open_settings",
-            GLFW.GLFW_KEY_K,
-            "key.categories.dglabcraft"
-    ));
+    public static final Supplier<KeyMapping> OPEN_SETTINGS_KEY = () -> OPEN_SETTINGS_KEY_INSTANCE;
 
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        // 直接在此处注册，不会有 null 的问题
-        event.enqueueWork(() -> ClientRegistry.registerKeyBinding(OPEN_SETTINGS_KEY.get()));
+    private static boolean registered;
+
+    private ClientModEvents() {
+    }
+
+    public static void register() {
+        if (!registered) {
+            KeyBindingHelper.registerKeyBinding(OPEN_SETTINGS_KEY_INSTANCE);
+            registered = true;
+        }
     }
 }

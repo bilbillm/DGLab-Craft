@@ -4,8 +4,6 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 濒死心跳处理
@@ -27,18 +25,9 @@ public class HeartbeatHandler {
         return currentMaxHealth;
     }
 
-    @SubscribeEvent
-    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        Minecraft mc = Minecraft.getInstance();
-        if (!event.player.level.isClientSide()) return;
-        if (mc.player == null) return;
-
-        // 使用 UUID 比较
-        Player eventPlayer = event.player;
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
-
-        Player player = event.player;
+    public void onClientTick(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
+        Player player = mc.player;
 
         tickCounter++;
 
@@ -81,14 +70,14 @@ public class HeartbeatHandler {
                     intensityA = Math.max(1, Math.min(intensityA, maxIntensityA));
                     int intensityB = (int)(maxIntensityB * percentage * multiplier);
                     intensityB = Math.max(1, Math.min(intensityB, maxIntensityB));
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "heartbeat", intensityA, intensityB);
                     // 更新 FadeManager
                     FadeManager.updateHeartbeat(intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     int intensity = (int)(maxIntensityB * percentage * multiplier);
                     intensity = Math.max(1, Math.min(intensity, maxIntensityB));
-                    ws.sendWaveformData("B", "heartbeat", intensity);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "B", "heartbeat", intensity);
                     // 更新 FadeManager（B通道用intensity，A通道用0）
                     FadeManager.updateHeartbeat(0, intensity);
                 }

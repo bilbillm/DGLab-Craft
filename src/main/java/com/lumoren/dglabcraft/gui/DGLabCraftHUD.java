@@ -11,10 +11,6 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Mod.EventBusSubscriber(modid = "dglabcraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class DGLabCraftHUD {
     private static final int PANEL_BG = 0xCC101014;
     private static final int PANEL_BORDER = 0xAAE8D57A;
@@ -38,16 +33,12 @@ public class DGLabCraftHUD {
     private static final int TIMELINE_LIMIT = 96;
     private static final Map<String, ChannelTimeline> WAVEFORM_TIMELINES = new HashMap<>();
 
-    @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
-
+    public static void render(PoseStack poseStack) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || mc.screen != null) return;
 
-        int screenWidth = event.getWindow().getGuiScaledWidth();
-        int screenHeight = event.getWindow().getGuiScaledHeight();
-        PoseStack poseStack = event.getMatrixStack();
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
         if (ModConfig.HUD_ENABLED.get()) {
@@ -96,16 +87,16 @@ public class DGLabCraftHUD {
         drawPanel(poseStack, rect, editing);
         renderScaled(poseStack, rect, OverlayLayout.HUD_WIDTH, () -> {
             int centerX = OverlayLayout.HUD_WIDTH / 2;
-            drawCentered(poseStack, font, translatable("overlay.dglabcraft.hud_title"), centerX, 7, YELLOW);
+            drawCentered(poseStack, font, tr("overlay.dglabcraft.hud_title"), centerX, 7, YELLOW);
 
             if (!server.isConnected()) {
-                drawCentered(poseStack, font, translatable("overlay.dglabcraft.disconnected"), centerX, 23, RED);
-                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getKey().getDisplayName().getString();
-                drawCentered(poseStack, font, translatable("overlay.dglabcraft.open_settings_hint", keyName), centerX, 39, MUTED);
+                drawCentered(poseStack, font, tr("overlay.dglabcraft.disconnected"), centerX, 23, RED);
+                String keyName = ClientModEvents.OPEN_SETTINGS_KEY.get().getTranslatedKeyMessage().getString();
+                drawCentered(poseStack, font, tr("overlay.dglabcraft.open_settings_hint", keyName), centerX, 39, MUTED);
                 return;
             }
 
-            drawCentered(poseStack, font, translatable("overlay.dglabcraft.connected"), centerX, 21, GREEN);
+            drawCentered(poseStack, font, tr("overlay.dglabcraft.connected"), centerX, 21, GREEN);
             drawCentered(poseStack, font, channelStatusText("A", (int) server.getChannelAIntensity(), server.getChannelAStatus()),
                 centerX, 35, TEXT);
             drawCentered(poseStack, font, channelStatusText("B", (int) server.getChannelBIntensity(), server.getChannelBStatus()),
@@ -119,7 +110,7 @@ public class DGLabCraftHUD {
         renderScaled(poseStack, rect, OverlayLayout.WAVEFORM_WIDTH, () -> {
             int x = 8;
             int y = 6;
-            font.draw(poseStack, translatable("overlay.dglabcraft.waveform_title"), x, y, YELLOW);
+            font.draw(poseStack, tr("overlay.dglabcraft.waveform_title"), x, y, YELLOW);
 
             ChannelPreview channelA = channelPreview(server, "A");
             ChannelPreview channelB = channelPreview(server, "B");
@@ -131,7 +122,7 @@ public class DGLabCraftHUD {
 
     private static void renderChannelWaveform(PoseStack poseStack, Font font, ChannelPreview preview,
                                               int x, int y, int width, String channel, long animationTime) {
-        font.draw(poseStack, translatable("overlay.dglabcraft.channel_label", channel), x, y, TEXT);
+        font.draw(poseStack, tr("overlay.dglabcraft.channel_label", channel), x, y, TEXT);
         int waveX = x + 18;
         int waveY = y + 11;
         int waveWidth = width - 18;
@@ -140,7 +131,7 @@ public class DGLabCraftHUD {
 
         if (!preview.active()) {
             updateTimeline(channel, preview, animationTime);
-            font.draw(poseStack, translatable("overlay.dglabcraft.idle"), waveX + 4, y, MUTED);
+            font.draw(poseStack, tr("overlay.dglabcraft.idle"), waveX + 4, y, MUTED);
             renderPulseBars(poseStack, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
             return;
         }
@@ -148,13 +139,13 @@ public class DGLabCraftHUD {
         List<Integer> samples = preview.samples();
         if (samples.isEmpty()) {
             updateTimeline(channel, preview, animationTime);
-            font.draw(poseStack, translatable("overlay.dglabcraft.no_waveform"), waveX + 4, y, MUTED);
+            font.draw(poseStack, tr("overlay.dglabcraft.no_waveform"), waveX + 4, y, MUTED);
             renderPulseBars(poseStack, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
             return;
         }
         updateTimeline(channel, preview, animationTime);
 
-        Component detail = translatable("overlay.dglabcraft.waveform_detail",
+        Component detail = tr("overlay.dglabcraft.waveform_detail",
             chineseWaveformName(preview.waveform()), formatSeconds(preview.remainingMillis()));
         font.draw(poseStack, detail, waveX + 4, y, MUTED);
         renderPulseBars(poseStack, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
@@ -173,11 +164,6 @@ public class DGLabCraftHUD {
         if (server.isChannelRuntimeActive(channel)) {
             String waveform = server.getChannelRuntimeWaveform(channel);
             return ChannelPreview.active(waveform, server.getChannelRuntimeRemainingMillis(channel), samplesFor(waveform));
-        }
-
-        if (server.isPulsePreviewActive(channel)) {
-            String waveform = server.getPulsePreviewWaveform(channel);
-            return ChannelPreview.active(waveform, server.getPulsePreviewRemainingMillis(channel), samplesFor(waveform));
         }
 
         return ChannelPreview.idle();
@@ -274,15 +260,19 @@ public class DGLabCraftHUD {
 
     private static String formatSeconds(long millis) {
         long seconds = Math.max(1L, (millis + 999L) / 1000L);
-        return translatable("duration.dglabcraft.seconds", seconds).getString();
-    }
-
-    private static Component translatable(String key, Object... args) {
-        return new TranslatableComponent(key, args);
+        return tr("duration.dglabcraft.seconds", seconds).getString();
     }
 
     private static Component channelStatusText(String channel, int intensity, String status) {
-        return new TextComponent(channel + ": " + intensity + "% " + chineseWaveformName(status));
+        return txt(channel + ": " + intensity + "% " + chineseWaveformName(status));
+    }
+
+    private static Component tr(String key, Object... args) {
+        return new TranslatableComponent(key, args);
+    }
+
+    private static Component txt(String value) {
+        return new TextComponent(value);
     }
 
     private static String chineseWaveformName(String status) {

@@ -28,6 +28,7 @@ import java.util.TimerTask;
  */
 public class WebSocketServerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
+    private static final long PULSE_PROTECTION_WINDOW_MS = 700L;
     private static final long TICK_MS = 50L;
     private static WebSocketServerManager instance;
 
@@ -86,10 +87,10 @@ public class WebSocketServerManager {
     private double channelBIntensity = 0;
     private String channelAStatus = "Idle";
     private String channelBStatus = "Idle";
+
+    private long lastPulseSentAt = 0L;
     private final ChannelRuntime channelAState = new ChannelRuntime();
     private final ChannelRuntime channelBState = new ChannelRuntime();
-    private final PulsePreviewState channelAPulsePreview = new PulsePreviewState();
-    private final PulsePreviewState channelBPulsePreview = new PulsePreviewState();
     private boolean syncEffectActive = false;
     private EffectSource syncSource = EffectSource.NONE;
     private String syncDetail = "";
@@ -97,7 +98,6 @@ public class WebSocketServerManager {
     private long syncLeaseUntilAt = 0L;
 
     private final Gson gson = new Gson();
-    private static final long PULSE_PREVIEW_LEASE_MILLIS = WebSocketProtocol.leaseTicks(EffectSource.DAMAGE, "") * TICK_MS;
 
     // 固定的客户端 ID（参考 DG_LAB）
     private static final String FIXED_CLIENT_ID = "1234-123456789-12345-12345-01";
@@ -375,7 +375,6 @@ public class WebSocketServerManager {
                 waveformMsg.put("clientId", sessionId);
                 waveformMsg.put("targetId", targetId != null ? targetId : "");
                 connectedClient.send(gson.toJson(waveformMsg));
-                recordPulsePreview(channelStr, waveType);
                 LOGGER.info("发送波形配置: " + waveformMessage);
             }
 
@@ -424,7 +423,6 @@ public class WebSocketServerManager {
                     otherWaveformMsg.put("clientId", sessionId);
                     otherWaveformMsg.put("targetId", targetId != null ? targetId : "");
                     connectedClient.send(gson.toJson(otherWaveformMsg));
-                    recordPulsePreview(otherChannelStr, waveType);
                     LOGGER.info("同步发送波形配置: " + waveformMessage);
                 }
 
@@ -465,6 +463,98 @@ public class WebSocketServerManager {
         sendWaveformDataSingleChannel(channel, waveId, intensity);
     }
 
+    public void requestEffect(EffectSource source, String detail, String channel, String waveId, double intensity) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        int value = (int) intensity;
+        String normalizedChannel = "A".equalsIgnoreCase(channel) ? "A" : "B";
+        ChannelRuntime state = "A".equals(normalizedChannel) ? channelAState : channelBState;
+        int newPriority = priorityOf(source);
+        boolean currentOwnerValid = isChannelStateActive(state);
+
+        LOGGER.info("请求效果 source={} detail={} channel={} waveform={} intensity={}", source, detail, normalizedChannel, waveId, value);
+
+        if (currentOwnerValid && state.priority > newPriority && !sameWaveform(state, source, waveId)) {
+            LOGGER.info("调度决策 channel={} action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                    normalizedChannel, source, detail, waveId, state.source, state.waveformId);
+            return;
+        }
+
+        if (sameWaveform(state, source, waveId)) {
+            resendSingleChannel(normalizedChannel, waveId, intensity, source, detail);
+            LOGGER.info("调度决策 channel={} action=refresh source={} detail={} waveform={} reason=same-waveform", normalizedChannel, source, detail, waveId);
+        } else {
+            sendWaveformDataSingleChannel(normalizedChannel, waveId, intensity);
+            updateChannelState(state, source, detail, waveId, value);
+            LOGGER.info("调度决策 channel={} action=replace source={} detail={} waveform={} reason=priority-ok", normalizedChannel, source, detail, waveId);
+        }
+    }
+
+    public void requestSyncedEffect(EffectSource source, String detail, String waveId, double intensityA, double intensityB) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        int valueA = (int) intensityA;
+        int valueB = (int) intensityB;
+        int newPriority = priorityOf(source);
+        boolean syncOwnerValid = isSyncStateActive();
+
+        LOGGER.info("请求效果 source={} detail={} channel=AB waveform={} intensityA={} intensityB={} sync=true", source, detail, waveId, valueA, valueB);
+
+        if (syncOwnerValid && priorityOf(syncSource) > newPriority && !(syncSource == source && waveId.equals(syncWaveform))) {
+            LOGGER.info("调度决策 syncGroup=AB action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                    source, detail, waveId, syncSource, syncWaveform);
+            return;
+        }
+
+        if (syncOwnerValid && syncSource == source && waveId.equals(syncWaveform)) {
+            resendSyncedChannels(waveId, intensityA, intensityB, source, detail);
+            LOGGER.info("调度决策 syncGroup=AB action=refresh source={} detail={} waveform={} reason=same-waveform", source, detail, waveId);
+        } else {
+            sendWaveformDataDualChannelWithDifferentIntensity(waveId, intensityA, intensityB);
+            updateChannelState(channelAState, source, detail, waveId, valueA);
+            updateChannelState(channelBState, source, detail, waveId, valueB);
+            syncEffectActive = true;
+            syncSource = source;
+            syncDetail = detail;
+            syncWaveform = waveId;
+            syncLeaseUntilAt = computeLeaseUntil(source, detail);
+            LOGGER.info("调度决策 syncGroup=AB action=replace source={} detail={} waveform={} reason=priority-ok", source, detail, waveId);
+        }
+    }
+
+    public void safeSilenceAll() {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        sendMessage("strength-1+2+0");
+        sendMessage("strength-2+2+0");
+        sendMessage("clear-1");
+        sendMessage("clear-2");
+
+        channelAIntensity = 0;
+        channelBIntensity = 0;
+        channelAStatus = "Idle";
+        channelBStatus = "Idle";
+        channelAState.reset();
+        channelBState.reset();
+        syncEffectActive = false;
+        syncSource = EffectSource.NONE;
+        syncDetail = "";
+        syncWaveform = "";
+        syncLeaseUntilAt = 0L;
+
+        LOGGER.info("安全归零 action=silence-clear reason=no-active-damage-heartbeat-environment clear=1,2 strengthA=0 strengthB=0");
+    }
+
+    public boolean hasActiveEffects() {
+        return isChannelStateActive(channelAState) || isChannelStateActive(channelBState) || isSyncStateActive();
+    }
+
     /**
      * 单通道发送 (原有逻辑)
      */
@@ -496,10 +586,36 @@ public class WebSocketServerManager {
                 channelBIntensity = intensity;
                 channelBStatus = waveId;
             }
-            recordPulsePreview(channelStr, waveId);
 
         } catch (Exception e) {
             LOGGER.error("发送波形数据失败: " + e.getMessage());
+        }
+    }
+
+    private void resendSingleChannel(String channel, String waveId, double intensity, EffectSource source, String detail) {
+        try {
+            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+            int value = (int) intensity;
+
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            for (List<String> chunk : chunks) {
+                sendPulseMessage(channelStr, chunk);
+            }
+            sendMessage("strength-" + channelNum + "+2+" + value);
+
+            if (channelNum == 1) {
+                channelAIntensity = intensity;
+                channelAStatus = waveId;
+            } else {
+                channelBIntensity = intensity;
+                channelBStatus = waveId;
+            }
+
+            updateChannelState("A".equals(channel) ? channelAState : channelBState, source, detail, waveId, value);
+            LOGGER.info("协议发送 channel={} clear=none pulse={} chunks={} strength={} refresh=true", channel, waveId, chunks.size(), value);
+        } catch (Exception e) {
+            LOGGER.error("续播单通道波形失败: {}", e.getMessage());
         }
     }
 
@@ -541,8 +657,6 @@ public class WebSocketServerManager {
             channelAStatus = waveId;
             channelBIntensity = intensity;
             channelBStatus = waveId;
-            recordPulsePreview("A", waveId);
-            recordPulsePreview("B", waveId);
 
         } catch (Exception e) {
             LOGGER.error("发送双通道波形数据失败: " + e.getMessage());
@@ -592,11 +706,43 @@ public class WebSocketServerManager {
             channelAStatus = waveId;
             channelBIntensity = intensityB;
             channelBStatus = waveId;
-            recordPulsePreview("A", waveId);
-            recordPulsePreview("B", waveId);
 
         } catch (Exception e) {
             LOGGER.error("发送双通道不同强度波形数据失败: " + e.getMessage());
+        }
+    }
+
+    private void resendSyncedChannels(String waveId, double intensityA, double intensityB, EffectSource source, String detail) {
+        try {
+            int valueA = (int) intensityA;
+            int valueB = (int) intensityB;
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("A", chunk);
+            }
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("B", chunk);
+            }
+
+            sendMessage("strength-1+2+" + valueA);
+            sendMessage("strength-2+2+" + valueB);
+
+            channelAIntensity = intensityA;
+            channelAStatus = waveId;
+            channelBIntensity = intensityB;
+            channelBStatus = waveId;
+            updateChannelState(channelAState, source, detail, waveId, valueA);
+            updateChannelState(channelBState, source, detail, waveId, valueB);
+            syncEffectActive = true;
+            syncSource = source;
+            syncDetail = detail;
+            syncWaveform = waveId;
+            syncLeaseUntilAt = computeLeaseUntil(source, detail);
+
+            LOGGER.info("协议发送 sync=AB clear=none pulse={} chunksA={} chunksB={} strengthA={} strengthB={} refresh=true", waveId, chunks.size(), chunks.size(), valueA, valueB);
+        } catch (Exception e) {
+            LOGGER.error("续播双通道波形失败: {}", e.getMessage());
         }
     }
 
@@ -656,6 +802,7 @@ public class WebSocketServerManager {
      * 每个元素必须是 16 位大写十六进制字符串
      */
     private void sendPulseMessage(String channelStr, List<String> chunk) {
+        markPulseSent();
         // 将列表转换为 JSON 数组字符串 (紧凑格式，无空格)
         StringBuilder hexArray = new StringBuilder("[");
         for (int i = 0; i < chunk.size(); i++) {
@@ -675,6 +822,14 @@ public class WebSocketServerManager {
         LOGGER.info("发送波形分块: pulse-{}:{}", channelStr, hexArray);
     }
 
+    private void markPulseSent() {
+        lastPulseSentAt = System.currentTimeMillis();
+    }
+
+    private boolean isPulseProtectionActive() {
+        return System.currentTimeMillis() - lastPulseSentAt < PULSE_PROTECTION_WINDOW_MS;
+    }
+
     /**
      * 停止刺激 - 发送强度为0的消息
      */
@@ -684,40 +839,15 @@ public class WebSocketServerManager {
         if (channelNum == 1) {
             channelAIntensity = 0;
             channelAStatus = "Idle";
-            channelAPulsePreview.clear();
         } else {
             channelBIntensity = 0;
             channelBStatus = "Idle";
-            channelBPulsePreview.clear();
         }
 
         // 发送强度为0的消息（而不是clear命令）
         if (connectedClient != null && connectedClient.isOpen()) {
             sendMessage("strength-" + channelNum + "+2+0");
             LOGGER.info("发送停止刺激(归零): strength-" + channelNum + "+2+0");
-        }
-    }
-
-    public void safeSilenceAll() {
-        channelAIntensity = 0;
-        channelBIntensity = 0;
-        channelAStatus = "Idle";
-        channelBStatus = "Idle";
-        channelAState.reset();
-        channelBState.reset();
-        channelAPulsePreview.clear();
-        channelBPulsePreview.clear();
-        syncEffectActive = false;
-        syncSource = EffectSource.NONE;
-        syncDetail = "";
-        syncWaveform = "";
-        syncLeaseUntilAt = 0L;
-
-        if (connectedClient != null && connectedClient.isOpen()) {
-            sendMessage("strength-1+2+0");
-            sendMessage("strength-2+2+0");
-            sendMessage("clear-1");
-            sendMessage("clear-2");
         }
     }
 
@@ -750,14 +880,6 @@ public class WebSocketServerManager {
 
     private ChannelRuntime getChannelState(String channel) {
         return "A".equalsIgnoreCase(channel) ? channelAState : channelBState;
-    }
-
-    private PulsePreviewState getPulsePreviewState(String channel) {
-        return "A".equalsIgnoreCase(channel) ? channelAPulsePreview : channelBPulsePreview;
-    }
-
-    private void recordPulsePreview(String channel, String waveId) {
-        getPulsePreviewState(channel).record(waveId, System.currentTimeMillis(), PULSE_PREVIEW_LEASE_MILLIS);
     }
 
     private long computeLeaseUntil(EffectSource source, String detail) {
@@ -793,7 +915,6 @@ public class WebSocketServerManager {
         msg.put("clientId", sessionId);
         msg.put("targetId", targetId != null ? targetId : "");
         connectedClient.send(gson.toJson(msg));
-        recordPulsePreview(channel, waveform);
     }
 
     /**
@@ -870,9 +991,6 @@ public class WebSocketServerManager {
     public boolean isWaitingForAppBind() {
         return hasClientSocketConnection() && !isBound;
     }
-    public boolean hasActiveEffects() {
-        return isChannelStateActive(channelAState) || isChannelStateActive(channelBState) || isSyncStateActive();
-    }
     public boolean hasLiveOutput() {
         return hasActiveEffects()
             || channelAIntensity > 0
@@ -897,13 +1015,6 @@ public class WebSocketServerManager {
     public long getChannelRuntimeRemainingMillis(String channel) {
         ChannelRuntime state = getChannelState(channel);
         return Math.max(0L, state.leaseUntilAt - System.currentTimeMillis());
-    }
-    public boolean isPulsePreviewActive(String channel) {
-        return getPulsePreviewState(channel).isActive(System.currentTimeMillis());
-    }
-    public String getPulsePreviewWaveform(String channel) { return getPulsePreviewState(channel).waveformId(); }
-    public long getPulsePreviewRemainingMillis(String channel) {
-        return getPulsePreviewState(channel).remainingMillis(System.currentTimeMillis());
     }
     public boolean isSyncRuntimeActive() { return isSyncStateActive(); }
     public EffectSource getSyncRuntimeSource() { return syncSource; }
