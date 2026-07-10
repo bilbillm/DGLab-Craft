@@ -82,6 +82,9 @@ jobs:
             loader="Forge"
           fi
           java_version="$(sed -n 's/.*JavaLanguageVersion\.of(\([0-9][0-9]*\)).*/\1/p' build.gradle | head -n 1 | tr -d '\r')"
+          if [ -z "${java_version}" ] && grep -Eq "sourceCompatibility.*['\"]?1\\.8['\"]?" build.gradle; then
+            java_version="8"
+          fi
           if [ -z "${java_version}" ]; then
             if [ "${loader}" = "NeoForge" ]; then
               java_version="21"
