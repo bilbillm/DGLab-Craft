@@ -76,7 +76,9 @@ jobs:
             exit 1
           fi
 
-          if grep -q '^neoforge_version=' gradle.properties; then
+          if grep -q '^fabric_loader_version=' gradle.properties || [ -f src/main/resources/fabric.mod.json ]; then
+            loader="Fabric"
+          elif grep -q '^neoforge_version=' gradle.properties; then
             loader="NeoForge"
           else
             loader="Forge"
@@ -92,8 +94,12 @@ jobs:
 
           minecraft_minor="${minecraft_version%.*}"
           game_versions="Minecraft ${minecraft_minor}:${minecraft_version},Java ${java_version},${loader}"
-          artifact="build/libs/DGLabCraft-${minecraft_version}-${mod_version}.jar"
-          display_name="DGLabCraft ${mod_version} for Minecraft ${minecraft_version}"
+          artifact_suffix=""
+          if [ "${loader}" = "Fabric" ]; then
+            artifact_suffix="-Fabric"
+          fi
+          artifact="build/libs/DGLabCraft-${minecraft_version}-${mod_version}${artifact_suffix}.jar"
+          display_name="DGLabCraft ${mod_version} ${loader} for Minecraft ${minecraft_version}"
 
           tag_lower="$(printf '%s' "${RELEASE_TAG}" | tr '[:upper:]' '[:lower:]')"
           release_type="${RELEASE_TYPE_INPUT}"

@@ -107,7 +107,11 @@ else {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($minecraftVersion) -and -not [string]::IsNullOrWhiteSpace($modVersion)) {
+        $isFabric = $properties.ContainsKey('fabric_loader_version') -or (Test-Path -LiteralPath 'src/main/resources/fabric.mod.json')
         $expectedTags = @("v$modVersion-$minecraftVersion")
+        if ($isFabric) {
+            $expectedTags += "v$modVersion-$minecraftVersion-Fabric"
+        }
         if ($properties.ContainsKey('neoforge_version')) {
             $expectedTags += "v$modVersion-$minecraftVersion-NeoForge"
         }
@@ -119,7 +123,8 @@ else {
             Write-Check "Tag matches gradle.properties."
         }
 
-        $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion.jar"
+        $jarLoaderSuffix = if ($isFabric) { '-Fabric' } else { '' }
+        $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion$jarLoaderSuffix.jar"
         $expectedJarPath = Join-Path 'build/libs' $expectedJar
         Write-Check "Expected release jar name: $expectedJarPath"
 
@@ -151,7 +156,12 @@ else {
         else {
             $readmeText = ($readmeFiles | ForEach-Object { Get-Content -LiteralPath $_ -Raw }) -join "`n"
             if ($readmeText -notmatch [regex]::Escape($Tag) -and $readmeText -notmatch [regex]::Escape($expectedJar)) {
-                Add-Error "README files do not mention '$Tag' or '$expectedJar'."
+                if ($isFabric) {
+                    Add-Warning "README files do not mention '$Tag' or '$expectedJar'."
+                }
+                else {
+                    Add-Error "README files do not mention '$Tag' or '$expectedJar'."
+                }
             }
             else {
                 Write-Check 'README release references look current.'

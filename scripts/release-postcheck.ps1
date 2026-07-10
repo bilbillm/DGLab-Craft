@@ -72,7 +72,11 @@ if ([string]::IsNullOrWhiteSpace($minecraftVersion) -or [string]::IsNullOrWhiteS
 }
 
 if ($errors.Count -eq 0) {
+    $isFabric = $properties.ContainsKey('fabric_loader_version') -or (Test-Path -LiteralPath 'src/main/resources/fabric.mod.json')
     $expectedTags = @("v$modVersion-$minecraftVersion")
+    if ($isFabric) {
+        $expectedTags += "v$modVersion-$minecraftVersion-Fabric"
+    }
     if ($properties.ContainsKey('neoforge_version')) {
         $expectedTags += "v$modVersion-$minecraftVersion-NeoForge"
     }
@@ -85,7 +89,9 @@ if ($errors.Count -eq 0) {
 }
 
 if ($errors.Count -eq 0) {
-    $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion.jar"
+    $isFabric = $properties.ContainsKey('fabric_loader_version') -or (Test-Path -LiteralPath 'src/main/resources/fabric.mod.json')
+    $jarLoaderSuffix = if ($isFabric) { '-Fabric' } else { '' }
+    $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion$jarLoaderSuffix.jar"
     $release = Invoke-GhJson -Arguments @('release', 'view', $Tag, '--json', 'tagName,url,assets,isDraft')
     if ($null -eq $release) {
         Add-Error "GitHub Release '$Tag' was not found."
