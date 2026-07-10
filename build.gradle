@@ -39,6 +39,7 @@ configurations {
 
 dependencies {
     shade 'org.java-websocket:Java-WebSocket:1.5.4'
+    shade 'org.slf4j:slf4j-api:1.7.36'
     shade('com.google.zxing:core:3.5.1') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }

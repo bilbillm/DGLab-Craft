@@ -8,8 +8,8 @@ import com.lumoren.dglabcraft.util.WaveformManager;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
 import java.util.UUID;
@@ -27,7 +27,7 @@ import java.util.TimerTask;
  * 参考 CaiJi-ikun/DG_LAB 实现
  */
 public class WebSocketServerManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
+    private static final Logger LOGGER = LogManager.getLogger("DGLabCraft-WebSocketServer");
     private static final long TICK_MS = 50L;
     private static WebSocketServerManager instance;
 
