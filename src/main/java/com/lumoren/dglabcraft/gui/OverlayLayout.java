@@ -13,6 +13,19 @@ public final class OverlayLayout {
     private OverlayLayout() {
     }
 
+    public static Rect defaultHudRect(int hudPosition, int screenWidth, int screenHeight) {
+        return rectFromRatio(defaultXRatio(hudPosition), defaultYRatio(hudPosition), HUD_WIDTH, HUD_HEIGHT, screenWidth, screenHeight);
+    }
+
+    public static Rect defaultWaveformRect(int screenWidth, int screenHeight) {
+        return clampRect(new Rect(MARGIN + HUD_WIDTH + DEFAULT_OVERLAY_GAP, MARGIN, WAVEFORM_WIDTH, WAVEFORM_HEIGHT), screenWidth, screenHeight);
+    }
+
+    public static Rect scaledRectFromRatio(double xRatio, double yRatio, int baseWidth, int baseHeight, double scale, int screenWidth, int screenHeight) {
+        double safeScale = clampScale(scale, baseWidth, baseHeight, screenWidth, screenHeight);
+        return rectFromRatio(xRatio, yRatio, scaledSize(baseWidth, safeScale), scaledSize(baseHeight, safeScale), screenWidth, screenHeight);
+    }
+
     public static Rect rectFromRatio(double xRatio, double yRatio, int width, int height, int screenWidth, int screenHeight) {
         double safeX = sanitizeRatio(xRatio);
         double safeY = sanitizeRatio(yRatio);
@@ -21,29 +34,16 @@ public final class OverlayLayout {
         return clampRect(new Rect(x, y, width, height), screenWidth, screenHeight);
     }
 
-    public static Rect defaultHudRect(int hudPosition, int screenWidth, int screenHeight) {
-        return rectFromRatio(defaultXRatio(hudPosition), defaultYRatio(hudPosition),
-            HUD_WIDTH, HUD_HEIGHT, screenWidth, screenHeight);
+    public static Rect drag(Rect start, double mouseX, double mouseY, double grabOffsetX, double grabOffsetY, int screenWidth, int screenHeight) {
+        int x = (int) Math.round(mouseX - grabOffsetX);
+        int y = (int) Math.round(mouseY - grabOffsetY);
+        return clampRect(new Rect(x, y, start.width(), start.height()), screenWidth, screenHeight);
     }
 
-    public static Rect defaultWaveformRect(int screenWidth, int screenHeight) {
-        return clampRect(new Rect(MARGIN + HUD_WIDTH + DEFAULT_OVERLAY_GAP, MARGIN, WAVEFORM_WIDTH, WAVEFORM_HEIGHT),
-            screenWidth, screenHeight);
-    }
-
-    public static Rect scaledRectFromRatio(double xRatio, double yRatio, int baseWidth, int baseHeight,
-                                           double scale, int screenWidth, int screenHeight) {
-        double safeScale = clampScale(scale, baseWidth, baseHeight, screenWidth, screenHeight);
-        return rectFromRatio(xRatio, yRatio, scaledSize(baseWidth, safeScale), scaledSize(baseHeight, safeScale),
-            screenWidth, screenHeight);
-    }
-
-    public static Rect resize(Rect start, double mouseX, double mouseY, ResizeHandle handle,
-                              int baseWidth, int baseHeight, int screenWidth, int screenHeight) {
+    public static Rect resize(Rect start, double mouseX, double mouseY, ResizeHandle handle, int baseWidth, int baseHeight, int screenWidth, int screenHeight) {
         if (handle == null || handle == ResizeHandle.NONE) {
             return start;
         }
-
         double rawScale = scaleForResize(start, mouseX, mouseY, handle, baseWidth, baseHeight);
         double scale = clampScale(rawScale, baseWidth, baseHeight, screenWidth, screenHeight);
         int width = scaledSize(baseWidth, scale);
@@ -57,7 +57,6 @@ public final class OverlayLayout {
         if (!rect.contains(mouseX, mouseY)) {
             return ResizeHandle.NONE;
         }
-
         boolean left = mouseX <= rect.x() + borderSize;
         boolean right = mouseX >= rect.x() + rect.width() - borderSize;
         boolean top = mouseY <= rect.y() + borderSize;
@@ -69,45 +68,18 @@ public final class OverlayLayout {
     }
 
     public static double scaleFromRect(Rect rect, int baseWidth) {
-        if (baseWidth <= 0) {
-            return 1.0D;
-        }
-        return Math.max(MIN_SCALE, rect.width() / (double) baseWidth);
-    }
-
-    public static double clampScale(double scale, int baseWidth, int baseHeight, int screenWidth, int screenHeight) {
-        double safe = sanitizeFinite(scale, 1.0D);
-        double maxByWidth = (Math.max(1, screenWidth - MARGIN * 2)) / (double) baseWidth;
-        double maxByHeight = (Math.max(1, screenHeight - MARGIN * 2)) / (double) baseHeight;
-        double max = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.min(maxByWidth, maxByHeight)));
-        return Math.max(MIN_SCALE, Math.min(max, safe));
+        return baseWidth <= 0 ? 1.0D : Math.max(MIN_SCALE, rect.width() / (double) baseWidth);
     }
 
     public static double ratioFromPixel(int pixel, int elementSize, int screenSize) {
         int available = Math.max(0, screenSize - elementSize);
-        if (available == 0) {
-            return 0.0D;
-        }
-        return clampRatio((double) pixel / (double) available);
-    }
-
-    public static Rect drag(Rect start, double mouseX, double mouseY, double grabOffsetX, double grabOffsetY,
-                            int screenWidth, int screenHeight) {
-        int x = (int) Math.round(mouseX - grabOffsetX);
-        int y = (int) Math.round(mouseY - grabOffsetY);
-        return clampRect(new Rect(x, y, start.width(), start.height()), screenWidth, screenHeight);
+        return available == 0 ? 0.0D : clampRatio((double) pixel / (double) available);
     }
 
     public static Rect clampRect(Rect rect, int screenWidth, int screenHeight) {
         int maxX = Math.max(MARGIN, screenWidth - rect.width() - MARGIN);
         int maxY = Math.max(MARGIN, screenHeight - rect.height() - MARGIN);
-        int x = clamp(rect.x(), MARGIN, maxX);
-        int y = clamp(rect.y(), MARGIN, maxY);
-        return new Rect(x, y, rect.width(), rect.height());
-    }
-
-    public static double clampRatio(double value) {
-        return Math.max(0.0D, Math.min(1.0D, value));
+        return new Rect(clamp(rect.x(), MARGIN, maxX), clamp(rect.y(), MARGIN, maxY), rect.width(), rect.height());
     }
 
     public static boolean hasSavedRatio(double xRatio, double yRatio) {
@@ -115,24 +87,50 @@ public final class OverlayLayout {
     }
 
     private static double defaultXRatio(int hudPosition) {
-        return switch (hudPosition) {
-            case 1, 3 -> 1.0D;
-            default -> 0.0D;
-        };
+        return hudPosition == 1 || hudPosition == 3 ? 1.0D : 0.0D;
     }
 
     private static double defaultYRatio(int hudPosition) {
-        return switch (hudPosition) {
-            case 2, 3 -> 1.0D;
-            default -> 0.0D;
-        };
+        return hudPosition == 2 || hudPosition == 3 ? 1.0D : 0.0D;
+    }
+
+    private static double clampScale(double scale, int baseWidth, int baseHeight, int screenWidth, int screenHeight) {
+        double safe = sanitizeFinite(scale, 1.0D);
+        double maxByWidth = Math.max(1, screenWidth - MARGIN * 2) / (double) baseWidth;
+        double maxByHeight = Math.max(1, screenHeight - MARGIN * 2) / (double) baseHeight;
+        double max = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.min(maxByWidth, maxByHeight)));
+        return Math.max(MIN_SCALE, Math.min(max, safe));
+    }
+
+    private static double scaleForResize(Rect start, double mouseX, double mouseY, ResizeHandle handle, int baseWidth, int baseHeight) {
+        double horizontalScale = start.width() / (double) baseWidth;
+        double verticalScale = start.height() / (double) baseHeight;
+        if (handle.left()) {
+            horizontalScale = (start.x() + start.width() - mouseX) / baseWidth;
+        } else if (handle.right()) {
+            horizontalScale = (mouseX - start.x()) / baseWidth;
+        }
+        if (handle.top()) {
+            verticalScale = (start.y() + start.height() - mouseY) / baseHeight;
+        } else if (handle.bottom()) {
+            verticalScale = (mouseY - start.y()) / baseHeight;
+        }
+        if ((handle.left() || handle.right()) && (handle.top() || handle.bottom())) {
+            return Math.max(horizontalScale, verticalScale);
+        }
+        return (handle.left() || handle.right()) ? horizontalScale : verticalScale;
     }
 
     private static double sanitizeRatio(double value) {
-        if (Double.isNaN(value) || Double.isInfinite(value)) {
-            return 0.0D;
-        }
-        return clampRatio(value);
+        return (Double.isNaN(value) || Double.isInfinite(value)) ? 0.0D : clampRatio(value);
+    }
+
+    private static double clampRatio(double value) {
+        return Math.max(0.0D, Math.min(1.0D, value));
+    }
+
+    private static double sanitizeFinite(double value, double fallback) {
+        return (Double.isNaN(value) || Double.isInfinite(value)) ? fallback : value;
     }
 
     private static int clamp(int value, int min, int max) {
@@ -146,46 +144,45 @@ public final class OverlayLayout {
         return Math.max(1, (int) Math.round(baseSize * scale));
     }
 
-    private static double scaleForResize(Rect start, double mouseX, double mouseY, ResizeHandle handle,
-                                         int baseWidth, int baseHeight) {
-        double horizontalScale = start.width() / (double) baseWidth;
-        double verticalScale = start.height() / (double) baseHeight;
+    public static final class Rect {
+        private final int x;
+        private final int y;
+        private final int width;
+        private final int height;
 
-        if (handle.left()) {
-            horizontalScale = (start.x() + start.width() - mouseX) / baseWidth;
-        } else if (handle.right()) {
-            horizontalScale = (mouseX - start.x()) / baseWidth;
+        public Rect(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
         }
 
-        if (handle.top()) {
-            verticalScale = (start.y() + start.height() - mouseY) / baseHeight;
-        } else if (handle.bottom()) {
-            verticalScale = (mouseY - start.y()) / baseHeight;
-        }
-
-        if ((handle.left() || handle.right()) && (handle.top() || handle.bottom())) {
-            return Math.max(horizontalScale, verticalScale);
-        }
-        if (handle.left() || handle.right()) {
-            return horizontalScale;
-        }
-        return verticalScale;
-    }
-
-    private static double sanitizeFinite(double value, double fallback) {
-        if (Double.isNaN(value) || Double.isInfinite(value)) {
-            return fallback;
-        }
-        return value;
-    }
-
-    public record Rect(int x, int y, int width, int height) {
+        public int x() { return x; }
+        public int y() { return y; }
+        public int width() { return width; }
+        public int height() { return height; }
         public boolean contains(double mouseX, double mouseY) {
             return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
         }
     }
 
-    public record ResizeHandle(boolean left, boolean right, boolean top, boolean bottom) {
+    public static final class ResizeHandle {
         public static final ResizeHandle NONE = new ResizeHandle(false, false, false, false);
+        private final boolean left;
+        private final boolean right;
+        private final boolean top;
+        private final boolean bottom;
+
+        public ResizeHandle(boolean left, boolean right, boolean top, boolean bottom) {
+            this.left = left;
+            this.right = right;
+            this.top = top;
+            this.bottom = bottom;
+        }
+
+        public boolean left() { return left; }
+        public boolean right() { return right; }
+        public boolean top() { return top; }
+        public boolean bottom() { return bottom; }
     }
 }

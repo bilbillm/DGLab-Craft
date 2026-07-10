@@ -3,16 +3,14 @@ package com.lumoren.dglabcraft.events;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 /**
  * 统一管理所有刺激的渐变消失效果
  * 当玩家退出某种状态后，延迟2秒后开始渐变，再用2秒时间将强度降为0
  */
-@Mod.EventBusSubscriber
 public class FadeManager {
 
     private static int tickCounter = 0;
@@ -48,13 +46,13 @@ public class FadeManager {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
-        Minecraft mc = Minecraft.getInstance();
-        if (!event.player.level.isClientSide()) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!event.player.world.isRemote) return;
         if (mc.player == null) return;
 
         // 使用 UUID 比较
-        Player eventPlayer = event.player;
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
+        EntityPlayer eventPlayer = event.player;
+        if (!eventPlayer.getUniqueID().equals(mc.player.getUniqueID())) return;
 
         tickCounter++;
 

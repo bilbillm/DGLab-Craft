@@ -3,284 +3,93 @@ package com.lumoren.dglabcraft.gui;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.QRCodeGenerator;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 
-public class ConnectionScreen extends Screen {
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_VERTICAL_SPACING = 4;
-    private static final int SECTION_VERTICAL_SPACING = 4;
-    private static final int DONE_BUTTON_BOTTOM_MARGIN = 30;
-    private static final int QR_BUTTON_COUNT = 3;
+public class ConnectionScreen extends GuiScreen {
+    private static final int BTN_REFRESH = 1;
+    private static final int BTN_OPEN_QR = 2;
+    private static final int BTN_RESET_IP = 3;
+    private static final int BTN_DONE = 4;
+    private final GuiScreen parent;
+    private GuiTextField hostField;
 
-    private static final Component MANUAL_IP_HINT = new TranslatableComponent("hint.dglabcraft.manual_ip")
-        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
-
-    private final Screen parent;
-    private Button refreshQrButton;
-    private Button openQrButton;
-    private Button openQrFolderButton;
-    private Button doneButton;
-    private EditBox manualIpInput;
-    private boolean manualIpInvalid = false;
-
-    public ConnectionScreen(Screen parent) {
-        super(new TranslatableComponent("screen.dglabcraft.connection_settings"));
+    public ConnectionScreen(GuiScreen parent) {
         this.parent = parent;
     }
 
     @Override
-    protected void init() {
-        super.init();
-
-        int centerX = this.width / 2;
-        int buttonWidth = 200;
-        int manualInputY = getManualInputY();
-        int doneButtonY = getDoneButtonY();
-        int qrButtonStartY = getQrButtonStartY(doneButtonY);
-
-        WebSocketServerManager server = WebSocketServerManager.getInstance();
-
-        this.manualIpInput = new EditBox(this.font, centerX - buttonWidth / 2, manualInputY, buttonWidth, BUTTON_HEIGHT,
-            new TranslatableComponent("label.dglabcraft.manual_lan_ip"));
+    public void initGui() {
+        buttonList.clear();
+        int centerX = width / 2;
         String currentHost = ModConfig.WS_HOST.get();
-        if (currentHost != null && !currentHost.isBlank() && !"localhost".equalsIgnoreCase(currentHost)) {
-            this.manualIpInput.setValue(currentHost);
-        }
-        this.addRenderableWidget(this.manualIpInput);
-
-        if (!server.isConnected()) {
-            ensureQrCodeGenerated();
-        }
-
-        this.refreshQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(0, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.refresh_qr"),
-            button -> {
-                if (commitManualIpInput()) {
-                    ensureQrCodeGenerated();
-                }
-            });
-        this.addRenderableWidget(this.refreshQrButton);
-
-        this.openQrButton = new Button(centerX - buttonWidth / 2, getQrButtonY(1, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.open_qr_image"),
-            button -> {
-                File qrFile = getQrCodeFile();
-                if (qrFile.isFile()) {
-                    net.minecraft.Util.getPlatform().openFile(qrFile);
-                }
-            });
-        this.addRenderableWidget(this.openQrButton);
-
-        this.openQrFolderButton = new Button(centerX - buttonWidth / 2, getQrButtonY(2, qrButtonStartY),
-            buttonWidth, BUTTON_HEIGHT, new TranslatableComponent("button.dglabcraft.open_qr_folder"),
-            button -> {
-                File qrFile = getQrCodeFile();
-                File qrFolder = qrFile.getParentFile();
-                if (qrFolder != null && qrFolder.isDirectory()) {
-                    net.minecraft.Util.getPlatform().openFile(qrFolder);
-                }
-            });
-        this.addRenderableWidget(this.openQrFolderButton);
-
-        this.doneButton = new Button(centerX - buttonWidth / 2, doneButtonY, buttonWidth, BUTTON_HEIGHT,
-            new TranslatableComponent("button.dglabcraft.done"), button -> this.onClose());
-        this.addRenderableWidget(this.doneButton);
+        hostField = new GuiTextField(10, fontRenderer, centerX - 100, 92, 200, 20);
+        hostField.setMaxStringLength(128);
+        hostField.setText(currentHost == null ? "" : currentHost);
+        buttonList.add(new GuiButton(BTN_REFRESH, centerX - 100, 120, 200, 20, "刷新二维码"));
+        buttonList.add(new GuiButton(BTN_OPEN_QR, centerX - 100, 145, 200, 20, "打开二维码图片"));
+        buttonList.add(new GuiButton(BTN_RESET_IP, centerX - 100, 170, 200, 20, "自动选择 IP"));
+        buttonList.add(new GuiButton(BTN_DONE, centerX - 100, height - 30, 200, 20, "完成"));
     }
 
     @Override
-    public void onClose() {
-        commitManualIpInput();
-        this.minecraft.setScreen(this.parent);
+    protected void actionPerformed(GuiButton button) throws IOException {
+        if (button.id == BTN_REFRESH) {
+            saveHost();
+            WebSocketServerManager.getInstance().generateQrUrl();
+        } else if (button.id == BTN_OPEN_QR) {
+            File qr = QRCodeGenerator.getQrCodeFile();
+            if (qr != null && qr.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(qr);
+            }
+        } else if (button.id == BTN_RESET_IP) {
+            hostField.setText("localhost");
+            saveHost();
+        } else if (button.id == BTN_DONE) {
+            saveHost();
+            mc.displayGuiScreen(parent);
+        }
     }
 
-    private boolean commitManualIpInput() {
-        String value = this.manualIpInput == null ? "" : this.manualIpInput.getValue().trim();
-        if (value.isEmpty()) {
-            ModConfig.WS_HOST.set("localhost");
-            ModConfig.save();
-            manualIpInvalid = false;
-            return true;
-        }
-        if (!isValidIpv4(value)) {
-            manualIpInvalid = true;
-            return false;
-        }
-
-        ModConfig.WS_HOST.set(value);
+    private void saveHost() {
+        String value = hostField.getText() == null ? "" : hostField.getText().trim();
+        ModConfig.WS_HOST.set(value.isEmpty() ? "localhost" : value);
         ModConfig.save();
-        manualIpInvalid = false;
-        return true;
-    }
-
-    private void ensureQrCodeGenerated() {
-        WebSocketServerManager server = WebSocketServerManager.getInstance();
-        server.generateQrUrl();
-        if (this.manualIpInput != null) {
-            this.manualIpInput.setSuggestion(MANUAL_IP_HINT.getString());
-        }
-    }
-
-    private boolean isValidIpv4(String value) {
-        String[] parts = value.split("\\.");
-        if (parts.length != 4) return false;
-        try {
-            for (String part : parts) {
-                if (part.isEmpty() || (part.length() > 1 && part.startsWith("0"))) {
-                    return false;
-                }
-                int number = Integer.parseInt(part);
-                if (number < 0 || number > 255) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(poseStack);
-
-        int centerX = this.width / 2;
-        WebSocketServerManager server = WebSocketServerManager.getInstance();
-        boolean isConnected = server.isConnected();
-
-        drawCenteredString(poseStack, this.font, new TranslatableComponent("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
-        drawCenteredString(poseStack, this.font,
-            new TranslatableComponent(isConnected ? "status.dglabcraft.connected" : "status.dglabcraft.waiting_connection"),
-            centerX, 50, isConnected ? 0x00FF00 : 0xFFFF00);
-        drawCenteredString(poseStack, this.font,
-            new TranslatableComponent("label.dglabcraft.address", server.resolveConnectionHost(), server.getPort()),
-            centerX, 70, 0xAAAAAA);
-
-        if (!isConnected) {
-            drawCenteredString(poseStack, this.font, new TranslatableComponent("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
-
-            File qrFile = getQrCodeFile();
-            if (qrFile.isFile()) {
-                renderQrPath(poseStack, centerX, 94, qrFile);
-            }
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (hostField.textboxKeyTyped(typedChar, keyCode)) {
+            return;
         }
-
-        if (manualIpInvalid) {
-            drawCenteredString(poseStack, this.font, new TranslatableComponent("error.dglabcraft.invalid_manual_ip"),
-                centerX, this.height / 2 + 2, 0xFF5555);
-        }
-
-        if (isConnected) {
-            String clientId = server.getConnectedClientId();
-            if (clientId != null) {
-                drawCenteredString(poseStack, this.font, new TranslatableComponent("label.dglabcraft.device", clientId),
-                    centerX, 90, 0xAAAAAA);
-            }
-        }
-
-        if (this.refreshQrButton != null) {
-            this.refreshQrButton.visible = !isConnected;
-        }
-        if (this.openQrButton != null) {
-            this.openQrButton.visible = !isConnected && hasQrImageFile();
-        }
-        if (this.openQrFolderButton != null) {
-            this.openQrFolderButton.visible = !isConnected && hasQrFolder();
-        }
-
-        super.render(poseStack, mouseX, mouseY, partialTick);
-    }
-
-    private File getQrCodeFile() {
-        File qrFile = QRCodeGenerator.getQrCodeFile();
-        if (qrFile != null) {
-            return qrFile;
-        }
-        return new File(Minecraft.getInstance().gameDirectory, "dglab-qrcode.png");
-    }
-
-    private boolean hasQrImageFile() {
-        return getQrCodeFile().isFile();
-    }
-
-    private boolean hasQrFolder() {
-        File qrFolder = getQrCodeFile().getParentFile();
-        return qrFolder != null && qrFolder.isDirectory();
-    }
-
-    private int getDoneButtonY() {
-        return this.height - DONE_BUTTON_BOTTOM_MARGIN;
-    }
-
-    private int getManualInputY() {
-        return this.height / 2 - 10;
-    }
-
-    private int getQrButtonStartY(int doneButtonY) {
-        int minY = getManualInputY() + BUTTON_HEIGHT + SECTION_VERTICAL_SPACING;
-        int maxY = doneButtonY - SECTION_VERTICAL_SPACING - getQrButtonBlockHeight();
-        return Math.max(minY, maxY);
-    }
-
-    private int getQrButtonY(int index, int qrButtonStartY) {
-        return qrButtonStartY + index * (BUTTON_HEIGHT + BUTTON_VERTICAL_SPACING);
-    }
-
-    private int getQrButtonBlockHeight() {
-        return QR_BUTTON_COUNT * BUTTON_HEIGHT + (QR_BUTTON_COUNT - 1) * BUTTON_VERTICAL_SPACING;
-    }
-
-    private void renderQrPath(PoseStack poseStack, int centerX, int startY, File qrFile) {
-        int maxTextWidth = Math.max(120, this.width - 40);
-        drawCenteredString(poseStack, this.font, new TranslatableComponent("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
-        drawCenteredString(poseStack, this.font, fitTextToWidth(qrFile.getAbsolutePath(), maxTextWidth), centerX, startY + 12, 0xAAAAAA);
-    }
-
-    private String fitTextToWidth(String text, int maxWidth) {
-        if (this.font.width(text) <= maxWidth) {
-            return text;
-        }
-
-        String ellipsis = "...";
-        int targetWidth = maxWidth - this.font.width(ellipsis);
-        if (targetWidth <= 0) {
-            return ellipsis;
-        }
-
-        int left = 0;
-        int right = text.length();
-        String prefix = "";
-        String suffix = "";
-
-        while (left < right && this.font.width(prefix + suffix) < targetWidth) {
-            if ((left + (text.length() - right)) % 2 == 0) {
-                prefix += text.charAt(left++);
-            } else {
-                suffix = text.charAt(--right) + suffix;
-            }
-
-            while (!suffix.isEmpty() && this.font.width(prefix + suffix) > targetWidth) {
-                suffix = suffix.substring(1);
-            }
-        }
-
-        while (!prefix.isEmpty() && this.font.width(prefix + suffix) > targetWidth) {
-            prefix = prefix.substring(0, prefix.length() - 1);
-        }
-
-        return prefix + ellipsis + suffix;
+        super.keyTyped(typedChar, keyCode);
     }
 
     @Override
-    public boolean isPauseScreen() {
-        return true;
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        hostField.mouseClicked(mouseX, mouseY, mouseButton);
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+    }
+
+    @Override
+    public void updateScreen() {
+        hostField.updateCursorCounter();
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        WebSocketServerManager server = WebSocketServerManager.getInstance();
+        drawCenteredString(fontRenderer, "连接设置", width / 2, 30, 0xFFFFFF);
+        drawCenteredString(fontRenderer, server.isConnected() ? "已连接" : "正在等待连接", width / 2, 52, server.isConnected() ? 0x55FF88 : 0xFFFF55);
+        drawCenteredString(fontRenderer, "地址: " + server.resolveConnectionHost() + ":" + server.getPort(), width / 2, 70, 0xCCCCCC);
+        fontRenderer.drawString("手动局域网 IP:", width / 2 - 100, 82, 0xAAAAAA);
+        hostField.drawTextBox();
+        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 }

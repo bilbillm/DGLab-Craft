@@ -1,148 +1,102 @@
 package com.lumoren.dglabcraft.gui;
 
-import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
 
-/**
- * 自定义滑动条组件 - 使用 Minecraft 原版 AbstractSliderButton
- * 严格对齐游戏设置中的 FOV 滑块样式
- */
-public class Slider extends AbstractSliderButton {
+public class Slider extends GuiButton {
+    public interface ValueConsumer {
+        void accept(double value);
+    }
 
     private final double minValue;
     private final double maxValue;
     private final double stepSize;
+    private final String prefix;
     private final String suffix;
-    private final Component prefix;  // 保存原始前缀文本
-    private final java.util.function.Consumer<Double> onValueChangeComplete;  // 释放鼠标时回调（保存配置）
+    private final ValueConsumer onValueChangeComplete;
+    private double value;
+    private boolean dragging;
 
-    /**
-     * 构造函数
-     *
-     * @param x                       组件 x 坐标
-     * @param y                       组件 y 坐标
-     * @param width                   组件宽度
-     * @param height                  组件高度（通常为 20）
-     * @param prefix                  前缀文本（如 "火焰伤害倍率: "）
-     * @param minValue                最小值
-     * @param maxValue                最大值
-     * @param currentValue            当前值
-     * @param stepSize                步长（例如 0.1 或 1.0）
-     * @param suffix                  后缀文本（如 "x" 或 "%"）
-     * @param onValueChangeComplete   释放鼠标时的回调（用于保存配置）
-     */
-    public Slider(int x, int y, int width, int height, Component prefix,
+    public Slider(int id, int x, int y, int width, int height, String prefix,
                   double minValue, double maxValue, double currentValue,
-                  double stepSize, String suffix, java.util.function.Consumer<Double> onValueChangeComplete) {
-        super(x, y, width, height, prefix, mapToInternalStatic(minValue, maxValue, currentValue));
+                  double stepSize, String suffix, ValueConsumer onValueChangeComplete) {
+        super(id, x, y, width, height, "");
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.stepSize = stepSize;
+        this.prefix = prefix;
         this.suffix = suffix;
-        this.prefix = prefix;  // 保存原始前缀文本
         this.onValueChangeComplete = onValueChangeComplete;
-
-        this.updateMessage();
+        setActualValue(currentValue);
     }
 
-    /**
-     * 将外部实际值映射到内部 0.0-1.0 区间（静态方法）
-     */
-    private static double mapToInternalStatic(double minValue, double maxValue, double actualValue) {
-        if (maxValue <= minValue) {
-            return 0.0;
-        }
-        return (actualValue - minValue) / (maxValue - minValue);
-    }
-
-    /**
-     * 将外部实际值映射到内部 0.0-1.0 区间（实例方法）
-     */
-    private double mapToInternal(double actualValue) {
-        return mapToInternalStatic(minValue, maxValue, actualValue);
-    }
-
-    /**
-     * 将内部 0.0-1.0 区间值映射回外部实际值
-     */
-    private double mapToExternal(double internalValue) {
-        if (maxValue <= minValue) {
-            return minValue;
-        }
-        double rawValue = minValue + (maxValue - minValue) * internalValue;
-
-        // 应用步长约束
-        if (stepSize > 0) {
-            rawValue = Math.round(rawValue / stepSize) * stepSize;
-        }
-
-        // 限制在范围内
-        return Math.max(minValue, Math.min(maxValue, rawValue));
-    }
-
-    /**
-     * 获取当前的实际值
-     */
     public double getValue() {
-        return mapToExternal(this.value);
-    }
-
-    /**
-     * 设置当前值
-     */
-    public void setValue(double value) {
-        this.value = mapToInternal(value);
-        this.updateMessage();
-    }
-
-    /**
-     * 更新滑块显示的文本
-     * 格式: [前缀]: [当前值][后缀]
-     */
-    @Override
-    protected void updateMessage() {
-        double actualValue = this.getValue();
-
-        // 处理数值显示精度
-        String valueStr;
-        if (stepSize < 1.0) {
-            // 浮点数范围（如 0.1-3.0），显示一位小数
-            valueStr = String.format("%.1f", actualValue);
-        } else {
-            // 整数范围，不显示小数位
-            valueStr = String.valueOf((int) Math.round(actualValue));
+        double raw = minValue + (maxValue - minValue) * value;
+        if (stepSize > 0.0D) {
+            raw = Math.round(raw / stepSize) * stepSize;
         }
-
-        // 使用保存的原始前缀文本构建显示文本
-        Component fullMessage = new TranslatableComponent("slider.dglabcraft.value", prefix, valueStr, suffix);
-        this.setMessage(fullMessage);
+        return Math.max(minValue, Math.min(maxValue, raw));
     }
 
-    /**
-     * 当滑块被拖动时调用
-     * 仅更新显示文本，不保存配置
-     */
-    @Override
-    protected void applyValue() {
-        // 拖动时只更新显示文本，不触发回调
-        // 配置保存在 onRelease 中处理
+    public void setActualValue(double actualValue) {
+        if (maxValue <= minValue) {
+            this.value = 0.0D;
+        } else {
+            this.value = (actualValue - minValue) / (maxValue - minValue);
+        }
+        this.value = Math.max(0.0D, Math.min(1.0D, this.value));
+        updateDisplayString();
     }
 
-    /**
-     * 当滑块释放时调用
-     * 触发回调保存配置
-     */
     @Override
-    public void onRelease(double mouseX, double mouseY) {
-        super.onRelease(mouseX, mouseY);
-        commitCurrentValue();
+    public int getHoverState(boolean mouseOver) {
+        return 0;
+    }
+
+    @Override
+    protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
+        if (visible) {
+            if (dragging) {
+                value = (mouseX - (x + 4)) / (double) (width - 8);
+                value = Math.max(0.0D, Math.min(1.0D, value));
+                updateDisplayString();
+            }
+            mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
+            int handleX = x + (int) (value * (width - 8));
+            drawTexturedModalRect(handleX, y, 0, 66, 4, 20);
+            drawTexturedModalRect(handleX + 4, y, 196, 66, 4, 20);
+        }
+    }
+
+    @Override
+    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+        if (super.mousePressed(mc, mouseX, mouseY)) {
+            value = (mouseX - (x + 4)) / (double) (width - 8);
+            value = Math.max(0.0D, Math.min(1.0D, value));
+            updateDisplayString();
+            dragging = true;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void mouseReleased(int mouseX, int mouseY) {
+        if (dragging) {
+            commitCurrentValue();
+        }
+        dragging = false;
     }
 
     public void commitCurrentValue() {
-        double actualValue = this.getValue();
         if (onValueChangeComplete != null) {
-            onValueChangeComplete.accept(actualValue);
+            onValueChangeComplete.accept(getValue());
         }
+    }
+
+    private void updateDisplayString() {
+        double actualValue = getValue();
+        String valueString = stepSize < 1.0D ? String.format("%.1f", actualValue) : String.valueOf((int) Math.round(actualValue));
+        this.displayString = prefix + valueString + suffix;
     }
 }

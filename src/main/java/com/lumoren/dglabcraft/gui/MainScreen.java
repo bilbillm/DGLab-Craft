@@ -2,142 +2,82 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 
-public class MainScreen extends Screen {
+import java.io.IOException;
 
-    public MainScreen() {
-        super(new TextComponent("DGLab Craft"));
-    }
-
-    private Button settingsButton;
-    private Button connectionButton;
-    private Button diagnosticButton;
-    private Button waveformButton;
-    private Button hudToggleButton;
-    private Button waveformOverlayButton;
-    private Button editOverlaysButton;
-    private Button closeButton;
+public class MainScreen extends GuiScreen {
+    private static final int BTN_SETTINGS = 1;
+    private static final int BTN_CONNECTION = 2;
+    private static final int BTN_DIAGNOSTIC = 3;
+    private static final int BTN_HUD = 4;
+    private static final int BTN_WAVEFORM = 5;
+    private static final int BTN_EDIT = 6;
+    private static final int BTN_CLOSE = 7;
 
     @Override
-    protected void init() {
-        super.init();
-
+    public void initGui() {
+        buttonList.clear();
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         if (!server.isConnected()) {
             server.generateQrUrl();
         }
-
-        int centerX = this.width / 2;
+        int centerX = width / 2;
         int buttonWidth = 200;
-        int buttonHeight = 20;
-        int spacing = 25;
-        int startY = this.height / 2 - 40;
-
-        this.settingsButton = new Button(centerX - buttonWidth / 2, startY, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.strength_settings"),
-            button -> this.minecraft.setScreen(new DGLabCraftScreen(this)));
-        this.addRenderableWidget(this.settingsButton);
-
-        this.connectionButton = new Button(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.connection_settings"),
-            button -> this.minecraft.setScreen(new ConnectionScreen(this)));
-        this.addRenderableWidget(this.connectionButton);
-
-        this.diagnosticButton = new Button(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.diagnostics"),
-            button -> this.minecraft.setScreen(new DiagnosticScreen(this)));
-        this.addRenderableWidget(this.diagnosticButton);
-
-        this.waveformButton = new Button(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.waveform_settings_soon"),
-            button -> {
-            });
-        this.addRenderableWidget(this.waveformButton);
-
-        int btnWidth = 98;
-        int btnGap = 4;
-        int startX = centerX - buttonWidth / 2;
-        boolean hudEnabled = ModConfig.HUD_ENABLED.get();
-        this.hudToggleButton = new Button(startX, startY + spacing * 4, btnWidth, buttonHeight,
-            hudToggleText(hudEnabled),
-            button -> {
-                boolean newState = !ModConfig.HUD_ENABLED.get();
-                ModConfig.HUD_ENABLED.set(newState);
-                ModConfig.save();
-                button.setMessage(hudToggleText(newState));
-            });
-        this.addRenderableWidget(this.hudToggleButton);
-
-        boolean waveformEnabled = ModConfig.WAVEFORM_OVERLAY_ENABLED.get();
-        this.waveformOverlayButton = new Button(startX + btnWidth + btnGap, startY + spacing * 4, btnWidth, buttonHeight,
-            waveformOverlayText(waveformEnabled),
-            button -> {
-                boolean newState = !ModConfig.WAVEFORM_OVERLAY_ENABLED.get();
-                ModConfig.WAVEFORM_OVERLAY_ENABLED.set(newState);
-                ModConfig.save();
-                button.setMessage(waveformOverlayText(newState));
-            });
-        this.addRenderableWidget(this.waveformOverlayButton);
-
-        this.editOverlaysButton = new Button(startX, startY + spacing * 5, btnWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.edit_overlays"),
-            button -> this.minecraft.setScreen(new OverlayEditScreen(this)));
-        this.addRenderableWidget(this.editOverlaysButton);
-
-        this.closeButton = new Button(startX + btnWidth + btnGap, startY + spacing * 5, btnWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.close_screen"),
-            button -> this.onClose());
-        this.addRenderableWidget(this.closeButton);
-    }
-
-    private Component hudToggleText(boolean enabled) {
-        return new TranslatableComponent("button.dglabcraft.hud_toggle",
-            new TranslatableComponent(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
-    }
-
-    private Component waveformOverlayText(boolean enabled) {
-        return new TranslatableComponent("button.dglabcraft.waveform_overlay",
-            new TranslatableComponent(enabled ? "status.dglabcraft.on" : "status.dglabcraft.off"));
+        int startY = height / 2 - 55;
+        buttonList.add(new GuiButton(BTN_SETTINGS, centerX - buttonWidth / 2, startY, buttonWidth, 20, "强度设置"));
+        buttonList.add(new GuiButton(BTN_CONNECTION, centerX - buttonWidth / 2, startY + 25, buttonWidth, 20, "连接设置"));
+        buttonList.add(new GuiButton(BTN_DIAGNOSTIC, centerX - buttonWidth / 2, startY + 50, buttonWidth, 20, "连接诊断"));
+        buttonList.add(new GuiButton(BTN_HUD, centerX - buttonWidth / 2, startY + 75, 98, 20, hudText()));
+        buttonList.add(new GuiButton(BTN_WAVEFORM, centerX + 2, startY + 75, 98, 20, waveformText()));
+        buttonList.add(new GuiButton(BTN_EDIT, centerX - buttonWidth / 2, startY + 100, 98, 20, "编辑叠加层"));
+        buttonList.add(new GuiButton(BTN_CLOSE, centerX + 2, startY + 100, 98, 20, "关闭"));
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(poseStack);
-
-        int centerX = this.width / 2;
-        drawCenteredString(poseStack, this.font, new TextComponent("DGLab Craft"), centerX, 30, 0xFFFFFF);
-
-        WebSocketServerManager server = WebSocketServerManager.getInstance();
-        Component statusText;
-        int statusColor;
-        if (server.isConnected()) {
-            statusText = new TranslatableComponent("status.dglabcraft.connected");
-            statusColor = 0x00FF00;
-        } else {
-            statusText = new TranslatableComponent("status.dglabcraft.waiting_connection");
-            statusColor = 0xFFFF00;
+    protected void actionPerformed(GuiButton button) throws IOException {
+        if (button.id == BTN_SETTINGS) {
+            mc.displayGuiScreen(new DGLabCraftScreen(this));
+        } else if (button.id == BTN_CONNECTION) {
+            mc.displayGuiScreen(new ConnectionScreen(this));
+        } else if (button.id == BTN_DIAGNOSTIC) {
+            mc.displayGuiScreen(new DiagnosticScreen(this));
+        } else if (button.id == BTN_HUD) {
+            ModConfig.HUD_ENABLED.set(!ModConfig.HUD_ENABLED.get());
+            ModConfig.save();
+            button.displayString = hudText();
+        } else if (button.id == BTN_WAVEFORM) {
+            ModConfig.WAVEFORM_OVERLAY_ENABLED.set(!ModConfig.WAVEFORM_OVERLAY_ENABLED.get());
+            ModConfig.save();
+            button.displayString = waveformText();
+        } else if (button.id == BTN_EDIT) {
+            mc.displayGuiScreen(new OverlayEditScreen(this));
+        } else if (button.id == BTN_CLOSE) {
+            mc.displayGuiScreen(null);
         }
-        drawCenteredString(poseStack, this.font, statusText, centerX, 50, statusColor);
-
-        String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
-        drawCenteredString(poseStack, this.font, serverInfo, centerX, this.height - 20, 0x888888);
-
-        super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public boolean isPauseScreen() {
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        drawCenteredString(fontRenderer, "DGLab Craft", width / 2, 30, 0xFFFFFF);
+        WebSocketServerManager server = WebSocketServerManager.getInstance();
+        drawCenteredString(fontRenderer, server.isConnected() ? "已连接" : "正在等待连接", width / 2, 50, server.isConnected() ? 0x55FF88 : 0xFFFF55);
+        drawCenteredString(fontRenderer, server.resolveConnectionHost() + ":" + server.getPort(), width / 2, height - 20, 0x888888);
+        super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
         return true;
     }
 
-    @Override
-    public void onClose() {
-        this.minecraft.setScreen(null);
+    private static String hudText() {
+        return "HUD: " + (ModConfig.HUD_ENABLED.get() ? "开" : "关");
+    }
+
+    private static String waveformText() {
+        return "波形: " + (ModConfig.WAVEFORM_OVERLAY_ENABLED.get() ? "开" : "关");
     }
 }

@@ -480,7 +480,7 @@ public class WebSocketServerManager {
             sendMessage("clear-" + channelNum);
 
             // 2. pulse-<A|B>:[...] (分块)
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
             for (List<String> chunk : chunks) {
                 sendPulseMessage(channelStr, chunk);
             }
@@ -519,7 +519,7 @@ public class WebSocketServerManager {
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
 
             // 先发送所有 A 通道波形块
             for (List<String> chunk : chunks) {
@@ -571,7 +571,7 @@ public class WebSocketServerManager {
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道不同强度)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
 
             // 先发送所有 A 通道波形块
             for (List<String> chunk : chunks) {
@@ -746,6 +746,20 @@ public class WebSocketServerManager {
 
     private boolean isSyncStateActive() {
         return syncEffectActive && syncLeaseUntilAt > System.currentTimeMillis();
+    }
+
+    public void noteChannelRuntime(String channel, EffectSource source, String detail, String waveId, int intensity) {
+        updateChannelState(getChannelState(channel), source, detail, waveId, intensity);
+    }
+
+    public void noteSyncRuntime(EffectSource source, String detail, String waveId, int intensity) {
+        syncEffectActive = true;
+        syncSource = source;
+        syncDetail = detail == null ? "" : detail;
+        syncWaveform = waveId == null ? "" : waveId;
+        syncLeaseUntilAt = computeLeaseUntil(source, detail);
+        updateChannelState(channelAState, source, detail, waveId, intensity);
+        updateChannelState(channelBState, source, detail, waveId, intensity);
     }
 
     private ChannelRuntime getChannelState(String channel) {
