@@ -72,7 +72,7 @@ if ([string]::IsNullOrWhiteSpace($minecraftVersion) -or [string]::IsNullOrWhiteS
 }
 
 if ($errors.Count -eq 0) {
-    $expectedTags = @("v$modVersion-$minecraftVersion")
+    $expectedTags = @("v$modVersion", "v$modVersion-$minecraftVersion")
     if ($properties.ContainsKey('neoforge_version')) {
         $expectedTags += "v$modVersion-$minecraftVersion-NeoForge"
     }
@@ -104,11 +104,8 @@ if ($errors.Count -eq 0) {
             $_.name -notlike '*-dev.jar' -and
             $_.name -notlike '*-all.jar'
         })
-        if ($jarAssets.Count -ne 1) {
-            Add-Error "Expected exactly one final release jar asset, found $($jarAssets.Count)."
-        }
-        elseif ($jarAssets[0].name -ne $expectedJar) {
-            Add-Error "GitHub Release jar '$($jarAssets[0].name)' does not match expected '$expectedJar'."
+        if ($jarAssets.name -notcontains $expectedJar) {
+            Add-Error "GitHub Release does not contain expected jar '$expectedJar'. Found: $(@($jarAssets.name) -join ', ')."
         }
         else {
             Write-Check "GitHub Release jar asset is current: $expectedJar"
