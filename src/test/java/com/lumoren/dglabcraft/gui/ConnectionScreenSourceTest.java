@@ -17,8 +17,8 @@ class ConnectionScreenSourceTest {
 
         assertTrue(source.contains(
             "guiGraphics.blit(RenderType::guiTextured, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(), "
-                + "layout.qrImage().width(), layout.qrImage().height(), 0.0F, 0.0F, "
-                + "qrTextureWidth, qrTextureHeight, qrTextureWidth, qrTextureHeight);"
+                + "0.0F, 0.0F, layout.qrImage().width(), layout.qrImage().height(), "
+                + "qrTextureWidth, qrTextureHeight);"
         ));
     }
 }

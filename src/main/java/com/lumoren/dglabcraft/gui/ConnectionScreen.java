@@ -257,8 +257,8 @@ public class ConnectionScreen extends Screen {
 
         if (qrFile.isFile() && loadQrTexture(qrFile)) {
             guiGraphics.blit(RenderType::guiTextured, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(),
-                layout.qrImage().width(), layout.qrImage().height(), 0.0F, 0.0F,
-                qrTextureWidth, qrTextureHeight, qrTextureWidth, qrTextureHeight);
+                0.0F, 0.0F, layout.qrImage().width(), layout.qrImage().height(),
+                qrTextureWidth, qrTextureHeight);
         } else {
             guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.scan_qr"),
                 qr.x() + qr.width() / 2, qr.y() + qr.height() / 2 - 4, 0x555555);
