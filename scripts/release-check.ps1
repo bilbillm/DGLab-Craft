@@ -107,7 +107,7 @@ else {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($minecraftVersion) -and -not [string]::IsNullOrWhiteSpace($modVersion)) {
-        $expectedTags = @("v$modVersion-$minecraftVersion")
+        $expectedTags = @("v$modVersion", "v$modVersion-$minecraftVersion")
         if ($properties.ContainsKey('neoforge_version')) {
             $expectedTags += "v$modVersion-$minecraftVersion-NeoForge"
         }
