@@ -37,18 +37,23 @@ jobs:
           - minecraft: "1.18.2"
             loader: Forge
             java: "17"
+            game-version: "Minecraft 1.18:1.18.2"
           - minecraft: "1.19.2"
             loader: Forge
             java: "17"
+            game-version: "Minecraft 1.19:1.19.2"
           - minecraft: "1.20.1"
             loader: Forge
             java: "17"
+            game-version: "Minecraft 1.20:1.20.1"
           - minecraft: "1.21.1"
             loader: NeoForge
             java: "21"
+            game-version: "Minecraft 1.21:1.21.1"
           - minecraft: "1.21.4"
             loader: NeoForge
             java: "21"
+            game-version: "Minecraft 1.21:1.21.4"
     env:
       RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
       RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || (github.event.release.prerelease && 'beta' || 'release') }}
@@ -123,7 +128,7 @@ jobs:
           project_id: "1538053"
           game_endpoint: minecraft
           file_path: ${{ steps.artifact.outputs.path }}
-          game_versions: Minecraft ${{ matrix.minecraft }},Java ${{ matrix.java }},${{ matrix.loader }}
+          game_versions: ${{ matrix.game-version }},Java ${{ matrix.java }},${{ matrix.loader }}
           release_type: ${{ env.RELEASE_TYPE }}
           display_name: DGLabCraft ${{ env.MOD_VERSION }} for Minecraft ${{ matrix.minecraft }}
           changelog: ${{ steps.notes.outputs.changelog }}
