@@ -43,9 +43,9 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 ### 2. 在 GitHub 下载 Mod
 
-1. 打开这个版本的 release：[`DGLabCraft-1.20.1-1.1.0.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1)
+1. 打开统一 release：[`DGLabCraft-1.20.1-1.1.1.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1)
 2. 在页面下方找到 **Assets**。
-3. 下载 `DGLabCraft-1.20.1-1.1.0.jar`。
+3. 下载 `DGLabCraft-1.20.1-1.1.1.jar`。
 4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
 
 也可以从项目的 [Releases 页面](https://github.com/bilbillm/DGLab-Craft/releases) 进入，按自己的 Minecraft 版本选择 release。
@@ -55,7 +55,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 1. 用启动器创建或选择一个 Minecraft `1.20.1` 实例。
 2. 给这个实例安装 Forge `47.2.0+`。
 3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
-4. 把刚下载的 `DGLabCraft-1.20.1-1.1.0.jar` 放进去。
+4. 把刚下载的 `DGLabCraft-1.20.1-1.1.1.jar` 放进去。
 5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
 
 如果你不知道实例目录在哪：在启动器里通常可以右键实例，选择“打开文件夹”或“打开游戏目录”。
@@ -93,7 +93,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 - Minecraft `1.20.1`
 - Forge `47.2.0+`
 - Java `17`
-- Mod 版本 `1.0.11`
+- Mod 版本 `1.1.1`
 
 维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
 
@@ -112,8 +112,8 @@ cd DGLab-Craft
 发布前后检查：
 
 ```bash
-pwsh scripts/release-check.ps1 -Tag v1.1.0-1.20.1 -SkipGitHubReleaseCheck
-pwsh scripts/release-postcheck.ps1 -Tag v1.1.0-1.20.1
+pwsh scripts/release-check.ps1 -Tag v1.1.1 -SkipGitHubReleaseCheck
+pwsh scripts/release-postcheck.ps1 -Tag v1.1.1
 ```
 
 GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证发布元数据，不创建 GitHub Release，也不会上传 CurseForge。

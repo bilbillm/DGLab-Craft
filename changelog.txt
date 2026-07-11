@@ -1,5 +1,22 @@
 # DGLab Craft Changelog
 
+## [1.1.1] - 2026-07-11
+
+### Added
+- Display the generated connection QR code directly in the in-game connection screen.
+- Add localized connection instructions and quick troubleshooting guidance for failed connections.
+
+### Changed
+- Use a responsive connection-screen layout across all maintained Minecraft versions.
+- Tighten header spacing and reserve more vertical space for connection help text.
+- Publish all maintained builds together in one GitHub release with version-specific jar names.
+
+### Fixed
+- Render the complete QR image instead of cropping its source texture.
+- Prevent connection controls, help text, and the Done button from overlapping at compact GUI sizes.
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 ### Added

@@ -8,19 +8,19 @@ on:
       tag:
         description: "Existing GitHub release tag to publish"
         required: true
+        default: "v1.1.1"
       release_type:
         description: "CurseForge release type"
         required: true
-        default: "auto"
+        default: "release"
         type: choice
         options:
-          - auto
           - release
           - beta
           - alpha
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: publish-release-${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
@@ -28,225 +28,93 @@ concurrency:
 
 jobs:
   publish:
-    name: Build and publish release assets
+    name: Publish Minecraft ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: "1.18.2"
+            loader: Forge
+            java: "17"
+          - minecraft: "1.19.2"
+            loader: Forge
+            java: "17"
+          - minecraft: "1.20.1"
+            loader: Forge
+            java: "17"
+          - minecraft: "1.21.1"
+            loader: NeoForge
+            java: "21"
+          - minecraft: "1.21.4"
+            loader: NeoForge
+            java: "21"
     env:
       RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
-      RELEASE_TYPE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || 'auto' }}
-      RELEASE_PRERELEASE: ${{ github.event_name == 'release' && github.event.release.prerelease || false }}
+      RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || (github.event.release.prerelease && 'beta' || 'release') }}
+      MOD_VERSION: "1.1.1"
 
     steps:
-      - name: Validate secrets
+      - name: Validate release and secret
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        shell: bash
         run: |
+          set -euo pipefail
+          if [ "${RELEASE_TAG}" != "v${MOD_VERSION}" ]; then
+            echo "::error::This workflow publishes v${MOD_VERSION}; received ${RELEASE_TAG}"
+            exit 1
+          fi
           if [ -z "${CF_API_TOKEN}" ]; then
             echo "::error::Missing CF_API_TOKEN repository secret"
             exit 1
           fi
 
-      - name: Checkout release tag
+      - name: Checkout release metadata
         uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
 
-      - name: Run release preflight checks
-        shell: pwsh
-        run: |
-          if (Test-Path ./scripts/release-check.ps1) {
-            ./scripts/release-check.ps1 -Tag "${env:RELEASE_TAG}"
-          } else {
-            Write-Warning "scripts/release-check.ps1 is not present in this tag; skipping preflight checks."
-          }
-
-      - name: Read release metadata
-        id: meta
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          read_property() {
-            sed -n "s/^$1=//p" gradle.properties | head -n 1 | tr -d '\r'
-          }
-
-          minecraft_version="$(read_property minecraft_version)"
-          mod_version="$(read_property mod_version)"
-          if [ -z "${minecraft_version}" ] || [ -z "${mod_version}" ]; then
-            echo "::error::Could not read minecraft_version or mod_version from gradle.properties"
-            exit 1
-          fi
-
-          if grep -q '^neoforge_version=' gradle.properties; then
-            loader="NeoForge"
-          else
-            loader="Forge"
-          fi
-          java_version="$(sed -n 's/.*JavaLanguageVersion\.of(\([0-9][0-9]*\)).*/\1/p' build.gradle | head -n 1 | tr -d '\r')"
-          if [ -z "${java_version}" ]; then
-            if [ "${loader}" = "NeoForge" ]; then
-              java_version="21"
-            else
-              java_version="17"
-            fi
-          fi
-
-          minecraft_minor="${minecraft_version%.*}"
-          game_versions="Minecraft ${minecraft_minor}:${minecraft_version},Java ${java_version},${loader}"
-          artifact="build/libs/DGLabCraft-${minecraft_version}-${mod_version}.jar"
-          display_name="DGLabCraft ${mod_version} for Minecraft ${minecraft_version}"
-
-          tag_lower="$(printf '%s' "${RELEASE_TAG}" | tr '[:upper:]' '[:lower:]')"
-          release_type="${RELEASE_TYPE_INPUT}"
-          if [ "${release_type}" = "auto" ]; then
-            if [[ "${tag_lower}" == *alpha* ]]; then
-              release_type="alpha"
-            elif [[ "${tag_lower}" == *beta* ]] || [ "${RELEASE_PRERELEASE}" = "true" ]; then
-              release_type="beta"
-            else
-              release_type="release"
-            fi
-          fi
-
-          {
-            echo "minecraft_version=${minecraft_version}"
-            echo "mod_version=${mod_version}"
-            echo "loader=${loader}"
-            echo "java_version=${java_version}"
-            echo "game_versions=${game_versions}"
-            echo "artifact=${artifact}"
-            echo "display_name=${display_name}"
-            echo "release_type=${release_type}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Download existing GitHub release jar
-        id: existing_artifact
+      - name: Download exact GitHub release jar
+        id: artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-
+          artifact="DGLabCraft-${{ matrix.minecraft }}-${MOD_VERSION}.jar"
           mkdir -p release-assets
-          if gh release download "${RELEASE_TAG}" --pattern "*.jar" --dir release-assets --clobber; then
-            mapfile -t candidates < <(
-              find release-assets -maxdepth 1 -type f -name '*.jar' \
-                ! -name '*-slim.jar' \
-                ! -name '*-sources.jar' \
-                ! -name '*-javadoc.jar' \
-                ! -name '*-dev.jar' \
-                ! -name '*-all.jar' \
-                | sort
-            )
-            if [ "${#candidates[@]}" -eq 1 ]; then
-              echo "found=true" >> "${GITHUB_OUTPUT}"
-              echo "path=${candidates[0]}" >> "${GITHUB_OUTPUT}"
-              exit 0
-            fi
-            if [ "${#candidates[@]}" -gt 1 ]; then
-              echo "::error::Found multiple existing release jar candidates"
-              printf '%s\n' "${candidates[@]}"
-              exit 1
-            fi
-          fi
+          gh release download "${RELEASE_TAG}" --pattern "${artifact}" --dir release-assets
+          test -f "release-assets/${artifact}"
+          echo "path=release-assets/${artifact}" >> "${GITHUB_OUTPUT}"
 
-          echo "found=false" >> "${GITHUB_OUTPUT}"
-          echo "path=" >> "${GITHUB_OUTPUT}"
-
-      - name: Set up Java
-        if: steps.existing_artifact.outputs.found != 'true'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ steps.meta.outputs.java_version }}
-          cache: gradle
-
-      - name: Remove local-only Gradle proxy
-        if: steps.existing_artifact.outputs.found != 'true'
-        run: |
-          sed -i '/^systemProp\.\(http\|https\)\.proxyHost=/d' gradle.properties
-          sed -i '/^systemProp\.\(http\|https\)\.proxyPort=/d' gradle.properties
-
-      - name: Build jar
-        if: steps.existing_artifact.outputs.found != 'true'
-        run: |
-          chmod +x ./gradlew
-          ./gradlew build
-
-      - name: Locate release jar
-        id: artifact
+      - name: Verify jar metadata
         shell: bash
         run: |
           set -euo pipefail
-
-          if [ "${{ steps.existing_artifact.outputs.found }}" = "true" ]; then
-            echo "path=${{ steps.existing_artifact.outputs.path }}" >> "${GITHUB_OUTPUT}"
-            echo "built=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          artifact="${{ steps.meta.outputs.artifact }}"
-          if [ ! -f "${artifact}" ]; then
-            mapfile -t candidates < <(
-              find build/libs -maxdepth 1 -type f -name '*.jar' \
-                ! -name '*-slim.jar' \
-                ! -name '*-sources.jar' \
-                ! -name '*-javadoc.jar' \
-                ! -name '*-dev.jar' \
-                ! -name '*-all.jar' \
-                | sort
-            )
-            if [ "${#candidates[@]}" -ne 1 ]; then
-              echo "::error::Expected ${artifact}, found ${#candidates[@]} release jar candidates"
-              printf '%s\n' "${candidates[@]}"
-              exit 1
-            fi
-            artifact="${candidates[0]}"
-          fi
-
-          echo "path=${artifact}" >> "${GITHUB_OUTPUT}"
-          echo "built=true" >> "${GITHUB_OUTPUT}"
+          test -s "${{ steps.artifact.outputs.path }}"
+          unzip -t "${{ steps.artifact.outputs.path }}" >/dev/null
 
       - name: Read CurseForge changelog
         id: notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-
-          version="${{ steps.meta.outputs.mod_version }}"
-          body=""
-          if [ -f changelog.txt ]; then
-            body="$(
-              awk -v version="${version}" '
-                BEGIN { in_section = 0 }
-                index($0, "## [" version "]") == 1 { in_section = 1 }
-                in_section && $0 == "---" { exit }
-                in_section && $0 ~ "^## \\[" && index($0, "## [" version "]") != 1 { exit }
-                in_section { print }
-              ' changelog.txt
-            )"
-          fi
-
+          body="$(awk -v version="${MOD_VERSION}" '
+            BEGIN { in_section = 0 }
+            index($0, "## [" version "]") == 1 { in_section = 1 }
+            in_section && $0 == "---" { exit }
+            in_section { print }
+          ' changelog.txt)"
           if [ -z "${body}" ]; then
-            body="$(gh release view "${RELEASE_TAG}" --json body --jq '.body // ""' 2>/dev/null || true)"
+            body="DGLab Craft ${MOD_VERSION}"
           fi
-          if [ -z "${body}" ]; then
-            body="Release ${RELEASE_TAG}"
-          fi
-
           delimiter="CHANGELOG_$(date +%s%N)"
           {
             echo "changelog<<${delimiter}"
             printf '%s\n' "${body}"
             echo "${delimiter}"
           } >> "${GITHUB_OUTPUT}"
-
-      - name: Upload jar to GitHub Release
-        if: steps.artifact.outputs.built == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${RELEASE_TAG}" "${{ steps.artifact.outputs.path }}" --clobber
 
       - name: Upload jar to CurseForge
         uses: itsmeow/curseforge-upload@v3
@@ -255,8 +123,8 @@ jobs:
           project_id: "1538053"
           game_endpoint: minecraft
           file_path: ${{ steps.artifact.outputs.path }}
-          game_versions: ${{ steps.meta.outputs.game_versions }}
-          release_type: ${{ steps.meta.outputs.release_type }}
-          display_name: ${{ steps.meta.outputs.display_name }}
+          game_versions: Minecraft ${{ matrix.minecraft }},Java ${{ matrix.java }},${{ matrix.loader }}
+          release_type: ${{ env.RELEASE_TYPE }}
+          display_name: DGLabCraft ${{ env.MOD_VERSION }} for Minecraft ${{ matrix.minecraft }}
           changelog: ${{ steps.notes.outputs.changelog }}
           changelog_type: markdown
