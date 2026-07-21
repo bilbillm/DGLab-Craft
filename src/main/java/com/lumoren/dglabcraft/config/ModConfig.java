@@ -1,8 +1,8 @@
 package com.lumoren.dglabcraft.config;
 
 import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class ModConfig {
-    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-Config");
+    private static final Logger LOGGER = LogManager.getLogger("DGLabCraft-Config");
     private static final Properties PROPERTIES = new Properties();
     private static final List<ConfigValue<?>> VALUES = new ArrayList<>();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("dglabcraft-fabric.properties");

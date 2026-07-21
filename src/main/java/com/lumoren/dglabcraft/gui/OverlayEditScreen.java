@@ -34,7 +34,7 @@ public class OverlayEditScreen extends Screen {
         int centerX = this.width / 2;
         int y = this.height - 28;
 
-        this.addRenderableWidget(new Button(centerX - buttonWidth - gap / 2, y, buttonWidth, buttonHeight,
+        this.addButton(new Button(centerX - buttonWidth - gap / 2, y, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.reset_overlay_positions"),
             button -> {
                 ModConfig.HUD_X_RATIO.set(-1.0D);
@@ -46,7 +46,7 @@ public class OverlayEditScreen extends Screen {
                 ModConfig.save();
             }));
 
-        this.addRenderableWidget(new Button(centerX + gap / 2, y, buttonWidth, buttonHeight,
+        this.addButton(new Button(centerX + gap / 2, y, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.done"),
             button -> this.onClose()));
     }

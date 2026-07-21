@@ -14,8 +14,8 @@ public abstract class LivingEntityMixin {
     @Inject(method = "hurt", at = @At("HEAD"))
     private void dglabcraft$cacheDamageSource(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         Object self = this;
-        if (self instanceof Player player) {
-            DGLabCraft.DAMAGE_HANDLER.cacheDamageSource(player, source);
+        if (self instanceof Player) {
+            DGLabCraft.DAMAGE_HANDLER.cacheDamageSource((Player) self, source);
         }
     }
 }

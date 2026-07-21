@@ -6,10 +6,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -17,7 +19,7 @@ import java.util.*;
  * 从资源目录加载 JSON 波形文件
  */
 public class WaveformManager implements ResourceManagerReloadListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WaveformManager");
+    private static final Logger LOGGER = LogManager.getLogger("DGLabCraft-WaveformManager");
     private static WaveformManager instance;
 
     // 波形池: 文件名(不含后缀) -> Hex 字符串列表
@@ -71,10 +73,11 @@ public class WaveformManager implements ResourceManagerReloadListener {
                 LOGGER.info("提取波形ID: {}", fileName);
 
                 // 读取资源
-                Resource resource = resourceManager.getResource(path);
-                String jsonContent = new String(resource.getInputStream().readAllBytes());
-                LOGGER.info("JSON内容: {}", jsonContent);
-                List<String> waveformData = gson.fromJson(jsonContent, listType);
+                List<String> waveformData;
+                try (Resource resource = resourceManager.getResource(path);
+                     InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                    waveformData = gson.fromJson(reader, listType);
+                }
 
                 if (waveformData != null && !waveformData.isEmpty()) {
                     waveformPool.put(fileName, waveformData);
@@ -139,7 +142,8 @@ public class WaveformManager implements ResourceManagerReloadListener {
             String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
             try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
-                    String jsonContent = new String(is.readAllBytes());
+                    Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name()).useDelimiter("\\A");
+                    String jsonContent = scanner.hasNext() ? scanner.next() : "";
                     List<String> waveformData = parseWaveformJson(jsonContent, gson);
 
                     if (waveformData != null && !waveformData.isEmpty()) {

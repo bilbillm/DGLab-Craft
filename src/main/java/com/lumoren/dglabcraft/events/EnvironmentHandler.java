@@ -121,36 +121,8 @@ public class EnvironmentHandler {
             wasInEnd = false;
         }
 
-        // 2. 寒冷环境检测 (通过玩家是否接触细雪方块判断)
-        if (!isNetherDimension) {
-            // 检查玩家是否接触到细雪方块
-            boolean touchingSnow = isTouchingBlock(player, Blocks.POWDER_SNOW, mc);
-            if (touchingSnow) {
-                if (!wasInCold) {
-                    wasInCold = true;
-                }
-                // 每1.5秒发送一次
-                if (tickCounter % 30 == 0) {
-                    int intensityA;
-                    int intensityB;
-                    if (ModConfig.SYNC_CHANNELS.get()) {
-                        intensityA = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                        intensityA = Math.min(intensityA, maxIntensityA);
-                        intensityB = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                        intensityB = Math.min(intensityB, maxIntensityB);
-                        ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
-                    } else {
-                        intensityB = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                        intensityB = Math.min(intensityB, maxIntensityB);
-                        intensityA = 0;
-                        ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
-                    }
-                    FadeManager.updateEnvironment(intensityA, intensityB);
-                }
-            } else {
-                wasInCold = false;
-            }
-        }
+        // Powder snow was added in Minecraft 1.17.
+        wasInCold = false;
 
         // 3. 检查玩家脚下的方块
         checkPlayerFootBlock(player, maxIntensityA, maxIntensityB, tickCounter, mc);
@@ -176,34 +148,7 @@ public class EnvironmentHandler {
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         Block feetBlock = mc.level.getBlockState(player.blockPosition().below()).getBlock();
 
-        // 细雪 - 每1.5秒发送一次 fast_pinch 波形
-        if (feetBlock == Blocks.POWDER_SNOW) {
-            // 每 30 tick (1.5秒) 发送一次
-            if (tickCounter % 30 == 0) {
-                int intensityA;
-                int intensityB;
-                if (ModConfig.SYNC_CHANNELS.get()) {
-                    intensityA = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensityA = Math.min(intensityA, maxIntensityA);
-                    intensityB = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensityB = Math.min(intensityB, maxIntensityB);
-                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "fast_pinch", intensityA, intensityB);
-                } else {
-                    intensityB = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensityB = Math.min(intensityB, maxIntensityB);
-                    intensityA = 0;
-                    ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, "powder_snow", "B", "fast_pinch", intensityB);
-                }
-                FadeManager.updateEnvironment(intensityA, intensityB);
-            }
-            wasInSnow = true;
-        } else {
-            if (wasInSnow) {
-                // 离开细雪时通知 FadeManager 开始渐变
-                FadeManager.stopEnvironment();
-            }
-            wasInSnow = false;
-        }
+        wasInSnow = false;
 
         // 注：仙人掌伤害已由 DamageHandler 处理，此处不再重复发送
 

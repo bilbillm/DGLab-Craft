@@ -8,8 +8,8 @@ import com.lumoren.dglabcraft.util.WaveformManager;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
 import java.util.UUID;
@@ -27,7 +27,7 @@ import java.util.TimerTask;
  * 参考 CaiJi-ikun/DG_LAB 实现
  */
 public class WebSocketServerManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WebSocketServer");
+    private static final Logger LOGGER = LogManager.getLogger("DGLabCraft-WebSocketServer");
     private static final long PULSE_PROTECTION_WINDOW_MS = 700L;
     private static final long TICK_MS = 50L;
     private static WebSocketServerManager instance;
@@ -570,7 +570,7 @@ public class WebSocketServerManager {
             sendMessage("clear-" + channelNum);
 
             // 2. pulse-<A|B>:[...] (分块)
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
             for (List<String> chunk : chunks) {
                 sendPulseMessage(channelStr, chunk);
             }
@@ -598,7 +598,7 @@ public class WebSocketServerManager {
             String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
             int value = (int) intensity;
 
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
             for (List<String> chunk : chunks) {
                 sendPulseMessage(channelStr, chunk);
             }
@@ -635,7 +635,7 @@ public class WebSocketServerManager {
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
 
             // 先发送所有 A 通道波形块
             for (List<String> chunk : chunks) {
@@ -685,7 +685,7 @@ public class WebSocketServerManager {
             LOGGER.info("发送清空命令: clear-1 + clear-2 (双通道不同强度)");
 
             // ===== 第2步: 分别灌入 A/B 波形队列 =====
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
 
             // 先发送所有 A 通道波形块
             for (List<String> chunk : chunks) {
@@ -716,7 +716,7 @@ public class WebSocketServerManager {
         try {
             int valueA = (int) intensityA;
             int valueB = (int) intensityB;
-            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            List<List<String>> chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
 
             for (List<String> chunk : chunks) {
                 sendPulseMessage("A", chunk);

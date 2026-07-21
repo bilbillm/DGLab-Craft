@@ -5,14 +5,14 @@
 [English Version](./README_EN.md)
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-40.2.21-orange)
+![Fabric](https://img.shields.io/badge/Fabric_API-0.42.0-blue)
 ![Java](https://img.shields.io/badge/Java-17-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量、环境变化等事件转换成 DGLab 设备反馈，并通过本地 WebSocket 和 DGLab App 连接。
 
 当前分支：`1.18.2`
-适配版本：Minecraft `1.18.2` / Forge `40.2.21` / Java `17`
+适配版本：Minecraft `1.16.5` / Fabric Loader `0.19.3` / Fabric API `0.42.0+1.16` / Java `8`
 
 > 提醒：请优先选择与你 MC 版本完全一致的 jar；不要混装不同 Minecraft、Forge 或 NeoForge 版本。
 
@@ -27,14 +27,17 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 这个分支只适合：
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.16.5`
+- Fabric Loader `0.19.3`
+- Fabric API `0.42.0+1.16`
+- Java `8`
 
 如果你的 Minecraft 版本不一样，请先在下面表格里找对应分支，不要混装不同 MC 版本的 jar。
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |
@@ -52,8 +55,8 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 ### 3. 安装到 Minecraft
 
-1. 用启动器创建或选择一个 Minecraft `1.18.2` 实例。
-2. 给这个实例安装 Forge `40.2.21`。
+1. 用启动器创建或选择一个 Minecraft `1.16.5` 实例。
+2. 给这个实例安装 Fabric Loader `0.19.3` 和 Fabric API `0.42.0+1.16`。
 3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
 4. 把刚下载的 `DGLabCraft-1.18.2-1.1.0.jar` 放进去。
 5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
@@ -90,9 +93,10 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 当前分支维护：
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.16.5`
+- Fabric Loader `0.19.3`
+- Fabric API `0.42.0+1.16`
+- Java `8`
 - Mod 版本 `1.0.7`
 
 维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
@@ -122,6 +126,8 @@ GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |

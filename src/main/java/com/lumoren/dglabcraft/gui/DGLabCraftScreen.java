@@ -4,11 +4,11 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -100,7 +100,7 @@ public class DGLabCraftScreen extends Screen {
             t("button.dglabcraft.done"),
             button -> this.onClose()
         );
-        this.addRenderableWidget(doneButton);
+        this.addButton(doneButton);
 
         // 重置按钮 - 居中偏右
         this.resetButton = new Button(
@@ -108,7 +108,7 @@ public class DGLabCraftScreen extends Screen {
             t("button.dglabcraft.reset_defaults"),
             button -> resetToDefaults()
         );
-        this.addRenderableWidget(resetButton);
+        this.addButton(resetButton);
     }
 
     /**
@@ -643,8 +643,8 @@ public class DGLabCraftScreen extends Screen {
 
         for (SettingsList.Entry entry : this.list.children()) {
             for (GuiEventListener child : entry.children()) {
-                if (child instanceof Slider slider) {
-                    slider.commitCurrentValue();
+                if (child instanceof Slider) {
+                    ((Slider) child).commitCurrentValue();
                 }
             }
         }
@@ -712,7 +712,7 @@ public class DGLabCraftScreen extends Screen {
             @Override
             public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染深色背景条
-                net.minecraft.client.gui.GuiComponent.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
+                GuiComponent.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
 
                 // 渲染居中标题文本（带阴影）
                 int textWidth = this.minecraft.font.width(this.title);
@@ -721,13 +721,9 @@ public class DGLabCraftScreen extends Screen {
 
             @Override
             public List<? extends GuiEventListener> children() {
-                return List.of();
+                return java.util.Collections.emptyList();
             }
 
-            @Override
-            public List<? extends NarratableEntry> narratables() {
-                return List.of();
-            }
         }
 
         /**
@@ -752,7 +748,7 @@ public class DGLabCraftScreen extends Screen {
             @Override
             public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染标签文本
-                net.minecraft.client.gui.GuiComponent.drawString(poseStack,
+                GuiComponent.drawString(poseStack,
                     net.minecraft.client.Minecraft.getInstance().font,
                     text,
                     left + 15,
@@ -761,18 +757,13 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public List<? extends NarratableEntry> narratables() {
-                return List.of();
-            }
-
-            @Override
             public List<? extends GuiEventListener> children() {
-                return List.of();
+                return java.util.Collections.emptyList();
             }
         }
 
         /**
-         * 行条目 - 用于显示设置项，支持双列两个 Widget
+         * 行条目 - 用于显示设置项，支持双列两个 AbstractWidget
          */
         static class RowEntry extends Entry {
             private final AbstractWidget leftWidget;
@@ -793,7 +784,7 @@ public class DGLabCraftScreen extends Screen {
                 int gap = 15;
                 int widgetWidth = (entryWidth - gap - 20) / 2;
 
-                // 渲染左侧 Widget
+                // 渲染左侧组件
                 if (leftWidget != null) {
                     leftWidget.x = left + 10;
                     leftWidget.y = top + 2;
@@ -801,7 +792,7 @@ public class DGLabCraftScreen extends Screen {
                     leftWidget.render(poseStack, mouseX, mouseY, partialTick);
                 }
 
-                // 渲染右侧 Widget
+                // 渲染右侧组件
                 if (rightWidget != null) {
                     rightWidget.x = left + 10 + widgetWidth + gap;
                     rightWidget.y = top + 2;
@@ -815,10 +806,6 @@ public class DGLabCraftScreen extends Screen {
                 return widgets;
             }
 
-            @Override
-            public List<? extends NarratableEntry> narratables() {
-                return widgets;
-            }
         }
     }
 }

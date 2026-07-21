@@ -4,46 +4,121 @@ public final class IssueReportBuilder {
     private IssueReportBuilder() {
     }
 
-    public record EnvironmentInfo(
-        String modVersion,
-        String minecraftVersion,
-        String loaderName,
-        String loaderVersion,
-        String javaVersion,
-        String osName,
-        String osVersion,
-        String websocketHost,
-        int websocketPort,
-        boolean serviceRunning,
-        boolean socketConnected,
-        boolean appBound,
-        boolean waitingForBind,
-        boolean syncChannels,
-        boolean hudEnabled,
-        String clientId,
-        String targetId
-    ) {
+    public static final class EnvironmentInfo {
+        private final String modVersion;
+        private final String minecraftVersion;
+        private final String loaderName;
+        private final String loaderVersion;
+        private final String javaVersion;
+        private final String osName;
+        private final String osVersion;
+        private final String websocketHost;
+        private final int websocketPort;
+        private final boolean serviceRunning;
+        private final boolean socketConnected;
+        private final boolean appBound;
+        private final boolean waitingForBind;
+        private final boolean syncChannels;
+        private final boolean hudEnabled;
+        private final String clientId;
+        private final String targetId;
+
+        public EnvironmentInfo(String modVersion, String minecraftVersion, String loaderName, String loaderVersion,
+                               String javaVersion, String osName, String osVersion, String websocketHost,
+                               int websocketPort, boolean serviceRunning, boolean socketConnected, boolean appBound,
+                               boolean waitingForBind, boolean syncChannels, boolean hudEnabled,
+                               String clientId, String targetId) {
+            this.modVersion = modVersion;
+            this.minecraftVersion = minecraftVersion;
+            this.loaderName = loaderName;
+            this.loaderVersion = loaderVersion;
+            this.javaVersion = javaVersion;
+            this.osName = osName;
+            this.osVersion = osVersion;
+            this.websocketHost = websocketHost;
+            this.websocketPort = websocketPort;
+            this.serviceRunning = serviceRunning;
+            this.socketConnected = socketConnected;
+            this.appBound = appBound;
+            this.waitingForBind = waitingForBind;
+            this.syncChannels = syncChannels;
+            this.hudEnabled = hudEnabled;
+            this.clientId = clientId;
+            this.targetId = targetId;
+        }
+
+        public String modVersion() { return modVersion; }
+        public String minecraftVersion() { return minecraftVersion; }
+        public String loaderName() { return loaderName; }
+        public String loaderVersion() { return loaderVersion; }
+        public String javaVersion() { return javaVersion; }
+        public String osName() { return osName; }
+        public String osVersion() { return osVersion; }
+        public String websocketHost() { return websocketHost; }
+        public int websocketPort() { return websocketPort; }
+        public boolean serviceRunning() { return serviceRunning; }
+        public boolean socketConnected() { return socketConnected; }
+        public boolean appBound() { return appBound; }
+        public boolean waitingForBind() { return waitingForBind; }
+        public boolean syncChannels() { return syncChannels; }
+        public boolean hudEnabled() { return hudEnabled; }
+        public String clientId() { return clientId; }
+        public String targetId() { return targetId; }
     }
 
-    public record ChannelInfo(
-        String channel,
-        String status,
-        int intensity,
-        boolean runtimeActive,
-        String source,
-        String detail,
-        String waveform,
-        long remainingMillis
-    ) {
+    public static final class ChannelInfo {
+        private final String channel;
+        private final String status;
+        private final int intensity;
+        private final boolean runtimeActive;
+        private final String source;
+        private final String detail;
+        private final String waveform;
+        private final long remainingMillis;
+
+        public ChannelInfo(String channel, String status, int intensity, boolean runtimeActive, String source,
+                           String detail, String waveform, long remainingMillis) {
+            this.channel = channel;
+            this.status = status;
+            this.intensity = intensity;
+            this.runtimeActive = runtimeActive;
+            this.source = source;
+            this.detail = detail;
+            this.waveform = waveform;
+            this.remainingMillis = remainingMillis;
+        }
+
+        public String channel() { return channel; }
+        public String status() { return status; }
+        public int intensity() { return intensity; }
+        public boolean runtimeActive() { return runtimeActive; }
+        public String source() { return source; }
+        public String detail() { return detail; }
+        public String waveform() { return waveform; }
+        public long remainingMillis() { return remainingMillis; }
     }
 
-    public record RuntimeInfo(
-        boolean syncRuntimeActive,
-        String syncSource,
-        String syncDetail,
-        String syncWaveform,
-        long syncRemainingMillis
-    ) {
+    public static final class RuntimeInfo {
+        private final boolean syncRuntimeActive;
+        private final String syncSource;
+        private final String syncDetail;
+        private final String syncWaveform;
+        private final long syncRemainingMillis;
+
+        public RuntimeInfo(boolean syncRuntimeActive, String syncSource, String syncDetail,
+                           String syncWaveform, long syncRemainingMillis) {
+            this.syncRuntimeActive = syncRuntimeActive;
+            this.syncSource = syncSource;
+            this.syncDetail = syncDetail;
+            this.syncWaveform = syncWaveform;
+            this.syncRemainingMillis = syncRemainingMillis;
+        }
+
+        public boolean syncRuntimeActive() { return syncRuntimeActive; }
+        public String syncSource() { return syncSource; }
+        public String syncDetail() { return syncDetail; }
+        public String syncWaveform() { return syncWaveform; }
+        public long syncRemainingMillis() { return syncRemainingMillis; }
     }
 
     public static String build(EnvironmentInfo env, ChannelInfo channelA, ChannelInfo channelB, RuntimeInfo runtime) {
@@ -84,7 +159,7 @@ public final class IssueReportBuilder {
     }
 
     public static String redactId(String id) {
-        if (id == null || id.isBlank()) {
+        if (id == null || id.trim().isEmpty()) {
             return "absent";
         }
         String trimmed = id.trim();
@@ -112,11 +187,11 @@ public final class IssueReportBuilder {
     }
 
     private static String valueOrUnknown(String value) {
-        return value == null || value.isBlank() ? "unknown" : value.trim();
+        return value == null || value.trim().isEmpty() ? "unknown" : value.trim();
     }
 
     private static String valueOrNone(String value) {
-        return value == null || value.isBlank() ? "none" : value.trim();
+        return value == null || value.trim().isEmpty() ? "none" : value.trim();
     }
 
     private static String formatMillis(long millis) {

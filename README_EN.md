@@ -5,14 +5,14 @@
 [中文说明](./README.md)
 
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-40.2.21-orange)
+![Fabric](https://img.shields.io/badge/Fabric_API-0.42.0-blue)
 ![Java](https://img.shields.io/badge/Java-17-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 DGLab Craft is a Minecraft mod that converts in-game damage, low-health states, and environment changes into DGLab device feedback. It connects to the DGLab mobile app through a local WebSocket server.
 
 Current branch: `1.18.2`
-Target version: Minecraft `1.18.2` / Forge `40.2.21` / Java `17`
+Target version: Minecraft `1.16.5` / Fabric Loader `0.19.3` / Fabric API `0.42.0+1.16` / Java `8`
 
 > Note: use the jar that exactly matches your Minecraft version and loader. Do not mix Minecraft, Forge, or NeoForge builds.
 
@@ -27,14 +27,17 @@ Download pages:
 
 This branch only targets:
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.16.5`
+- Fabric Loader `0.19.3`
+- Fabric API `0.42.0+1.16`
+- Java `8`
 
 If your Minecraft version is different, use the matching branch and release below. Do not mix jars built for different Minecraft versions.
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
@@ -52,8 +55,8 @@ You can also start from the project [Releases page](https://github.com/bilbillm/
 
 ### 3. Install it into Minecraft
 
-1. Create or select a Minecraft `1.18.2` instance in your launcher.
-2. Install Forge `40.2.21` for that instance.
+1. Create or select a Minecraft `1.16.5` instance in your launcher.
+2. Install Fabric Loader `0.19.3` and Fabric API `0.42.0+1.16` for that instance.
 3. Open the instance's `mods` folder. A common path is `.minecraft/mods`.
 4. Put `DGLabCraft-1.18.2-1.0.7.jar` into that folder.
 5. Start the game and check the Mods screen for `DGLab Craft`.
@@ -90,9 +93,10 @@ If connection fails, check these first:
 
 This branch maintains:
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.16.5`
+- Fabric Loader `0.19.3`
+- Fabric API `0.42.0+1.16`
+- Java `8`
 - Mod version `1.0.7`
 
 When maintaining multiple versions, put fixes on the matching Minecraft branch first. Do not blindly copy Forge and NeoForge code between branches because their events, registration APIs, and build flows differ.
@@ -122,6 +126,8 @@ You can manually run the `Release Rehearsal` GitHub Action to validate release m
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |

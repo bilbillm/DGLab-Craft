@@ -7,8 +7,8 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import net.minecraft.client.Minecraft;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -24,7 +24,7 @@ import java.util.Map;
  * 将 DGLab 连接 URL 生成二维码图片保存到本地
  */
 public class QRCodeGenerator {
-    private static final Logger LOGGER = LoggerFactory.getLogger("QRCodeGenerator");
+    private static final Logger LOGGER = LogManager.getLogger("QRCodeGenerator");
 
     private static final int QR_SIZE = 400;
     private static final String QR_FILE_NAME = "dglab-qrcode.png";

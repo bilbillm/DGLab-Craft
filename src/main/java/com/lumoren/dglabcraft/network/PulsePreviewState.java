@@ -14,7 +14,7 @@ final class PulsePreviewState {
     }
 
     boolean isActive(long nowMillis) {
-        return !waveformId.isBlank() && leaseUntilAt > nowMillis;
+        return !waveformId.trim().isEmpty() && leaseUntilAt > nowMillis;
     }
 
     String waveformId() {
@@ -32,7 +32,7 @@ final class PulsePreviewState {
 
     private static boolean isPulseWaveform(String waveformId) {
         return waveformId != null
-            && !waveformId.isBlank()
+            && !waveformId.trim().isEmpty()
             && !"Idle".equalsIgnoreCase(waveformId)
             && !"increase".equalsIgnoreCase(waveformId)
             && !"decrease".equalsIgnoreCase(waveformId);

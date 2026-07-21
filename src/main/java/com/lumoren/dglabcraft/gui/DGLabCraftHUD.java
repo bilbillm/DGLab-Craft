@@ -170,7 +170,7 @@ public class DGLabCraftHUD {
     }
 
     private static List<Integer> samplesFor(String waveform) {
-        if (waveform == null || waveform.isBlank()) {
+        if (waveform == null || waveform.trim().isEmpty()) {
             return Collections.emptyList();
         }
         return WaveformPreview.amplitudes(WaveformManager.getInstance().getWaveform(waveform), 96);
@@ -276,33 +276,31 @@ public class DGLabCraftHUD {
     }
 
     private static String chineseWaveformName(String status) {
-        if (status == null || status.isBlank() || "Idle".equalsIgnoreCase(status)) {
+        if (status == null || status.trim().isEmpty() || "Idle".equalsIgnoreCase(status)) {
             return "空闲";
         }
-        return switch (status) {
-            case "beat" -> "节拍";
-            case "bounce_gradual" -> "渐弹";
-            case "breath" -> "呼吸";
-            case "burn" -> "灼烧";
-            case "compress" -> "压缩";
-            case "drown" -> "溺水";
-            case "fast_pinch" -> "快夹";
-            case "grain_friction" -> "颗粒摩擦";
-            case "heartbeat" -> "心跳";
-            case "pinch_intensify" -> "夹紧增强";
-            case "rain_wash" -> "雨刷";
-            case "rhythm_step" -> "节奏步进";
-            case "signal_light" -> "信号灯";
-            case "tease1" -> "挑逗一";
-            case "tease2" -> "挑逗二";
-            case "tide" -> "潮汐";
-            case "variable_speed" -> "变速";
-            case "wave_ripple" -> "波纹";
-            case "default" -> "默认";
-            case "ADamage" -> "A伤害";
-            case "BDamage" -> "B伤害";
-            default -> status;
-        };
+        if ("beat".equals(status)) return "节拍";
+        if ("bounce_gradual".equals(status)) return "渐弹";
+        if ("breath".equals(status)) return "呼吸";
+        if ("burn".equals(status)) return "灼烧";
+        if ("compress".equals(status)) return "压缩";
+        if ("drown".equals(status)) return "溺水";
+        if ("fast_pinch".equals(status)) return "快夹";
+        if ("grain_friction".equals(status)) return "颗粒摩擦";
+        if ("heartbeat".equals(status)) return "心跳";
+        if ("pinch_intensify".equals(status)) return "夹紧增强";
+        if ("rain_wash".equals(status)) return "雨刷";
+        if ("rhythm_step".equals(status)) return "节奏步进";
+        if ("signal_light".equals(status)) return "信号灯";
+        if ("tease1".equals(status)) return "挑逗一";
+        if ("tease2".equals(status)) return "挑逗二";
+        if ("tide".equals(status)) return "潮汐";
+        if ("variable_speed".equals(status)) return "变速";
+        if ("wave_ripple".equals(status)) return "波纹";
+        if ("default".equals(status)) return "默认";
+        if ("ADamage".equals(status)) return "A伤害";
+        if ("BDamage".equals(status)) return "B伤害";
+        return status;
     }
 
     private static int withAlpha(int rgb, int alpha) {
@@ -355,13 +353,30 @@ public class DGLabCraftHUD {
         }
     }
 
-    private record ChannelPreview(boolean active, String waveform, long remainingMillis, List<Integer> samples) {
+    private static final class ChannelPreview {
+        private final boolean active;
+        private final String waveform;
+        private final long remainingMillis;
+        private final List<Integer> samples;
+
+        private ChannelPreview(boolean active, String waveform, long remainingMillis, List<Integer> samples) {
+            this.active = active;
+            this.waveform = waveform;
+            this.remainingMillis = remainingMillis;
+            this.samples = samples;
+        }
+
+        boolean active() { return active; }
+        String waveform() { return waveform; }
+        long remainingMillis() { return remainingMillis; }
+        List<Integer> samples() { return samples; }
+
         static ChannelPreview idle() {
             return new ChannelPreview(false, "", 0L, Collections.emptyList());
         }
 
         static ChannelPreview active(String waveform, long remainingMillis, List<Integer> samples) {
-            return new ChannelPreview(true, waveform == null || waveform.isBlank() ? "default" : waveform, remainingMillis, samples);
+            return new ChannelPreview(true, waveform == null || waveform.trim().isEmpty() ? "default" : waveform, remainingMillis, samples);
         }
     }
 }

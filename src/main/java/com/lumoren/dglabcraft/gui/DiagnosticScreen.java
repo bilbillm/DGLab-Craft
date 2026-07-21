@@ -54,7 +54,7 @@ public class DiagnosticScreen extends Screen {
         this.regenerateQrButton = new Button(startX, firstRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
             tr("button.dglabcraft.regenerate_qr"),
             button -> WebSocketServerManager.getInstance().generateQrUrl());
-        this.addRenderableWidget(this.regenerateQrButton);
+        this.addButton(this.regenerateQrButton);
 
         this.copyIssueButton = new Button(startX + BUTTON_WIDTH + BUTTON_GAP, firstRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
             tr("button.dglabcraft.copy_issue_info"),
@@ -63,16 +63,16 @@ public class DiagnosticScreen extends Screen {
                 this.minecraft.keyboardHandler.setClipboard(report);
                 this.copyStatus = tr("status.dglabcraft.issue_info_copied").withStyle(ChatFormatting.GREEN);
             });
-        this.addRenderableWidget(this.copyIssueButton);
+        this.addButton(this.copyIssueButton);
 
         this.silenceButton = new Button(startX, secondRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
             tr("button.dglabcraft.stop_feedback_now"),
             button -> WebSocketServerManager.getInstance().safeSilenceAll());
-        this.addRenderableWidget(this.silenceButton);
+        this.addButton(this.silenceButton);
 
         this.doneButton = new Button(startX + BUTTON_WIDTH + BUTTON_GAP, secondRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
             tr("button.dglabcraft.done"), button -> this.onClose());
-        this.addRenderableWidget(this.doneButton);
+        this.addButton(this.doneButton);
     }
 
     @Override
@@ -287,7 +287,7 @@ public class DiagnosticScreen extends Screen {
     private String formatWaveformDetail(WebSocketServerManager server, String channel) {
         String waveform = server.getChannelRuntimeWaveform(channel);
         long remainingMillis = server.getChannelRuntimeRemainingMillis(channel);
-        if (waveform == null || waveform.isBlank()) {
+        if (waveform == null || waveform.trim().isEmpty()) {
             return "";
         }
         return ", waveform=" + waveform + ", remaining=" + formatSeconds(remainingMillis);
@@ -340,30 +340,33 @@ public class DiagnosticScreen extends Screen {
     }
 
     private Component toPlainDetail(WebSocketServerManager.EffectSource source, String detail) {
-        return switch (source) {
-            case DAMAGE -> switch (normalize(detail)) {
-                case "lava" -> tr("effect.dglabcraft.damage.lava");
-                case "onfire" -> tr("effect.dglabcraft.damage.onfire");
-                case "infire" -> tr("effect.dglabcraft.damage.infire");
-                case "hotfloor" -> tr("effect.dglabcraft.damage.hotfloor");
-                case "drown" -> tr("effect.dglabcraft.damage.drown");
-                case "freeze" -> tr("effect.dglabcraft.damage.freeze");
-                case "fall" -> tr("effect.dglabcraft.damage.fall");
-                case "mob_attack" -> tr("effect.dglabcraft.damage.mob_attack");
-                case "player_attack" -> tr("effect.dglabcraft.damage.player_attack");
-                case "explosion", "explosion.player" -> tr("effect.dglabcraft.damage.explosion");
-                default -> tr("effect.dglabcraft.damage.default");
-            };
-            case HEARTBEAT -> tr("effect.dglabcraft.heartbeat.low_health");
-            case ENVIRONMENT -> switch (normalize(detail)) {
-                case "nether" -> tr("effect.dglabcraft.environment.nether");
-                case "end" -> tr("effect.dglabcraft.environment.end");
-                case "portal" -> tr("effect.dglabcraft.environment.portal");
-                case "powder_snow" -> tr("effect.dglabcraft.environment.powder_snow");
-                default -> tr("effect.dglabcraft.environment.default");
-            };
-            case NONE -> tr("effect.dglabcraft.none");
-        };
+        String normalized = normalize(detail);
+        if (source == WebSocketServerManager.EffectSource.DAMAGE) {
+            if ("lava".equals(normalized)) return tr("effect.dglabcraft.damage.lava");
+            if ("onfire".equals(normalized)) return tr("effect.dglabcraft.damage.onfire");
+            if ("infire".equals(normalized)) return tr("effect.dglabcraft.damage.infire");
+            if ("hotfloor".equals(normalized)) return tr("effect.dglabcraft.damage.hotfloor");
+            if ("drown".equals(normalized)) return tr("effect.dglabcraft.damage.drown");
+            if ("freeze".equals(normalized)) return tr("effect.dglabcraft.damage.freeze");
+            if ("fall".equals(normalized)) return tr("effect.dglabcraft.damage.fall");
+            if ("mob_attack".equals(normalized)) return tr("effect.dglabcraft.damage.mob_attack");
+            if ("player_attack".equals(normalized)) return tr("effect.dglabcraft.damage.player_attack");
+            if ("explosion".equals(normalized) || "explosion.player".equals(normalized)) {
+                return tr("effect.dglabcraft.damage.explosion");
+            }
+            return tr("effect.dglabcraft.damage.default");
+        }
+        if (source == WebSocketServerManager.EffectSource.HEARTBEAT) {
+            return tr("effect.dglabcraft.heartbeat.low_health");
+        }
+        if (source == WebSocketServerManager.EffectSource.ENVIRONMENT) {
+            if ("nether".equals(normalized)) return tr("effect.dglabcraft.environment.nether");
+            if ("end".equals(normalized)) return tr("effect.dglabcraft.environment.end");
+            if ("portal".equals(normalized)) return tr("effect.dglabcraft.environment.portal");
+            if ("powder_snow".equals(normalized)) return tr("effect.dglabcraft.environment.powder_snow");
+            return tr("effect.dglabcraft.environment.default");
+        }
+        return tr("effect.dglabcraft.none");
     }
 
     private String normalize(String value) {

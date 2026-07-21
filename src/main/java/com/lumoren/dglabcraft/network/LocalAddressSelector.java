@@ -51,6 +51,25 @@ final class LocalAddressSelector {
         return false;
     }
 
-    record Candidate(String ip, String name, String displayName, boolean virtualInterface, boolean supportsMulticast) {
+    static final class Candidate {
+        private final String ip;
+        private final String name;
+        private final String displayName;
+        private final boolean virtualInterface;
+        private final boolean supportsMulticast;
+
+        Candidate(String ip, String name, String displayName, boolean virtualInterface, boolean supportsMulticast) {
+            this.ip = ip;
+            this.name = name;
+            this.displayName = displayName;
+            this.virtualInterface = virtualInterface;
+            this.supportsMulticast = supportsMulticast;
+        }
+
+        String ip() { return ip; }
+        String name() { return name; }
+        String displayName() { return displayName; }
+        boolean virtualInterface() { return virtualInterface; }
+        boolean supportsMulticast() { return supportsMulticast; }
     }
 }

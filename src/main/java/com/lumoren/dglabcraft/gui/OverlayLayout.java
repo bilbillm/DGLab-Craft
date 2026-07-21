@@ -115,17 +115,11 @@ public final class OverlayLayout {
     }
 
     private static double defaultXRatio(int hudPosition) {
-        return switch (hudPosition) {
-            case 1, 3 -> 1.0D;
-            default -> 0.0D;
-        };
+        return hudPosition == 1 || hudPosition == 3 ? 1.0D : 0.0D;
     }
 
     private static double defaultYRatio(int hudPosition) {
-        return switch (hudPosition) {
-            case 2, 3 -> 1.0D;
-            default -> 0.0D;
-        };
+        return hudPosition == 2 || hudPosition == 3 ? 1.0D : 0.0D;
     }
 
     private static double sanitizeRatio(double value) {
@@ -179,13 +173,90 @@ public final class OverlayLayout {
         return value;
     }
 
-    public record Rect(int x, int y, int width, int height) {
+    public static final class Rect {
+        private final int x;
+        private final int y;
+        private final int width;
+        private final int height;
+
+        public Rect(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        public int x() { return x; }
+        public int y() { return y; }
+        public int width() { return width; }
+        public int height() { return height; }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof Rect)) return false;
+            Rect rect = (Rect) other;
+            return x == rect.x && y == rect.y && width == rect.width && height == rect.height;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = x;
+            result = 31 * result + y;
+            result = 31 * result + width;
+            result = 31 * result + height;
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Rect[x=" + x + ", y=" + y + ", width=" + width + ", height=" + height + "]";
+        }
+
         public boolean contains(double mouseX, double mouseY) {
             return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
         }
     }
 
-    public record ResizeHandle(boolean left, boolean right, boolean top, boolean bottom) {
+    public static final class ResizeHandle {
         public static final ResizeHandle NONE = new ResizeHandle(false, false, false, false);
+        private final boolean left;
+        private final boolean right;
+        private final boolean top;
+        private final boolean bottom;
+
+        public ResizeHandle(boolean left, boolean right, boolean top, boolean bottom) {
+            this.left = left;
+            this.right = right;
+            this.top = top;
+            this.bottom = bottom;
+        }
+
+        public boolean left() { return left; }
+        public boolean right() { return right; }
+        public boolean top() { return top; }
+        public boolean bottom() { return bottom; }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof ResizeHandle)) return false;
+            ResizeHandle handle = (ResizeHandle) other;
+            return left == handle.left && right == handle.right && top == handle.top && bottom == handle.bottom;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = left ? 1 : 0;
+            result = 31 * result + (right ? 1 : 0);
+            result = 31 * result + (top ? 1 : 0);
+            result = 31 * result + (bottom ? 1 : 0);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "ResizeHandle[left=" + left + ", right=" + right + ", top=" + top + ", bottom=" + bottom + "]";
+        }
     }
 }

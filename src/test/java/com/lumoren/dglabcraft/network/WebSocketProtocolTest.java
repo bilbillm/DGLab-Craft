@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.network;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +18,7 @@ class WebSocketProtocolTest {
     void formatsPulseCommandWithQuotedUppercaseSixteenCharChunks() {
         assertEquals(
             "pulse-A:[\"00000000000000AB\",\"1234567890ABCDEF\",\"FFFFFFFFFFFFFFFF\"]",
-            WebSocketProtocol.pulseCommand("a", List.of("ab", "1234567890abcdef", "ffffffffffffffffffff"))
+            WebSocketProtocol.pulseCommand("a", Arrays.asList("ab", "1234567890abcdef", "ffffffffffffffffffff"))
         );
     }
 

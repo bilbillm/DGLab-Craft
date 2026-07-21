@@ -14,8 +14,8 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 伤害事件处理
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DamageHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-DamageHandler");
+    private static final Logger LOGGER = LogManager.getLogger("DGLabCraft-DamageHandler");
     private static final float MIN_DAMAGE_DELTA = 0.01f;
     private static final int DAMAGE_DEBOUNCE_TICKS = 6;
     private static final int EVENT_SOURCE_MAX_AGE_TICKS = 40;
@@ -147,9 +147,6 @@ public class DamageHandler {
         if (player.isOnFire()) {
             return "onFire";
         }
-        if (player.isFreezing()) {
-            return "freeze";
-        }
         if (player.getAirSupply() <= 0) {
             return "drown";
         }
@@ -191,25 +188,18 @@ public class DamageHandler {
             lower = lower.split("\\.")[0];
         }
 
-        return switch (lower) {
-            case "sweet_berry_bush" -> "sweetberrybush";
-            case "hot_floor" -> "hotFloor";
-            case "in_wall" -> "inWall";
-            case "falling_block" -> "fallingBlock";
-            case "dragon_breath" -> "dragonBreath";
-            case "fly_into_wall" -> "flyIntoWall";
-            case "mob_attack", "mobattack" -> "mob";
-            case "player_attack", "playerattack" -> "player";
-            case "indirect_magic", "indirectmagic" -> "magic";
-            case "onfire" -> "onFire";
-            case "infire" -> "inFire";
-            case "hotfloor" -> "hotFloor";
-            case "inwall" -> "inWall";
-            case "fallingblock" -> "fallingBlock";
-            case "dragonbreath" -> "dragonBreath";
-            case "flyintowall" -> "flyIntoWall";
-            default -> lower;
-        };
+        if ("sweet_berry_bush".equals(lower)) return "sweetberrybush";
+        if ("hot_floor".equals(lower) || "hotfloor".equals(lower)) return "hotFloor";
+        if ("in_wall".equals(lower) || "inwall".equals(lower)) return "inWall";
+        if ("falling_block".equals(lower) || "fallingblock".equals(lower)) return "fallingBlock";
+        if ("dragon_breath".equals(lower) || "dragonbreath".equals(lower)) return "dragonBreath";
+        if ("fly_into_wall".equals(lower) || "flyintowall".equals(lower)) return "flyIntoWall";
+        if ("mob_attack".equals(lower) || "mobattack".equals(lower)) return "mob";
+        if ("player_attack".equals(lower) || "playerattack".equals(lower)) return "player";
+        if ("indirect_magic".equals(lower) || "indirectmagic".equals(lower)) return "magic";
+        if ("onfire".equals(lower)) return "onFire";
+        if ("infire".equals(lower)) return "inFire";
+        return lower;
     }
 
     private String peekRecentDamageSource() {
@@ -268,14 +258,6 @@ public class DamageHandler {
     private String getPositionalOrEntityDamageSource(Player player, Minecraft mc) {
         if (mc.level == null) {
             return null;
-        }
-
-        BlockPos pos = player.blockPosition();
-        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
-        Block blockAtBody = mc.level.getBlockState(pos).getBlock();
-
-        if (blockAtFeet == Blocks.POINTED_DRIPSTONE || blockAtBody == Blocks.POINTED_DRIPSTONE) {
-            return "stalagmite";
         }
 
         if (player.isInWall()) {

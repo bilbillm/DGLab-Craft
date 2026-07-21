@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.gui;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,33 +11,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class WaveformPreviewTest {
     @Test
     void parsesProtocolWaveformStrengthBytesAsTwentyFiveMillisBars() {
-        List<Integer> amplitudes = WaveformPreview.amplitudes(List.of("010203040A141E28", "64646464FF0014C8"), 12);
+        List<Integer> amplitudes = WaveformPreview.amplitudes(Arrays.asList("010203040A141E28", "64646464FF0014C8"), 12);
 
-        assertEquals(List.of(10, 20, 30, 40, 100, 0, 20, 100), amplitudes);
+        assertEquals(Arrays.asList(10, 20, 30, 40, 100, 0, 20, 100), amplitudes);
     }
 
     @Test
     void ignoresFrequencyBytesAndMalformedStrengthBytes() {
-        List<Integer> amplitudes = WaveformPreview.amplitudes(List.of("FFFFFFFF0AXX1400"), 2);
+        List<Integer> amplitudes = WaveformPreview.amplitudes(Arrays.asList("FFFFFFFF0AXX1400"), 2);
 
-        assertEquals(List.of(10, 20), amplitudes);
+        assertEquals(Arrays.asList(10, 20), amplitudes);
     }
 
     @Test
     void emptyInputReturnsEmptyPreview() {
         assertTrue(WaveformPreview.amplitudes(null, 8).isEmpty());
-        assertTrue(WaveformPreview.amplitudes(List.of(), 8).isEmpty());
-        assertTrue(WaveformPreview.amplitudes(List.of("0a"), 0).isEmpty());
+        assertTrue(WaveformPreview.amplitudes(Arrays.asList(), 8).isEmpty());
+        assertTrue(WaveformPreview.amplitudes(Arrays.asList("0a"), 0).isEmpty());
     }
 
     @Test
     void fallbackParsesShortChunksForRobustness() {
-        assertEquals(List.of(10, 20), WaveformPreview.amplitudes(List.of("0aXX14"), 4));
+        assertEquals(Arrays.asList(10, 20), WaveformPreview.amplitudes(Arrays.asList("0aXX14"), 4));
     }
 
     @Test
     void buildsDglabStyleStrengthBarsFromNonZeroAmplitudes() {
-        List<WaveformPreview.PulseBar> bars = WaveformPreview.pulseBars(List.of(0, 100, 0, 60, 4, 80), 120, 20, 0L);
+        List<WaveformPreview.PulseBar> bars = WaveformPreview.pulseBars(Arrays.asList(0, 100, 0, 60, 4, 80), 120, 20, 0L);
 
         assertTrue(bars.size() >= 4);
         assertTrue(bars.stream().allMatch(bar -> bar.width() == 1));
@@ -46,7 +47,7 @@ class WaveformPreviewTest {
 
     @Test
     void pulseBarsScrollHorizontallyOverTime() {
-        List<Integer> samples = List.of(100, 100, 100, 100, 100, 100);
+        List<Integer> samples = Arrays.asList(100, 100, 100, 100, 100, 100);
 
         List<WaveformPreview.PulseBar> first = WaveformPreview.pulseBars(samples, 120, 20, 0L);
         List<WaveformPreview.PulseBar> later = WaveformPreview.pulseBars(samples, 120, 20, 13L);
@@ -56,15 +57,15 @@ class WaveformPreviewTest {
 
     @Test
     void eachStrengthBarRepresentsOneTenthSecondSample() {
-        assertTrue(WaveformPreview.pulseBars(List.of(0), 1, 20, 0L).isEmpty());
-        assertEquals(1, WaveformPreview.pulseBars(List.of(0, 100), 1, 20, 25L).size());
+        assertTrue(WaveformPreview.pulseBars(Arrays.asList(0), 1, 20, 0L).isEmpty());
+        assertEquals(1, WaveformPreview.pulseBars(Arrays.asList(0, 100), 1, 20, 25L).size());
     }
 
     @Test
     void zeroStrengthKeepsTimelineMovingWithoutDrawingBars() {
-        List<WaveformPreview.PulseBar> beforeZero = WaveformPreview.pulseBars(List.of(100), 1, 20, 0L);
-        List<WaveformPreview.PulseBar> zeroSlot = WaveformPreview.pulseBars(List.of(100, 0), 1, 20, 25L);
-        List<WaveformPreview.PulseBar> afterZero = WaveformPreview.pulseBars(List.of(100, 0, 100), 1, 20, 50L);
+        List<WaveformPreview.PulseBar> beforeZero = WaveformPreview.pulseBars(Arrays.asList(100), 1, 20, 0L);
+        List<WaveformPreview.PulseBar> zeroSlot = WaveformPreview.pulseBars(Arrays.asList(100, 0), 1, 20, 25L);
+        List<WaveformPreview.PulseBar> afterZero = WaveformPreview.pulseBars(Arrays.asList(100, 0, 100), 1, 20, 50L);
 
         assertEquals(1, beforeZero.size());
         assertTrue(zeroSlot.isEmpty());
@@ -74,9 +75,9 @@ class WaveformPreviewTest {
     @Test
     void pulseBarsSkipIdleOrInvisibleInput() {
         assertTrue(WaveformPreview.pulseBars(null, 120, 20, 0L).isEmpty());
-        assertTrue(WaveformPreview.pulseBars(List.of(), 120, 20, 0L).isEmpty());
-        assertTrue(WaveformPreview.pulseBars(List.of(0, 0, 0), 120, 20, 0L).isEmpty());
-        assertTrue(WaveformPreview.pulseBars(List.of(100), 0, 20, 0L).isEmpty());
-        assertTrue(WaveformPreview.pulseBars(List.of(100), 120, 0, 0L).isEmpty());
+        assertTrue(WaveformPreview.pulseBars(Arrays.asList(), 120, 20, 0L).isEmpty());
+        assertTrue(WaveformPreview.pulseBars(Arrays.asList(0, 0, 0), 120, 20, 0L).isEmpty());
+        assertTrue(WaveformPreview.pulseBars(Arrays.asList(100), 0, 20, 0L).isEmpty());
+        assertTrue(WaveformPreview.pulseBars(Arrays.asList(100), 120, 0, 0L).isEmpty());
     }
 }

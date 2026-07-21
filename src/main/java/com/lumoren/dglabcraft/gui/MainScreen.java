@@ -42,23 +42,23 @@ public class MainScreen extends Screen {
         this.settingsButton = new Button(centerX - buttonWidth / 2, startY, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.strength_settings"),
             button -> this.minecraft.setScreen(new DGLabCraftScreen(this)));
-        this.addRenderableWidget(this.settingsButton);
+        this.addButton(this.settingsButton);
 
         this.connectionButton = new Button(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.connection_settings"),
             button -> this.minecraft.setScreen(new ConnectionScreen(this)));
-        this.addRenderableWidget(this.connectionButton);
+        this.addButton(this.connectionButton);
 
         this.diagnosticButton = new Button(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.diagnostics"),
             button -> this.minecraft.setScreen(new DiagnosticScreen(this)));
-        this.addRenderableWidget(this.diagnosticButton);
+        this.addButton(this.diagnosticButton);
 
         this.waveformButton = new Button(centerX - buttonWidth / 2, startY + spacing * 3, buttonWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.waveform_settings_soon"),
             button -> {
             });
-        this.addRenderableWidget(this.waveformButton);
+        this.addButton(this.waveformButton);
 
         int btnWidth = 98;
         int btnGap = 4;
@@ -72,7 +72,7 @@ public class MainScreen extends Screen {
                 ModConfig.save();
                 button.setMessage(hudToggleText(newState));
             });
-        this.addRenderableWidget(this.hudToggleButton);
+        this.addButton(this.hudToggleButton);
 
         boolean waveformEnabled = ModConfig.WAVEFORM_OVERLAY_ENABLED.get();
         this.waveformOverlayButton = new Button(startX + btnWidth + btnGap, startY + spacing * 4, btnWidth, buttonHeight,
@@ -83,17 +83,17 @@ public class MainScreen extends Screen {
                 ModConfig.save();
                 button.setMessage(waveformOverlayText(newState));
             });
-        this.addRenderableWidget(this.waveformOverlayButton);
+        this.addButton(this.waveformOverlayButton);
 
         this.editOverlaysButton = new Button(startX, startY + spacing * 5, btnWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.edit_overlays"),
             button -> this.minecraft.setScreen(new OverlayEditScreen(this)));
-        this.addRenderableWidget(this.editOverlaysButton);
+        this.addButton(this.editOverlaysButton);
 
         this.closeButton = new Button(startX + btnWidth + btnGap, startY + spacing * 5, btnWidth, buttonHeight,
             new TranslatableComponent("button.dglabcraft.close_screen"),
             button -> this.onClose());
-        this.addRenderableWidget(this.closeButton);
+        this.addButton(this.closeButton);
     }
 
     private Component hudToggleText(boolean enabled) {
