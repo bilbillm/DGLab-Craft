@@ -2,12 +2,12 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class OverlayEditScreen extends Screen {
     private static final int RESIZE_BORDER = 8;
@@ -20,7 +20,7 @@ public class OverlayEditScreen extends Screen {
     private double grabOffsetY;
 
     public OverlayEditScreen(Screen parent) {
-        super(new TranslatableComponent("screen.dglabcraft.edit_overlays"));
+        super(new TranslationTextComponent("screen.dglabcraft.edit_overlays"));
         this.parent = parent;
     }
 
@@ -34,8 +34,8 @@ public class OverlayEditScreen extends Screen {
         int centerX = this.width / 2;
         int y = this.height - 28;
 
-        this.addRenderableWidget(new Button(centerX - buttonWidth - gap / 2, y, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.reset_overlay_positions"),
+        this.addButton(new Button(centerX - buttonWidth - gap / 2, y, buttonWidth, buttonHeight,
+            new TranslationTextComponent("button.dglabcraft.reset_overlay_positions"),
             button -> {
                 ModConfig.HUD_X_RATIO.set(-1.0D);
                 ModConfig.HUD_Y_RATIO.set(-1.0D);
@@ -46,17 +46,17 @@ public class OverlayEditScreen extends Screen {
                 ModConfig.save();
             }));
 
-        this.addRenderableWidget(new Button(centerX + gap / 2, y, buttonWidth, buttonHeight,
-            new TranslatableComponent("button.dglabcraft.done"),
+        this.addButton(new Button(centerX + gap / 2, y, buttonWidth, buttonHeight,
+            new TranslationTextComponent("button.dglabcraft.done"),
             button -> this.onClose()));
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+    public void render(MatrixStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(poseStack);
-        GuiComponent.fill(poseStack, 0, 0, this.width, this.height, 0x66000000);
+        AbstractGui.fill(poseStack, 0, 0, this.width, this.height, 0x66000000);
         drawCenteredString(poseStack, this.font, this.title, this.width / 2, 16, 0xFFFFFF);
-        drawCenteredString(poseStack, this.font, new TranslatableComponent("message.dglabcraft.drag_overlay_hint"),
+        drawCenteredString(poseStack, this.font, new TranslationTextComponent("message.dglabcraft.drag_overlay_hint"),
             this.width / 2, 32, 0xCCCCCC);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();

@@ -3,11 +3,11 @@ package com.lumoren.dglabcraft.events;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.world.DimensionType;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -33,14 +33,14 @@ public class EnvironmentHandler {
         if (mc.player == null) return;
 
         // 使用 UUID 比较
-        Player eventPlayer = event.player;
+        PlayerEntity eventPlayer = event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
-        Player player = event.player;
+        PlayerEntity player = event.player;
         handleClientEnvironment(player);
     }
 
-    private void handleClientEnvironment(Player player) {
+    private void handleClientEnvironment(PlayerEntity player) {
         tickCounter++;
         // 每 10 tick 检查一次 (减少频繁调用)
         if (tickCounter % 10 != 0) return;
@@ -130,26 +130,8 @@ public class EnvironmentHandler {
             wasInEnd = false;
         }
 
-        // 2. 寒冷环境检测 (通过玩家是否接触细雪方块判断)
-        if (!isNetherDimension) {
-            // 检查玩家是否接触到细雪方块
-            boolean touchingSnow = isTouchingBlock(player, Blocks.POWDER_SNOW);
-            if (touchingSnow) {
-                if (!wasInCold) {
-                    wasInCold = true;
-                }
-                // 每1.5秒发送一次
-                if (tickCounter % 30 == 0) {
-                    int intensity = (int)(8.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                    intensity = Math.min(intensity, maxIntensityA);
-                    ws.sendWaveformData("A", "fast_pinch", intensity);
-                    // 细雪只用 A 通道，更新 FadeManager
-                    FadeManager.updateEnvironment(intensity, 0);
-                }
-            } else {
-                wasInCold = false;
-            }
-        }
+        // Powder snow was added in Minecraft 1.17, so cold-block feedback is unavailable here.
+        wasInCold = false;
 
         // 3. 检查玩家脚下的方块
         checkPlayerFootBlock(player, maxIntensityA, maxIntensityB, tickCounter);
@@ -158,7 +140,7 @@ public class EnvironmentHandler {
     /**
      * 检查玩家是否直接接触指定方块（只检查脚部和身体位置）
      */
-    private boolean isTouchingBlock(Player player, Block targetBlock) {
+    private boolean isTouchingBlock(PlayerEntity player, Block targetBlock) {
         BlockPos pos = player.blockPosition();
         // 只检查玩家当前所在的方块和脚下方块
         Block blockAtFeet = player.level.getBlockState(pos.below()).getBlock();
@@ -169,28 +151,11 @@ public class EnvironmentHandler {
     /**
      * 检查玩家脚下的方块
      */
-    private void checkPlayerFootBlock(Player player, int maxIntensityA, int maxIntensityB, int tickCounter) {
+    private void checkPlayerFootBlock(PlayerEntity player, int maxIntensityA, int maxIntensityB, int tickCounter) {
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         Block feetBlock = player.level.getBlockState(player.blockPosition().below()).getBlock();
 
-        // 细雪 - 每1.5秒发送一次 fast_pinch 波形
-        if (feetBlock == Blocks.POWDER_SNOW) {
-            // 每 30 tick (1.5秒) 发送一次
-            if (tickCounter % 30 == 0) {
-                int intensity = (int)(10.0 * ModConfig.FREEZE_MULTIPLIER.get());
-                intensity = Math.min(intensity, maxIntensityA);
-                ws.sendWaveformData("A", "fast_pinch", intensity);
-                // 细雪只用 A 通道，更新 FadeManager
-                FadeManager.updateEnvironment(intensity, 0);
-            }
-            wasInSnow = true;
-        } else {
-            if (wasInSnow) {
-                // 离开细雪时通知 FadeManager 开始渐变
-                FadeManager.stopEnvironment();
-            }
-            wasInSnow = false;
-        }
+        wasInSnow = false;
 
         // 注：仙人掌伤害已由 DamageHandler 处理，此处不再重复发送
 

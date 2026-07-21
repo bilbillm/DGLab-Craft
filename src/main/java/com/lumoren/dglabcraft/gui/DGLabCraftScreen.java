@@ -3,21 +3,20 @@ package com.lumoren.dglabcraft.gui;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.ContainerObjectSelectionList;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.list.AbstractOptionList;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DGLab Craft 设置界面 - 使用原版 ContainerObjectSelectionList
+ * DGLab Craft 设置界面 - 使用原版 AbstractOptionList
  */
 public class DGLabCraftScreen extends Screen {
 
@@ -37,43 +36,43 @@ public class DGLabCraftScreen extends Screen {
     private boolean lastConnected = false;
 
     public DGLabCraftScreen(Screen parent) {
-        super(new TranslatableComponent("screen.dglabcraft.strength_settings"));
+        super(new TranslationTextComponent("screen.dglabcraft.strength_settings"));
         this.parent = parent;
     }
 
-    private static Component t(String key, Object... args) {
-        return new TranslatableComponent(key, args);
+    private static ITextComponent t(String key, Object... args) {
+        return new TranslationTextComponent(key, args);
     }
 
-    private static Component setting(String key) {
+    private static ITextComponent setting(String key) {
         return t(key).copy().append(": ");
     }
 
-    private static Component onOff(boolean value) {
+    private static ITextComponent onOff(boolean value) {
         return t(value ? "status.dglabcraft.on" : "status.dglabcraft.off");
     }
 
-    private static Component syncButtonText(boolean value) {
+    private static ITextComponent syncButtonText(boolean value) {
         return t("button.dglabcraft.sync_channels", onOff(value));
     }
 
-    private static Component appStrengthDisconnectedText() {
+    private static ITextComponent appStrengthDisconnectedText() {
         return t("label.dglabcraft.app_strength.disconnected");
     }
 
-    private static Component effectiveStrengthDisconnectedText() {
+    private static ITextComponent effectiveStrengthDisconnectedText() {
         return t("label.dglabcraft.effective_strength.disconnected");
     }
 
-    private static Component appStrengthText(int strengthA, int strengthB) {
+    private static ITextComponent appStrengthText(int strengthA, int strengthB) {
         return t("label.dglabcraft.app_strength", strengthA, strengthB);
     }
 
-    private static Component effectiveStrengthText(int strengthA, int strengthB) {
+    private static ITextComponent effectiveStrengthText(int strengthA, int strengthB) {
         return t("label.dglabcraft.effective_strength", strengthA, strengthB);
     }
 
-    private static Component heartbeatTriggerText(int health) {
+    private static ITextComponent heartbeatTriggerText(int health) {
         return t("label.dglabcraft.heartbeat_trigger", health);
     }
 
@@ -100,7 +99,7 @@ public class DGLabCraftScreen extends Screen {
             t("button.dglabcraft.done"),
             button -> this.onClose()
         );
-        this.addRenderableWidget(doneButton);
+        this.addButton(doneButton);
 
         // 重置按钮 - 居中偏右
         this.resetButton = new Button(
@@ -108,7 +107,7 @@ public class DGLabCraftScreen extends Screen {
             t("button.dglabcraft.reset_defaults"),
             button -> resetToDefaults()
         );
-        this.addRenderableWidget(resetButton);
+        this.addButton(resetButton);
     }
 
     /**
@@ -548,7 +547,7 @@ public class DGLabCraftScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
+    public void render(MatrixStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(pPoseStack);
 
         // 检测强度上限变化并更新显示
@@ -642,9 +641,9 @@ public class DGLabCraftScreen extends Screen {
         }
 
         for (SettingsList.Entry entry : this.list.children()) {
-            for (GuiEventListener child : entry.children()) {
-                if (child instanceof Slider slider) {
-                    slider.commitCurrentValue();
+            for (IGuiEventListener child : entry.children()) {
+                if (child instanceof Slider) {
+                    ((Slider) child).commitCurrentValue();
                 }
             }
         }
@@ -653,9 +652,9 @@ public class DGLabCraftScreen extends Screen {
     // ========== 内部类：滚动列表 ==========
 
     /**
-     * 设置列表 - 继承自 ContainerObjectSelectionList
+     * 设置列表 - 继承自 AbstractOptionList
      */
-    static class SettingsList extends ContainerObjectSelectionList<SettingsList.Entry> {
+    static class SettingsList extends AbstractOptionList<SettingsList.Entry> {
 
         public SettingsList(net.minecraft.client.Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
             super(minecraft, width, height, top, bottom, itemHeight);
@@ -690,7 +689,7 @@ public class DGLabCraftScreen extends Screen {
         /**
          * 设置项基类
          */
-        abstract static class Entry extends ContainerObjectSelectionList.Entry<SettingsList.Entry> {
+        abstract static class Entry extends AbstractOptionList.Entry<SettingsList.Entry> {
             protected final net.minecraft.client.Minecraft minecraft;
 
             protected Entry() {
@@ -702,17 +701,17 @@ public class DGLabCraftScreen extends Screen {
          * 标题条目 - 用于显示分类标题
          */
         static class HeaderEntry extends Entry {
-            private final Component title;
+            private final ITextComponent title;
 
-            public HeaderEntry(Component title) {
+            public HeaderEntry(ITextComponent title) {
                 super();
                 this.title = title;
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(MatrixStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染深色背景条
-                net.minecraft.client.gui.GuiComponent.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
+                net.minecraft.client.gui.AbstractGui.fill(poseStack, left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
 
                 // 渲染居中标题文本（带阴影）
                 int textWidth = this.minecraft.font.width(this.title);
@@ -720,39 +719,35 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public List<? extends GuiEventListener> children() {
-                return List.of();
+            public List<? extends IGuiEventListener> children() {
+                return java.util.Collections.emptyList();
             }
 
-            @Override
-            public List<? extends NarratableEntry> narratables() {
-                return List.of();
-            }
         }
 
         /**
          * 标签条目 - 用于显示只读文本（支持动态更新）
          */
         static class LabelEntry extends Entry {
-            private Component text;
+            private ITextComponent text;
 
-            public LabelEntry(Component text) {
+            public LabelEntry(ITextComponent text) {
                 super();
                 this.text = text;
             }
 
-            public void setText(Component text) {
+            public void setText(ITextComponent text) {
                 this.text = text;
             }
 
-            public Component getText() {
+            public ITextComponent getText() {
                 return this.text;
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(MatrixStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染标签文本
-                net.minecraft.client.gui.GuiComponent.drawString(poseStack,
+                net.minecraft.client.gui.AbstractGui.drawString(poseStack,
                     net.minecraft.client.Minecraft.getInstance().font,
                     text,
                     left + 15,
@@ -761,13 +756,8 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public List<? extends NarratableEntry> narratables() {
-                return List.of();
-            }
-
-            @Override
-            public List<? extends GuiEventListener> children() {
-                return List.of();
+            public List<? extends IGuiEventListener> children() {
+                return java.util.Collections.emptyList();
             }
         }
 
@@ -775,11 +765,11 @@ public class DGLabCraftScreen extends Screen {
          * 行条目 - 用于显示设置项，支持双列两个 Widget
          */
         static class RowEntry extends Entry {
-            private final AbstractWidget leftWidget;
-            private final AbstractWidget rightWidget;
-            private final List<AbstractWidget> widgets;
+            private final Widget leftWidget;
+            private final Widget rightWidget;
+            private final List<Widget> widgets;
 
-            public RowEntry(AbstractWidget left, AbstractWidget right) {
+            public RowEntry(Widget left, Widget right) {
                 super();
                 this.leftWidget = left;
                 this.rightWidget = right;
@@ -789,7 +779,7 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(PoseStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void render(MatrixStack poseStack, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 int gap = 15;
                 int widgetWidth = (entryWidth - gap - 20) / 2;
 
@@ -811,14 +801,10 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public List<? extends GuiEventListener> children() {
+            public List<? extends IGuiEventListener> children() {
                 return widgets;
             }
 
-            @Override
-            public List<? extends NarratableEntry> narratables() {
-                return widgets;
-            }
         }
     }
 }

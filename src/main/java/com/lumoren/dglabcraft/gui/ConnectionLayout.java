@@ -1,5 +1,6 @@
 package com.lumoren.dglabcraft.gui;
 
+import java.util.Arrays;
 import java.util.List;
 
 final class ConnectionLayout {
@@ -83,7 +84,7 @@ final class ConnectionLayout {
             Rect manualInput = new Rect(x, inputY, width, BUTTON_HEIGHT);
             int buttonsY = manualInput.bottom() + CONTROL_GAP;
             int halfWidth = Math.max(1, (width - CONTROL_GAP) / 2);
-            List<Rect> buttons = List.of(
+            List<Rect> buttons = Arrays.asList(
                 new Rect(x, buttonsY, halfWidth, BUTTON_HEIGHT),
                 new Rect(x + halfWidth + CONTROL_GAP, buttonsY,
                     Math.max(1, width - halfWidth - CONTROL_GAP), BUTTON_HEIGHT),
@@ -93,7 +94,7 @@ final class ConnectionLayout {
             return new ControlLayout(controls, manualInput, CONTENT_TOP, buttons);
         }
 
-        List<Rect> buttons = List.of(
+        List<Rect> buttons = Arrays.asList(
             new Rect(x, CONTENT_TOP, width, BUTTON_HEIGHT),
             new Rect(x, CONTENT_TOP + BUTTON_HEIGHT + CONTROL_GAP, width, BUTTON_HEIGHT),
             new Rect(x, CONTENT_TOP + (BUTTON_HEIGHT + CONTROL_GAP) * 2, width, BUTTON_HEIGHT)
@@ -108,20 +109,59 @@ final class ConnectionLayout {
         return Math.max(min, Math.min(max, value));
     }
 
-    record Layout(
-        Rect qrPanel,
-        Rect qrImage,
-        Rect controls,
-        Rect manualInput,
-        int manualLabelY,
-        List<Rect> controlButtons,
-        Rect helpViewport,
-        Rect doneButton,
-        boolean compactControls
-    ) {
+    static final class Layout {
+        private final Rect qrPanel;
+        private final Rect qrImage;
+        private final Rect controls;
+        private final Rect manualInput;
+        private final int manualLabelY;
+        private final List<Rect> controlButtons;
+        private final Rect helpViewport;
+        private final Rect doneButton;
+        private final boolean compactControls;
+
+        Layout(Rect qrPanel, Rect qrImage, Rect controls, Rect manualInput, int manualLabelY,
+               List<Rect> controlButtons, Rect helpViewport, Rect doneButton, boolean compactControls) {
+            this.qrPanel = qrPanel;
+            this.qrImage = qrImage;
+            this.controls = controls;
+            this.manualInput = manualInput;
+            this.manualLabelY = manualLabelY;
+            this.controlButtons = controlButtons;
+            this.helpViewport = helpViewport;
+            this.doneButton = doneButton;
+            this.compactControls = compactControls;
+        }
+
+        Rect qrPanel() { return qrPanel; }
+        Rect qrImage() { return qrImage; }
+        Rect controls() { return controls; }
+        Rect manualInput() { return manualInput; }
+        int manualLabelY() { return manualLabelY; }
+        List<Rect> controlButtons() { return controlButtons; }
+        Rect helpViewport() { return helpViewport; }
+        Rect doneButton() { return doneButton; }
+        boolean compactControls() { return compactControls; }
     }
 
-    record Rect(int x, int y, int width, int height) {
+    static final class Rect {
+        private final int x;
+        private final int y;
+        private final int width;
+        private final int height;
+
+        Rect(int x, int y, int width, int height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        int x() { return x; }
+        int y() { return y; }
+        int width() { return width; }
+        int height() { return height; }
+
         int right() {
             return x + width;
         }
@@ -145,6 +185,22 @@ final class ConnectionLayout {
         }
     }
 
-    private record ControlLayout(Rect controls, Rect manualInput, int manualLabelY, List<Rect> buttons) {
+    private static final class ControlLayout {
+        private final Rect controls;
+        private final Rect manualInput;
+        private final int manualLabelY;
+        private final List<Rect> buttons;
+
+        private ControlLayout(Rect controls, Rect manualInput, int manualLabelY, List<Rect> buttons) {
+            this.controls = controls;
+            this.manualInput = manualInput;
+            this.manualLabelY = manualLabelY;
+            this.buttons = buttons;
+        }
+
+        Rect controls() { return controls; }
+        Rect manualInput() { return manualInput; }
+        int manualLabelY() { return manualLabelY; }
+        List<Rect> buttons() { return buttons; }
     }
 }

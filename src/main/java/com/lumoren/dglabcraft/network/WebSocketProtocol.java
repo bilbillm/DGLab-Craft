@@ -42,29 +42,27 @@ final class WebSocketProtocol {
     }
 
     static int priorityOf(WebSocketServerManager.EffectSource source) {
-        return switch (source) {
-            case DAMAGE -> 3;
-            case HEARTBEAT -> 2;
-            case ENVIRONMENT -> 1;
-            case NONE -> -1;
-        };
+        if (source == WebSocketServerManager.EffectSource.DAMAGE) return 3;
+        if (source == WebSocketServerManager.EffectSource.HEARTBEAT) return 2;
+        if (source == WebSocketServerManager.EffectSource.ENVIRONMENT) return 1;
+        return -1;
     }
 
     static int leaseTicks(WebSocketServerManager.EffectSource source, String detail) {
         String normalizedDetail = detail == null ? "" : detail.toLowerCase();
-        return switch (source) {
-            case HEARTBEAT -> 55;
-            case ENVIRONMENT -> switch (normalizedDetail) {
-                case "portal", "powder_snow" -> 40;
-                case "nether", "end" -> 55;
-                default -> 45;
-            };
-            case DAMAGE -> switch (normalizedDetail) {
-                case "onfire", "infire", "lava", "hotfloor", "drown", "freeze" -> 30;
-                default -> 12;
-            };
-            case NONE -> 0;
-        };
+        if (source == WebSocketServerManager.EffectSource.HEARTBEAT) return 55;
+        if (source == WebSocketServerManager.EffectSource.ENVIRONMENT) {
+            if ("portal".equals(normalizedDetail) || "powder_snow".equals(normalizedDetail)) return 40;
+            if ("nether".equals(normalizedDetail) || "end".equals(normalizedDetail)) return 55;
+            return 45;
+        }
+        if (source == WebSocketServerManager.EffectSource.DAMAGE) {
+            if ("onfire".equals(normalizedDetail) || "infire".equals(normalizedDetail)
+                || "lava".equals(normalizedDetail) || "hotfloor".equals(normalizedDetail)
+                || "drown".equals(normalizedDetail) || "freeze".equals(normalizedDetail)) return 30;
+            return 12;
+        }
+        return 0;
     }
 
     static StrengthLimits parseStrengthLimits(String message, int currentA, int currentB) {
@@ -94,6 +92,34 @@ final class WebSocketProtocol {
         return new StrengthLimits(currentA, currentB);
     }
 
-    record StrengthLimits(int channelA, int channelB) {
+    static final class StrengthLimits {
+        private final int channelA;
+        private final int channelB;
+
+        StrengthLimits(int channelA, int channelB) {
+            this.channelA = channelA;
+            this.channelB = channelB;
+        }
+
+        int channelA() { return channelA; }
+        int channelB() { return channelB; }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof StrengthLimits)) return false;
+            StrengthLimits limits = (StrengthLimits) other;
+            return channelA == limits.channelA && channelB == limits.channelB;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * channelA + channelB;
+        }
+
+        @Override
+        public String toString() {
+            return "StrengthLimits[channelA=" + channelA + ", channelB=" + channelB + "]";
+        }
     }
 }

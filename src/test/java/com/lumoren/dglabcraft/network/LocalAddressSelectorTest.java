@@ -2,6 +2,7 @@ package com.lumoren.dglabcraft.network;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,18 +13,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LocalAddressSelectorTest {
     @Test
     void prefersPhysicalLanOverVirtualAdapter() {
-        var vmware = new LocalAddressSelector.Candidate("192.168.6.1", "eth7", "VMware Network Adapter VMnet1", true, false);
-        var wlan = new LocalAddressSelector.Candidate("192.168.31.25", "wlan0", "Intel Wi-Fi", false, true);
+        LocalAddressSelector.Candidate vmware = new LocalAddressSelector.Candidate("192.168.6.1", "eth7", "VMware Network Adapter VMnet1", true, false);
+        LocalAddressSelector.Candidate wlan = new LocalAddressSelector.Candidate("192.168.31.25", "wlan0", "Intel Wi-Fi", false, true);
 
-        assertEquals("192.168.31.25", LocalAddressSelector.chooseBestLocalIpAddress(List.of(vmware, wlan)));
+        assertEquals("192.168.31.25", LocalAddressSelector.chooseBestLocalIpAddress(Arrays.asList(vmware, wlan)));
     }
 
     @Test
     void ignoresPublicAndLoopbackAddresses() {
-        var publicAddress = new LocalAddressSelector.Candidate("8.8.8.8", "eth0", "Ethernet", false, true);
-        var loopback = new LocalAddressSelector.Candidate("127.0.0.1", "lo", "Loopback", false, false);
+        LocalAddressSelector.Candidate publicAddress = new LocalAddressSelector.Candidate("8.8.8.8", "eth0", "Ethernet", false, true);
+        LocalAddressSelector.Candidate loopback = new LocalAddressSelector.Candidate("127.0.0.1", "lo", "Loopback", false, false);
 
-        assertNull(LocalAddressSelector.chooseBestLocalIpAddress(List.of(publicAddress, loopback)));
+        assertNull(LocalAddressSelector.chooseBestLocalIpAddress(Arrays.asList(publicAddress, loopback)));
     }
 
     @Test

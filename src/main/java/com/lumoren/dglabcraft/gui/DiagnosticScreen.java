@@ -3,15 +3,15 @@ package com.lumoren.dglabcraft.gui;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.IssueReportBuilder;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.ChatFormatting;
-import net.minecraft.SharedConstants;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.util.FormattedCharSequence;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.SharedConstants;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraftforge.fml.ModList;
 
 import java.util.ArrayList;
@@ -31,12 +31,12 @@ public class DiagnosticScreen extends Screen {
     private Button copyIssueButton;
     private Button silenceButton;
     private Button doneButton;
-    private Component copyStatus = TextComponent.EMPTY;
+    private ITextComponent copyStatus = StringTextComponent.EMPTY;
     private int scrollOffset;
     private int maxScroll;
 
     public DiagnosticScreen(Screen parent) {
-        super(new TranslatableComponent("screen.dglabcraft.diagnostics"));
+        super(new TranslationTextComponent("screen.dglabcraft.diagnostics"));
         this.parent = parent;
     }
 
@@ -51,30 +51,30 @@ public class DiagnosticScreen extends Screen {
         int secondRowY = this.height - 30;
 
         this.regenerateQrButton = new Button(startX, firstRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
-            new TranslatableComponent("button.dglabcraft.regenerate_qr"),
+            new TranslationTextComponent("button.dglabcraft.regenerate_qr"),
             button -> WebSocketServerManager.getInstance().generateQrUrl());
-        this.addRenderableWidget(this.regenerateQrButton);
+        this.addButton(this.regenerateQrButton);
 
         this.copyIssueButton = new Button(startX + BUTTON_WIDTH + BUTTON_GAP, firstRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
-            new TranslatableComponent("button.dglabcraft.copy_issue_info"),
+            new TranslationTextComponent("button.dglabcraft.copy_issue_info"),
             button -> {
                 this.minecraft.keyboardHandler.setClipboard(buildIssueReport(WebSocketServerManager.getInstance()));
-                this.copyStatus = new TranslatableComponent("status.dglabcraft.issue_info_copied").withStyle(ChatFormatting.GREEN);
+                this.copyStatus = new TranslationTextComponent("status.dglabcraft.issue_info_copied").withStyle(TextFormatting.GREEN);
             });
-        this.addRenderableWidget(this.copyIssueButton);
+        this.addButton(this.copyIssueButton);
 
         this.silenceButton = new Button(startX, secondRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
-            new TranslatableComponent("button.dglabcraft.stop_feedback_now"),
+            new TranslationTextComponent("button.dglabcraft.stop_feedback_now"),
             button -> WebSocketServerManager.getInstance().safeSilenceAll());
-        this.addRenderableWidget(this.silenceButton);
+        this.addButton(this.silenceButton);
 
         this.doneButton = new Button(startX + BUTTON_WIDTH + BUTTON_GAP, secondRowY, BUTTON_WIDTH, BUTTON_HEIGHT,
-            new TranslatableComponent("button.dglabcraft.done"), button -> this.onClose());
-        this.addRenderableWidget(this.doneButton);
+            new TranslationTextComponent("button.dglabcraft.done"), button -> this.onClose());
+        this.addButton(this.doneButton);
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+    public void render(MatrixStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(poseStack);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
@@ -82,9 +82,9 @@ public class DiagnosticScreen extends Screen {
         int contentX = centerX - CONTENT_WIDTH / 2;
         int y = 20;
 
-        drawCenteredString(poseStack, this.font, new TranslatableComponent("screen.dglabcraft.diagnostics"), centerX, y, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, new TranslationTextComponent("screen.dglabcraft.diagnostics"), centerX, y, 0xFFFFFF);
         y += 18;
-        drawCenteredString(poseStack, this.font, new TranslatableComponent("message.dglabcraft.diagnostics_summary"), centerX, y, 0xAAAAAA);
+        drawCenteredString(poseStack, this.font, new TranslationTextComponent("message.dglabcraft.diagnostics_summary"), centerX, y, 0xAAAAAA);
         y += 20;
         if (!copyStatus.getString().isEmpty()) {
             drawCenteredString(poseStack, this.font, copyStatus, centerX, y, 0x55FF55);
@@ -113,85 +113,85 @@ public class DiagnosticScreen extends Screen {
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
-    private List<Component> buildConnectionLines(WebSocketServerManager server) {
-        List<Component> lines = new ArrayList<>();
+    private List<ITextComponent> buildConnectionLines(WebSocketServerManager server) {
+        List<ITextComponent> lines = new ArrayList<>();
         if (server.isConnected()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.connected"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.check_channels"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.connected"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.check_channels"));
         } else if (server.isWaitingForAppBind()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.waiting_bind"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.confirm_or_rescan"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.waiting_bind"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.confirm_or_rescan"));
         } else if (server.isRunning()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.not_connected"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.scan_same_lan"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.not_connected"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.scan_same_lan"));
         } else {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.service_stopped"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.connection.check_port"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.service_stopped"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.connection.check_port"));
         }
         return lines;
     }
 
-    private List<Component> buildChannelLines(WebSocketServerManager server, String channel) {
-        List<Component> lines = new ArrayList<>();
+    private List<ITextComponent> buildChannelLines(WebSocketServerManager server, String channel) {
+        List<ITextComponent> lines = new ArrayList<>();
         boolean active = server.isChannelRuntimeActive(channel);
         int intensity = server.getChannelRuntimeIntensity(channel);
-        Component detail = toPlainDetail(server.getChannelRuntimeSource(channel), server.getChannelRuntimeDetail(channel));
+        ITextComponent detail = toPlainDetail(server.getChannelRuntimeSource(channel), server.getChannelRuntimeDetail(channel));
         if (!server.isConnected()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.disconnected"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.disconnected"));
             return lines;
         }
         if (active) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.active", channel));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.active_detail", intensity, detail));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.stop_hint"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.active", channel));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.active_detail", intensity, detail));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.stop_hint"));
         } else {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.idle", channel));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.channel.waiting_event"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.idle", channel));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.channel.waiting_event"));
         }
         return lines;
     }
 
-    private List<Component> buildRuntimeLines(WebSocketServerManager server) {
-        List<Component> lines = new ArrayList<>();
+    private List<ITextComponent> buildRuntimeLines(WebSocketServerManager server) {
+        List<ITextComponent> lines = new ArrayList<>();
         if (!server.isConnected()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.none_disconnected"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.connect_first"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.none_disconnected"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.connect_first"));
             return lines;
         }
         if (server.isSyncRuntimeActive()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.sync_active"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.current_source",
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.sync_active"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.current_source",
                 toPlainDetail(server.getSyncRuntimeSource(), server.getSyncRuntimeDetail())));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.remaining", formatSeconds(server.getSyncRuntimeRemainingMillis())));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.remaining", formatSeconds(server.getSyncRuntimeRemainingMillis())));
             return lines;
         }
         if (server.hasActiveEffects()) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.active_effects"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.check_channels"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.active_effects"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.check_channels"));
         } else {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.no_recent_effects"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.no_event_now"));
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.runtime.stop_if_device_continues"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.no_recent_effects"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.no_event_now"));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.runtime.stop_if_device_continues"));
         }
         return lines;
     }
 
-    private List<Component> buildDetailLines(WebSocketServerManager server) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.address", server.resolveConnectionHost(), server.getPort()).withStyle(ChatFormatting.GRAY));
-        lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.service", statusKey(server.isRunning())).withStyle(ChatFormatting.GRAY));
-        lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.socket", statusKey(server.hasClientSocketConnection())).withStyle(ChatFormatting.GRAY));
-        lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.bind", bindStatus(server)).withStyle(ChatFormatting.GRAY));
+    private List<ITextComponent> buildDetailLines(WebSocketServerManager server) {
+        List<ITextComponent> lines = new ArrayList<>();
+        lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.address", server.resolveConnectionHost(), server.getPort()).withStyle(TextFormatting.GRAY));
+        lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.service", statusKey(server.isRunning())).withStyle(TextFormatting.GRAY));
+        lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.socket", statusKey(server.hasClientSocketConnection())).withStyle(TextFormatting.GRAY));
+        lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.bind", bindStatus(server)).withStyle(TextFormatting.GRAY));
         if (server.getConnectedClientId() != null) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.client_id", IssueReportBuilder.redactId(server.getConnectedClientId())).withStyle(ChatFormatting.GRAY));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.client_id", IssueReportBuilder.redactId(server.getConnectedClientId())).withStyle(TextFormatting.GRAY));
         }
         if (server.getTargetId() != null) {
-            lines.add(new TranslatableComponent("diagnostic.dglabcraft.detail.target_id", IssueReportBuilder.redactId(server.getTargetId())).withStyle(ChatFormatting.GRAY));
+            lines.add(new TranslationTextComponent("diagnostic.dglabcraft.detail.target_id", IssueReportBuilder.redactId(server.getTargetId())).withStyle(TextFormatting.GRAY));
         }
-        lines.add(new TextComponent("A: status=" + server.getChannelAStatus() + ", intensity=" + (int) server.getChannelAIntensity() + "%"
-            + formatWaveformDetail(server, "A")).withStyle(ChatFormatting.GRAY));
-        lines.add(new TextComponent("B: status=" + server.getChannelBStatus() + ", intensity=" + (int) server.getChannelBIntensity() + "%"
-            + formatWaveformDetail(server, "B")).withStyle(ChatFormatting.GRAY));
+        lines.add(new StringTextComponent("A: status=" + server.getChannelAStatus() + ", intensity=" + (int) server.getChannelAIntensity() + "%"
+            + formatWaveformDetail(server, "A")).withStyle(TextFormatting.GRAY));
+        lines.add(new StringTextComponent("B: status=" + server.getChannelBStatus() + ", intensity=" + (int) server.getChannelBIntensity() + "%"
+            + formatWaveformDetail(server, "B")).withStyle(TextFormatting.GRAY));
         return lines;
     }
 
@@ -248,24 +248,24 @@ public class DiagnosticScreen extends Screen {
             .orElse("unknown");
     }
 
-    private Component statusKey(boolean enabled) {
-        return new TranslatableComponent(enabled ? "status.dglabcraft.started" : "status.dglabcraft.stopped");
+    private ITextComponent statusKey(boolean enabled) {
+        return new TranslationTextComponent(enabled ? "status.dglabcraft.started" : "status.dglabcraft.stopped");
     }
 
-    private Component bindStatus(WebSocketServerManager server) {
+    private ITextComponent bindStatus(WebSocketServerManager server) {
         if (server.isConnected()) {
-            return new TranslatableComponent("status.dglabcraft.completed");
+            return new TranslationTextComponent("status.dglabcraft.completed");
         }
         if (server.isWaitingForAppBind()) {
-            return new TranslatableComponent("status.dglabcraft.waiting_confirmation");
+            return new TranslationTextComponent("status.dglabcraft.waiting_confirmation");
         }
-        return new TranslatableComponent("status.dglabcraft.incomplete");
+        return new TranslationTextComponent("status.dglabcraft.incomplete");
     }
 
     private String formatWaveformDetail(WebSocketServerManager server, String channel) {
         String waveform = server.getChannelRuntimeWaveform(channel);
         long remainingMillis = server.getChannelRuntimeRemainingMillis(channel);
-        if (waveform == null || waveform.isBlank()) {
+        if (waveform == null || waveform.trim().isEmpty()) {
             return "";
         }
         return ", waveform=" + waveform + ", remaining=" + formatSeconds(remainingMillis);
@@ -273,26 +273,26 @@ public class DiagnosticScreen extends Screen {
 
     private List<RenderLine> buildRenderLines(WebSocketServerManager server) {
         List<RenderLine> lines = new ArrayList<>();
-        addSection(lines, new TranslatableComponent("section.dglabcraft.connection_status"), buildConnectionLines(server));
-        addSection(lines, new TranslatableComponent("section.dglabcraft.channel_status", "A"), buildChannelLines(server, "A"));
-        addSection(lines, new TranslatableComponent("section.dglabcraft.channel_status", "B"), buildChannelLines(server, "B"));
-        addSection(lines, new TranslatableComponent("section.dglabcraft.runtime_summary"), buildRuntimeLines(server));
-        addSection(lines, new TranslatableComponent("section.dglabcraft.details"), buildDetailLines(server));
+        addSection(lines, new TranslationTextComponent("section.dglabcraft.connection_status"), buildConnectionLines(server));
+        addSection(lines, new TranslationTextComponent("section.dglabcraft.channel_status", "A"), buildChannelLines(server, "A"));
+        addSection(lines, new TranslationTextComponent("section.dglabcraft.channel_status", "B"), buildChannelLines(server, "B"));
+        addSection(lines, new TranslationTextComponent("section.dglabcraft.runtime_summary"), buildRuntimeLines(server));
+        addSection(lines, new TranslationTextComponent("section.dglabcraft.details"), buildDetailLines(server));
         return lines;
     }
 
-    private void addSection(List<RenderLine> renderLines, Component title, List<Component> lines) {
+    private void addSection(List<RenderLine> renderLines, ITextComponent title, List<ITextComponent> lines) {
         renderLines.add(new RenderLine(title.getVisualOrderText(), 0xFFFFFF, TITLE_HEIGHT));
-        for (Component line : lines) {
-            List<FormattedCharSequence> wrapped = this.font.split(line, CONTENT_WIDTH);
-            for (FormattedCharSequence textLine : wrapped) {
+        for (ITextComponent line : lines) {
+            List<IReorderingProcessor> wrapped = this.font.split(line, CONTENT_WIDTH);
+            for (IReorderingProcessor textLine : wrapped) {
                 renderLines.add(new RenderLine(textLine, 0xD0D0D0, LINE_HEIGHT));
             }
         }
         renderLines.add(new RenderLine(null, 0, SECTION_GAP));
     }
 
-    private void renderScrollBar(PoseStack poseStack, int x, int top, int bottom, int contentHeight) {
+    private void renderScrollBar(MatrixStack poseStack, int x, int top, int bottom, int contentHeight) {
         int viewportHeight = bottom - top;
         if (this.maxScroll <= 0 || viewportHeight <= 0) {
             return;
@@ -317,31 +317,34 @@ public class DiagnosticScreen extends Screen {
         return super.mouseScrolled(pMouseX, pMouseY, pDelta);
     }
 
-    private Component toPlainDetail(WebSocketServerManager.EffectSource source, String detail) {
-        return switch (source) {
-            case DAMAGE -> switch (normalize(detail)) {
-                case "lava" -> new TranslatableComponent("effect.dglabcraft.damage.lava");
-                case "onfire" -> new TranslatableComponent("effect.dglabcraft.damage.onfire");
-                case "infire" -> new TranslatableComponent("effect.dglabcraft.damage.infire");
-                case "hotfloor" -> new TranslatableComponent("effect.dglabcraft.damage.hotfloor");
-                case "drown" -> new TranslatableComponent("effect.dglabcraft.damage.drown");
-                case "freeze" -> new TranslatableComponent("effect.dglabcraft.damage.freeze");
-                case "fall" -> new TranslatableComponent("effect.dglabcraft.damage.fall");
-                case "mob_attack" -> new TranslatableComponent("effect.dglabcraft.damage.mob_attack");
-                case "player_attack" -> new TranslatableComponent("effect.dglabcraft.damage.player_attack");
-                case "explosion", "explosion.player" -> new TranslatableComponent("effect.dglabcraft.damage.explosion");
-                default -> new TranslatableComponent("effect.dglabcraft.damage.default");
-            };
-            case HEARTBEAT -> new TranslatableComponent("effect.dglabcraft.heartbeat.low_health");
-            case ENVIRONMENT -> switch (normalize(detail)) {
-                case "nether" -> new TranslatableComponent("effect.dglabcraft.environment.nether");
-                case "end" -> new TranslatableComponent("effect.dglabcraft.environment.end");
-                case "portal" -> new TranslatableComponent("effect.dglabcraft.environment.portal");
-                case "powder_snow" -> new TranslatableComponent("effect.dglabcraft.environment.powder_snow");
-                default -> new TranslatableComponent("effect.dglabcraft.environment.default");
-            };
-            case NONE -> new TranslatableComponent("effect.dglabcraft.none");
-        };
+    private ITextComponent toPlainDetail(WebSocketServerManager.EffectSource source, String detail) {
+        String normalized = normalize(detail);
+        if (source == WebSocketServerManager.EffectSource.DAMAGE) {
+            if ("lava".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.lava");
+            if ("onfire".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.onfire");
+            if ("infire".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.infire");
+            if ("hotfloor".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.hotfloor");
+            if ("drown".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.drown");
+            if ("freeze".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.freeze");
+            if ("fall".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.fall");
+            if ("mob_attack".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.mob_attack");
+            if ("player_attack".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.damage.player_attack");
+            if ("explosion".equals(normalized) || "explosion.player".equals(normalized)) {
+                return new TranslationTextComponent("effect.dglabcraft.damage.explosion");
+            }
+            return new TranslationTextComponent("effect.dglabcraft.damage.default");
+        }
+        if (source == WebSocketServerManager.EffectSource.HEARTBEAT) {
+            return new TranslationTextComponent("effect.dglabcraft.heartbeat.low_health");
+        }
+        if (source == WebSocketServerManager.EffectSource.ENVIRONMENT) {
+            if ("nether".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.environment.nether");
+            if ("end".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.environment.end");
+            if ("portal".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.environment.portal");
+            if ("powder_snow".equals(normalized)) return new TranslationTextComponent("effect.dglabcraft.environment.powder_snow");
+            return new TranslationTextComponent("effect.dglabcraft.environment.default");
+        }
+        return new TranslationTextComponent("effect.dglabcraft.none");
     }
 
     private String normalize(String value) {
@@ -350,7 +353,7 @@ public class DiagnosticScreen extends Screen {
 
     private String formatSeconds(long millis) {
         long seconds = Math.max(1L, (millis + 999L) / 1000L);
-        return new TranslatableComponent("duration.dglabcraft.seconds", seconds).getString();
+        return new TranslationTextComponent("duration.dglabcraft.seconds", seconds).getString();
     }
 
     @Override
@@ -364,11 +367,11 @@ public class DiagnosticScreen extends Screen {
     }
 
     private static final class RenderLine {
-        private final FormattedCharSequence text;
+        private final IReorderingProcessor text;
         private final int color;
         private final int height;
 
-        private RenderLine(FormattedCharSequence text, int color, int height) {
+        private RenderLine(IReorderingProcessor text, int color, int height) {
             this.text = text;
             this.color = color;
             this.height = height;

@@ -1,8 +1,8 @@
 package com.lumoren.dglabcraft;
 
-import net.minecraft.client.KeyMapping;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -12,8 +12,8 @@ import org.lwjgl.glfw.GLFW;
 @Mod.EventBusSubscriber(modid = DGLabCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientModEvents {
 
-    // 使用 Lazy 延迟加载 KeyMapping，确保在被请求时已实例化
-    public static final Lazy<KeyMapping> OPEN_SETTINGS_KEY = Lazy.of(() -> new KeyMapping(
+    // 使用 Lazy 延迟加载 KeyBinding，确保在被请求时已实例化
+    public static final Lazy<KeyBinding> OPEN_SETTINGS_KEY = Lazy.of(() -> new KeyBinding(
             "key.dglabcraft.open_settings",
             GLFW.GLFW_KEY_K,
             "key.categories.dglabcraft"

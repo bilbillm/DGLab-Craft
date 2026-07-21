@@ -3,7 +3,7 @@ package com.lumoren.dglabcraft.events;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -35,10 +35,10 @@ public class HeartbeatHandler {
         if (mc.player == null) return;
 
         // 使用 UUID 比较
-        Player eventPlayer = event.player;
+        PlayerEntity eventPlayer = event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
-        Player player = event.player;
+        PlayerEntity player = event.player;
 
         tickCounter++;
 

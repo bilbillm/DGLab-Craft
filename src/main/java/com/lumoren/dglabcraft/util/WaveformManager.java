@@ -2,22 +2,24 @@ package com.lumoren.dglabcraft.util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.IResource;
+import net.minecraft.resources.IResourceManager;
+import net.minecraft.resources.IResourceManagerReloadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * 波形管理器 - 数据驱动的波形加载系统
  * 从资源目录加载 JSON 波形文件
  */
-public class WaveformManager implements ResourceManagerReloadListener {
+public class WaveformManager implements IResourceManagerReloadListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WaveformManager");
     private static WaveformManager instance;
 
@@ -45,7 +47,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
     /**
      * 初始化波形池 - 从资源目录加载
      */
-    public void init(ResourceManager resourceManager) {
+    public void init(IResourceManager resourceManager) {
         if (initialized) {
             LOGGER.info("波形管理器已初始化，跳过");
             return;
@@ -72,10 +74,11 @@ public class WaveformManager implements ResourceManagerReloadListener {
                 LOGGER.info("提取波形ID: {}", fileName);
 
                 // 读取资源
-                Resource resource = resourceManager.getResource(path);
-                String jsonContent = new String(resource.getInputStream().readAllBytes());
-                LOGGER.info("JSON内容: {}", jsonContent);
-                List<String> waveformData = gson.fromJson(jsonContent, listType);
+                List<String> waveformData;
+                try (IResource resource = resourceManager.getResource(path);
+                     InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                    waveformData = gson.fromJson(reader, listType);
+                }
 
                 if (waveformData != null && !waveformData.isEmpty()) {
                     waveformPool.put(fileName, waveformData);
@@ -136,20 +139,18 @@ public class WaveformManager implements ResourceManagerReloadListener {
         };
 
         for (String fileName : waveformFiles) {
-            try {
-                // 从 classpath 加载
-                String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
-                java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath);
-
+            // 从 classpath 加载
+            String resourcePath = "assets/dglabcraft/waveforms/" + fileName + ".json";
+            try (java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                 if (is != null) {
-                    String jsonContent = new String(is.readAllBytes());
+                    Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name()).useDelimiter("\\A");
+                    String jsonContent = scanner.hasNext() ? scanner.next() : "";
                     List<String> waveformData = parseWaveformJson(jsonContent, gson);
 
                     if (waveformData != null && !waveformData.isEmpty()) {
                         waveformPool.put(fileName, waveformData);
                         LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
                     }
-                    is.close();
                 } else {
                     LOGGER.warn("找不到资源: {}", resourcePath);
                 }
@@ -303,7 +304,7 @@ public class WaveformManager implements ResourceManagerReloadListener {
     }
 
     @Override
-    public void onResourceManagerReload(@Nonnull ResourceManager resourceManager) {
+    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
         // 重新加载波形
         initialized = false;
         init(resourceManager);

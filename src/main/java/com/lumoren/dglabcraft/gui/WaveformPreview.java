@@ -103,6 +103,22 @@ public final class WaveformPreview {
         return Math.max(min, Math.min(max, value));
     }
 
-    public record PulseBar(int x, int width, int height, int alpha) {
+    public static final class PulseBar {
+        private final int x;
+        private final int width;
+        private final int height;
+        private final int alpha;
+
+        public PulseBar(int x, int width, int height, int alpha) {
+            this.x = x;
+            this.width = width;
+            this.height = height;
+            this.alpha = alpha;
+        }
+
+        public int x() { return x; }
+        public int width() { return width; }
+        public int height() { return height; }
+        public int alpha() { return alpha; }
     }
 }

@@ -4,13 +4,13 @@ import com.lumoren.dglabcraft.ClientModEvents;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -47,7 +47,7 @@ public class DGLabCraftHUD {
 
         int screenWidth = event.getWindow().getGuiScaledWidth();
         int screenHeight = event.getWindow().getGuiScaledHeight();
-        PoseStack poseStack = event.getMatrixStack();
+        MatrixStack poseStack = event.getMatrixStack();
         WebSocketServerManager server = WebSocketServerManager.getInstance();
 
         if (ModConfig.HUD_ENABLED.get()) {
@@ -91,7 +91,7 @@ public class DGLabCraftHUD {
             OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT, ModConfig.WAVEFORM_SCALE.get(), screenWidth, screenHeight);
     }
 
-    static void renderHudPanel(PoseStack poseStack, Font font, WebSocketServerManager server,
+    static void renderHudPanel(MatrixStack poseStack, FontRenderer font, WebSocketServerManager server,
                                OverlayLayout.Rect rect, boolean editing) {
         drawPanel(poseStack, rect, editing);
         renderScaled(poseStack, rect, OverlayLayout.HUD_WIDTH, () -> {
@@ -113,7 +113,7 @@ public class DGLabCraftHUD {
         });
     }
 
-    static void renderWaveformPanel(PoseStack poseStack, Font font, WebSocketServerManager server,
+    static void renderWaveformPanel(MatrixStack poseStack, FontRenderer font, WebSocketServerManager server,
                                     OverlayLayout.Rect rect, boolean editing) {
         drawPanel(poseStack, rect, editing);
         renderScaled(poseStack, rect, OverlayLayout.WAVEFORM_WIDTH, () -> {
@@ -129,7 +129,7 @@ public class DGLabCraftHUD {
         });
     }
 
-    private static void renderChannelWaveform(PoseStack poseStack, Font font, ChannelPreview preview,
+    private static void renderChannelWaveform(MatrixStack poseStack, FontRenderer font, ChannelPreview preview,
                                               int x, int y, int width, String channel, long animationTime) {
         font.draw(poseStack, translatable("overlay.dglabcraft.channel_label", channel), x, y, TEXT);
         int waveX = x + 18;
@@ -154,7 +154,7 @@ public class DGLabCraftHUD {
         }
         updateTimeline(channel, preview, animationTime);
 
-        Component detail = translatable("overlay.dglabcraft.waveform_detail",
+        ITextComponent detail = translatable("overlay.dglabcraft.waveform_detail",
             chineseWaveformName(preview.waveform()), formatSeconds(preview.remainingMillis()));
         font.draw(poseStack, detail, waveX + 4, y, MUTED);
         renderPulseBars(poseStack, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
@@ -184,36 +184,36 @@ public class DGLabCraftHUD {
     }
 
     private static List<Integer> samplesFor(String waveform) {
-        if (waveform == null || waveform.isBlank()) {
+        if (waveform == null || waveform.trim().isEmpty()) {
             return Collections.emptyList();
         }
         return WaveformPreview.amplitudes(WaveformManager.getInstance().getWaveform(waveform), 96);
     }
 
-    private static void drawPanel(PoseStack poseStack, OverlayLayout.Rect rect, boolean editing) {
-        GuiComponent.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BG);
-        GuiComponent.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 1, PANEL_BORDER);
-        GuiComponent.fill(poseStack, rect.x(), rect.y() + rect.height() - 1, rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
-        GuiComponent.fill(poseStack, rect.x(), rect.y(), rect.x() + 1, rect.y() + rect.height(), PANEL_BORDER);
-        GuiComponent.fill(poseStack, rect.x() + rect.width() - 1, rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
+    private static void drawPanel(MatrixStack poseStack, OverlayLayout.Rect rect, boolean editing) {
+        AbstractGui.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BG);
+        AbstractGui.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 1, PANEL_BORDER);
+        AbstractGui.fill(poseStack, rect.x(), rect.y() + rect.height() - 1, rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
+        AbstractGui.fill(poseStack, rect.x(), rect.y(), rect.x() + 1, rect.y() + rect.height(), PANEL_BORDER);
+        AbstractGui.fill(poseStack, rect.x() + rect.width() - 1, rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
         if (editing) {
-            GuiComponent.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 12, 0x44E8D57A);
+            AbstractGui.fill(poseStack, rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 12, 0x44E8D57A);
             int grip = 6;
-            GuiComponent.fill(poseStack, rect.x(), rect.y(), rect.x() + grip, rect.y() + grip, PANEL_BORDER);
-            GuiComponent.fill(poseStack, rect.x() + rect.width() - grip, rect.y(), rect.x() + rect.width(), rect.y() + grip, PANEL_BORDER);
-            GuiComponent.fill(poseStack, rect.x(), rect.y() + rect.height() - grip, rect.x() + grip, rect.y() + rect.height(), PANEL_BORDER);
-            GuiComponent.fill(poseStack, rect.x() + rect.width() - grip, rect.y() + rect.height() - grip,
+            AbstractGui.fill(poseStack, rect.x(), rect.y(), rect.x() + grip, rect.y() + grip, PANEL_BORDER);
+            AbstractGui.fill(poseStack, rect.x() + rect.width() - grip, rect.y(), rect.x() + rect.width(), rect.y() + grip, PANEL_BORDER);
+            AbstractGui.fill(poseStack, rect.x(), rect.y() + rect.height() - grip, rect.x() + grip, rect.y() + rect.height(), PANEL_BORDER);
+            AbstractGui.fill(poseStack, rect.x() + rect.width() - grip, rect.y() + rect.height() - grip,
                 rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
         }
     }
 
-    private static void drawWaveTrack(PoseStack poseStack, int x, int y, int width, int height) {
-        GuiComponent.fill(poseStack, x, y, x + width, y + height, WAVE_TRACK_BG);
-        GuiComponent.fill(poseStack, x, y + height - 2, x + width, y + height, WAVE_TRACK_SHADOW);
-        GuiComponent.fill(poseStack, x, y, x + width, y + 1, 0x332A2A2E);
+    private static void drawWaveTrack(MatrixStack poseStack, int x, int y, int width, int height) {
+        AbstractGui.fill(poseStack, x, y, x + width, y + height, WAVE_TRACK_BG);
+        AbstractGui.fill(poseStack, x, y + height - 2, x + width, y + height, WAVE_TRACK_SHADOW);
+        AbstractGui.fill(poseStack, x, y, x + width, y + 1, 0x332A2A2E);
     }
 
-    private static void renderPulseBars(PoseStack poseStack, List<Integer> samples, int x, int y,
+    private static void renderPulseBars(MatrixStack poseStack, List<Integer> samples, int x, int y,
                                         int width, int height, long animationTime) {
         for (WaveformPreview.PulseBar bar : WaveformPreview.pulseBars(samples, width, height, animationTime)) {
             int barX = x + bar.x();
@@ -225,10 +225,10 @@ public class DGLabCraftHUD {
             }
 
             int glowAlpha = Math.min(96, Math.max(36, bar.alpha() / 3));
-            GuiComponent.fill(poseStack, Math.max(x, barX - 1), Math.max(y, barY - 1),
+            AbstractGui.fill(poseStack, Math.max(x, barX - 1), Math.max(y, barY - 1),
                 Math.min(x + width, barRight + 1), barBottom,
                 withAlpha(PULSE_GLOW, glowAlpha));
-            GuiComponent.fill(poseStack, Math.max(x, barX), barY, barRight, barBottom, withAlpha(PULSE_CORE, bar.alpha()));
+            AbstractGui.fill(poseStack, Math.max(x, barX), barY, barRight, barBottom, withAlpha(PULSE_CORE, bar.alpha()));
         }
     }
 
@@ -263,7 +263,7 @@ public class DGLabCraftHUD {
         return WAVEFORM_TIMELINES.computeIfAbsent(channel, ignored -> new ChannelTimeline());
     }
 
-    private static void renderScaled(PoseStack poseStack, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
+    private static void renderScaled(MatrixStack poseStack, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
         float scale = (float) Math.max(0.01D, rect.width() / (double) baseWidth);
         poseStack.pushPose();
         poseStack.translate(rect.x(), rect.y(), 0.0D);
@@ -277,49 +277,47 @@ public class DGLabCraftHUD {
         return translatable("duration.dglabcraft.seconds", seconds).getString();
     }
 
-    private static Component translatable(String key, Object... args) {
-        return new TranslatableComponent(key, args);
+    private static ITextComponent translatable(String key, Object... args) {
+        return new TranslationTextComponent(key, args);
     }
 
-    private static Component channelStatusText(String channel, int intensity, String status) {
-        return new TextComponent(channel + ": " + intensity + "% " + chineseWaveformName(status));
+    private static ITextComponent channelStatusText(String channel, int intensity, String status) {
+        return new StringTextComponent(channel + ": " + intensity + "% " + chineseWaveformName(status));
     }
 
     private static String chineseWaveformName(String status) {
-        if (status == null || status.isBlank() || "Idle".equalsIgnoreCase(status)) {
+        if (status == null || status.trim().isEmpty() || "Idle".equalsIgnoreCase(status)) {
             return "空闲";
         }
-        return switch (status) {
-            case "beat" -> "节拍";
-            case "bounce_gradual" -> "渐弹";
-            case "breath" -> "呼吸";
-            case "burn" -> "灼烧";
-            case "compress" -> "压缩";
-            case "drown" -> "溺水";
-            case "fast_pinch" -> "快夹";
-            case "grain_friction" -> "颗粒摩擦";
-            case "heartbeat" -> "心跳";
-            case "pinch_intensify" -> "夹紧增强";
-            case "rain_wash" -> "雨刷";
-            case "rhythm_step" -> "节奏步进";
-            case "signal_light" -> "信号灯";
-            case "tease1" -> "挑逗一";
-            case "tease2" -> "挑逗二";
-            case "tide" -> "潮汐";
-            case "variable_speed" -> "变速";
-            case "wave_ripple" -> "波纹";
-            case "default" -> "默认";
-            case "ADamage" -> "A伤害";
-            case "BDamage" -> "B伤害";
-            default -> status;
-        };
+        if ("beat".equals(status)) return "节拍";
+        if ("bounce_gradual".equals(status)) return "渐弹";
+        if ("breath".equals(status)) return "呼吸";
+        if ("burn".equals(status)) return "灼烧";
+        if ("compress".equals(status)) return "压缩";
+        if ("drown".equals(status)) return "溺水";
+        if ("fast_pinch".equals(status)) return "快夹";
+        if ("grain_friction".equals(status)) return "颗粒摩擦";
+        if ("heartbeat".equals(status)) return "心跳";
+        if ("pinch_intensify".equals(status)) return "夹紧增强";
+        if ("rain_wash".equals(status)) return "雨刷";
+        if ("rhythm_step".equals(status)) return "节奏步进";
+        if ("signal_light".equals(status)) return "信号灯";
+        if ("tease1".equals(status)) return "挑逗一";
+        if ("tease2".equals(status)) return "挑逗二";
+        if ("tide".equals(status)) return "潮汐";
+        if ("variable_speed".equals(status)) return "变速";
+        if ("wave_ripple".equals(status)) return "波纹";
+        if ("default".equals(status)) return "默认";
+        if ("ADamage".equals(status)) return "A伤害";
+        if ("BDamage".equals(status)) return "B伤害";
+        return status;
     }
 
     private static int withAlpha(int rgb, int alpha) {
         return (Math.max(0, Math.min(255, alpha)) << 24) | (rgb & 0x00FFFFFF);
     }
 
-    private static void drawCentered(PoseStack poseStack, Font font, Component text, int centerX, int y, int color) {
+    private static void drawCentered(MatrixStack poseStack, FontRenderer font, ITextComponent text, int centerX, int y, int color) {
         font.draw(poseStack, text, centerX - font.width(text) / 2, y, color);
     }
 
@@ -365,13 +363,30 @@ public class DGLabCraftHUD {
         }
     }
 
-    private record ChannelPreview(boolean active, String waveform, long remainingMillis, List<Integer> samples) {
+    private static final class ChannelPreview {
+        private final boolean active;
+        private final String waveform;
+        private final long remainingMillis;
+        private final List<Integer> samples;
+
+        private ChannelPreview(boolean active, String waveform, long remainingMillis, List<Integer> samples) {
+            this.active = active;
+            this.waveform = waveform;
+            this.remainingMillis = remainingMillis;
+            this.samples = samples;
+        }
+
+        boolean active() { return active; }
+        String waveform() { return waveform; }
+        long remainingMillis() { return remainingMillis; }
+        List<Integer> samples() { return samples; }
+
         static ChannelPreview idle() {
             return new ChannelPreview(false, "", 0L, Collections.emptyList());
         }
 
         static ChannelPreview active(String waveform, long remainingMillis, List<Integer> samples) {
-            return new ChannelPreview(true, waveform == null || waveform.isBlank() ? "default" : waveform, remainingMillis, samples);
+            return new ChannelPreview(true, waveform == null || waveform.trim().isEmpty() ? "default" : waveform, remainingMillis, samples);
         }
     }
 }

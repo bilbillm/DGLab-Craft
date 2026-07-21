@@ -1,20 +1,20 @@
 package com.lumoren.dglabcraft.gui;
 
-import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.client.gui.widget.AbstractSlider;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 /**
- * 自定义滑动条组件 - 使用 Minecraft 原版 AbstractSliderButton
+ * 自定义滑动条组件 - 使用 Minecraft 原版 AbstractSlider
  * 严格对齐游戏设置中的 FOV 滑块样式
  */
-public class Slider extends AbstractSliderButton {
+public class Slider extends AbstractSlider {
 
     private final double minValue;
     private final double maxValue;
     private final double stepSize;
     private final String suffix;
-    private final Component prefix;  // 保存原始前缀文本
+    private final ITextComponent prefix;  // 保存原始前缀文本
     private final java.util.function.Consumer<Double> onValueChangeComplete;  // 释放鼠标时回调（保存配置）
 
     /**
@@ -32,7 +32,7 @@ public class Slider extends AbstractSliderButton {
      * @param suffix                  后缀文本（如 "x" 或 "%"）
      * @param onValueChangeComplete   释放鼠标时的回调（用于保存配置）
      */
-    public Slider(int x, int y, int width, int height, Component prefix,
+    public Slider(int x, int y, int width, int height, ITextComponent prefix,
                   double minValue, double maxValue, double currentValue,
                   double stepSize, String suffix, java.util.function.Consumer<Double> onValueChangeComplete) {
         super(x, y, width, height, prefix, mapToInternalStatic(minValue, maxValue, currentValue));
@@ -115,7 +115,7 @@ public class Slider extends AbstractSliderButton {
         }
 
         // 使用保存的原始前缀文本构建显示文本
-        Component fullMessage = new TranslatableComponent("slider.dglabcraft.value", prefix, valueStr, suffix);
+        ITextComponent fullMessage = new TranslationTextComponent("slider.dglabcraft.value", prefix, valueStr, suffix);
         this.setMessage(fullMessage);
     }
 

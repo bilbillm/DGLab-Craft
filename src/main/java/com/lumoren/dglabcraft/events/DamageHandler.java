@@ -4,8 +4,8 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -20,16 +20,16 @@ public class DamageHandler {
         // 只处理客户端玩家自身
         Minecraft mc = Minecraft.getInstance();
 
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.getEntity() instanceof PlayerEntity)) return;
         if (mc.player == null || mc.level == null) return;
 
         // UUID 比较判断是否是本地玩家
-        Player eventPlayer = (Player) event.getEntity();
+        PlayerEntity eventPlayer = (PlayerEntity) event.getEntity();
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) {
             return;
         }
 
-        Player player = eventPlayer;
+        PlayerEntity player = eventPlayer;
 
         DamageSource source = event.getSource();
         float damage = event.getAmount();
