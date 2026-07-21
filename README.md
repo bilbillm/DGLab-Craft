@@ -35,6 +35,8 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.20.1 | Forge 47.x | `1.20.1-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
@@ -122,6 +124,8 @@ GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证
 
 | MC 版本 | 加载器 | 分支 | 最新 release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.20.1 | Forge 47.x | `1.20.1-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
@@ -134,7 +138,7 @@ GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证
 
 - 诊断页一键复制反馈信息的完整内容
 - Minecraft 版本
-- Forge / NeoForge 版本
+- Forge / Fabric / NeoForge 版本
 - DGLab Craft 版本
 - Java 版本
 - 单人、联机还是整合包

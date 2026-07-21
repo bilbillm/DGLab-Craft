@@ -35,6 +35,8 @@ If your Minecraft version is different, use the matching branch and release belo
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.20.1 | Forge 47.x | `1.20.1-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
@@ -122,6 +124,8 @@ You can manually run the `Release Rehearsal` GitHub Action to validate release m
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.16.5 | Forge 36.2.42 | `1.16.5-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
+| 1.16.5 | Fabric Loader 0.19.3 | `1.16.5-Fabric` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
 | 1.20.1 | Forge 47.x | `1.20.1-Forge` | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) |
@@ -134,7 +138,7 @@ Ask users to include:
 
 - the full text from the diagnostics page Copy issue info button
 - Minecraft version
-- Forge / NeoForge version
+- Forge / Fabric / NeoForge version
 - DGLab Craft version
 - Java version
 - single-player, multiplayer, or modpack environment

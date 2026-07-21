@@ -28,32 +28,47 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish Minecraft ${{ matrix.minecraft }}
+    name: Publish Minecraft ${{ matrix.minecraft }} ${{ matrix.loader }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
+          - minecraft: "1.16.5"
+            loader: Forge
+            java: "8"
+            game-version: "Minecraft 1.16:1.16.5"
+            artifact-suffix: "-Forge"
+          - minecraft: "1.16.5"
+            loader: Fabric
+            java: "8"
+            game-version: "Minecraft 1.16:1.16.5"
+            artifact-suffix: "-Fabric"
           - minecraft: "1.18.2"
             loader: Forge
             java: "17"
             game-version: "Minecraft 1.18:1.18.2"
+            artifact-suffix: ""
           - minecraft: "1.19.2"
             loader: Forge
             java: "17"
             game-version: "Minecraft 1.19:1.19.2"
+            artifact-suffix: ""
           - minecraft: "1.20.1"
             loader: Forge
             java: "17"
             game-version: "Minecraft 1.20:1.20.1"
+            artifact-suffix: ""
           - minecraft: "1.21.1"
             loader: NeoForge
             java: "21"
             game-version: "Minecraft 1.21:1.21.1"
+            artifact-suffix: ""
           - minecraft: "1.21.4"
             loader: NeoForge
             java: "21"
             game-version: "Minecraft 1.21:1.21.4"
+            artifact-suffix: ""
     env:
       RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
       RELEASE_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type || (github.event.release.prerelease && 'beta' || 'release') }}
@@ -87,7 +102,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          artifact="DGLabCraft-${{ matrix.minecraft }}-${MOD_VERSION}.jar"
+          artifact="DGLabCraft-${{ matrix.minecraft }}-${MOD_VERSION}${{ matrix.artifact-suffix }}.jar"
           mkdir -p release-assets
           gh release download "${RELEASE_TAG}" --pattern "${artifact}" --dir release-assets
           test -f "release-assets/${artifact}"
