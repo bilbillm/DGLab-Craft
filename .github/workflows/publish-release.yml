@@ -162,7 +162,7 @@ jobs:
           project_id: "1538053"
           game_endpoint: minecraft
           file_path: ${{ steps.artifact.outputs.path }}
-          game_versions: ${{ matrix.game-version }},Java ${{ matrix.java }},${{ matrix.loader }}
+          game_versions: ${{ matrix.game-version }},Java ${{ matrix.java }},${{ matrix.loader }},Client
           release_type: ${{ env.RELEASE_TYPE }}
           display_name: DGLabCraft ${{ env.MOD_VERSION }} for Minecraft ${{ matrix.minecraft }} ${{ matrix.loader }}
           changelog: ${{ steps.notes.outputs.changelog }}
