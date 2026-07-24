@@ -147,7 +147,7 @@ public class DamageHandler {
         if (player.isOnFire()) {
             return "onFire";
         }
-        if (player.isFreezing()) {
+        if (player.getTicksFrozen() > 0) {
             return "freeze";
         }
         if (player.getAirSupply() <= 0) {
