@@ -9,11 +9,14 @@ version = mod_version
 group = 'com.lumoren.dglabcraft'
 
 base {
-    archivesName = "DGLabCraft-${minecraft_version}"
+    archivesName = "DGLabCraft-${minecraft_version}-Forge"
 }
 
-// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+// Minecraft 1.17.1 runs on Java 16+, and the vanilla launcher ships Java 16 for it.
+java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+}
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
@@ -126,6 +129,11 @@ repositories {
     // }
 }
 
+configurations {
+    shade
+    implementation.extendsFrom shade
+}
+
 dependencies {
     // Specify the version of Minecraft to use.
     // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
@@ -134,18 +142,17 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // 供开发环境使用的依赖
-    minecraftLibrary 'org.java-websocket:Java-WebSocket:1.5.4'
-    minecraftLibrary('com.google.zxing:core:3.5.1') {
+    // 1.17.1 Forge has no JarJar support, so shade the libraries into the jar instead.
+    // 1.3.9 avoids the SLF4J 2.x dependency that conflicts with Forge's logging.
+    shade 'org.java-websocket:Java-WebSocket:1.3.9'
+    shade('com.google.zxing:core:3.5.1') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
 
-    // 指示 Forge 打包进 jar 内部的声明
-    jarJar(group: 'org.java-websocket', name: 'Java-WebSocket', version: '[1.5.4, 2.0)')
-    jarJar(group: 'com.google.zxing', name: 'core', version: '[3.5.1, 4.0)')
-
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // MC 1.17.1 ships Gson 2.8.0 which lacks JsonParser.parseString used by tests
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 
     // Real mod deobf dependency examples - these get remapped to your current mappings
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
@@ -185,10 +192,14 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
-// 配置默认的 jar 任务
+// 配置默认的 jar 任务：打入 shaded 依赖并重obf
 tasks.named('jar', Jar).configure {
-    archiveClassifier = 'slim'
-
+    archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}-Forge.jar"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/versions/**', 'module-info.class'
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -202,11 +213,11 @@ tasks.named('jar', Jar).configure {
     }
 }
 
+reobf {
+    jar {}
+}
 
-// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing:
-// tasks.named('publish').configure {
-//     dependsOn 'reobfJar'
-// }
+build.dependsOn reobfJar
 
 publishing {
     publications {
@@ -223,20 +234,4 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-}
-
-def removeSlimJars = tasks.register('removeSlimJars', Delete) {
-    delete fileTree(layout.buildDirectory.dir('libs')) {
-        include '*-slim.jar'
-    }
-}
-
-// 将 jarJar 绑定到默认的 build 流程中
-build.dependsOn 'jarJar'
-build.finalizedBy removeSlimJars
-
-// 确保 jarJar 任务启用
-tasks.named('jarJar') {
-    enabled = true
-    archiveClassifier = ''
 }
