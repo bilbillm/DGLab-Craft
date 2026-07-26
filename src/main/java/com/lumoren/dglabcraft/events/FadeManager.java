@@ -4,8 +4,8 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 /**
  * 统一管理所有刺激的渐变消失效果
@@ -47,12 +47,12 @@ public class FadeManager {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
-        if (!event.player.world.isRemote) return;
-        if (mc.player == null) return;
+        if (!event.player.worldObj.isRemote) return;
+        if (mc.thePlayer == null) return;
 
         // 使用 UUID 比较
         EntityPlayer eventPlayer = event.player;
-        if (!eventPlayer.getUniqueID().equals(mc.player.getUniqueID())) return;
+        if (!eventPlayer.getUniqueID().equals(mc.thePlayer.getUniqueID())) return;
 
         tickCounter++;
 

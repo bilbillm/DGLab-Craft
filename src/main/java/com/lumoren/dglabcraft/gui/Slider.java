@@ -57,21 +57,21 @@ public class Slider extends GuiButton {
     protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
         if (visible) {
             if (dragging) {
-                value = (mouseX - (x + 4)) / (double) (width - 8);
+                value = (mouseX - (xPosition + 4)) / (double) (width - 8);
                 value = Math.max(0.0D, Math.min(1.0D, value));
                 updateDisplayString();
             }
-            mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
-            int handleX = x + (int) (value * (width - 8));
-            drawTexturedModalRect(handleX, y, 0, 66, 4, 20);
-            drawTexturedModalRect(handleX + 4, y, 196, 66, 4, 20);
+            mc.getTextureManager().bindTexture(buttonTextures);
+            int handleX = xPosition + (int) (value * (width - 8));
+            drawTexturedModalRect(handleX, yPosition, 0, 66, 4, 20);
+            drawTexturedModalRect(handleX + 4, yPosition, 196, 66, 4, 20);
         }
     }
 
     @Override
     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
         if (super.mousePressed(mc, mouseX, mouseY)) {
-            value = (mouseX - (x + 4)) / (double) (width - 8);
+            value = (mouseX - (xPosition + 4)) / (double) (width - 8);
             value = Math.max(0.0D, Math.min(1.0D, value));
             updateDisplayString();
             dragging = true;

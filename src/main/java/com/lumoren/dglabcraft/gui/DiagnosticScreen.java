@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class DiagnosticScreen extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button.id == BTN_COPY) {
             GuiScreen.setClipboardString(buildIssueReport());
         } else if (button.id == BTN_SILENCE) {
@@ -43,7 +42,7 @@ public class DiagnosticScreen extends GuiScreen {
     }
 
     @Override
-    public void handleMouseInput() throws IOException {
+    public void handleMouseInput() {
         super.handleMouseInput();
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         if (wheel != 0) {
@@ -55,12 +54,12 @@ public class DiagnosticScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRenderer, "连接诊断", width / 2, 18, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "连接诊断", width / 2, 18, 0xFFFFFF);
         List<String> lines = buildLines();
         int y = 40 - scroll;
         for (String line : lines) {
             if (y > 28 && y < height - 38) {
-                fontRenderer.drawString(line, 24, y, 0xDDDDDD);
+                fontRendererObj.drawString(line, 24, y, 0xDDDDDD);
             }
             y += 12;
         }
@@ -70,8 +69,8 @@ public class DiagnosticScreen extends GuiScreen {
     private List<String> buildLines() {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         List<String> lines = new ArrayList<String>();
-        lines.add("Minecraft: 1.12.2");
-        lines.add("Forge: 14.23.5.2847");
+        lines.add("Minecraft: 1.7.10");
+        lines.add("Forge: 10.13.4.1614");
         lines.add("Java: " + System.getProperty("java.version"));
         lines.add("OS: " + System.getProperty("os.name") + " " + System.getProperty("os.version"));
         lines.add("WebSocket: " + server.resolveConnectionHost() + ":" + server.getPort());

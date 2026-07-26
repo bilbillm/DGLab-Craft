@@ -9,7 +9,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -31,20 +31,20 @@ public class DGLabCraftHUD extends Gui {
 
     @SubscribeEvent
     public void onRenderGuiOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
+        if (event.type != RenderGameOverlayEvent.ElementType.ALL) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.world == null || mc.player == null || mc.currentScreen != null) {
+        if (mc.theWorld == null || mc.thePlayer == null || mc.currentScreen != null) {
             return;
         }
-        ScaledResolution resolution = event.getResolution();
+        ScaledResolution resolution = event.resolution;
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         if (ModConfig.HUD_ENABLED.get()) {
-            renderHudPanel(mc.fontRenderer, server, hudRect(resolution.getScaledWidth(), resolution.getScaledHeight()), false);
+            renderHudPanel(mc.fontRendererObj, server, hudRect(resolution.getScaledWidth(), resolution.getScaledHeight()), false);
         }
         if (ModConfig.WAVEFORM_OVERLAY_ENABLED.get()) {
-            renderWaveformPanel(mc.fontRenderer, server, waveformRect(resolution.getScaledWidth(), resolution.getScaledHeight()), false);
+            renderWaveformPanel(mc.fontRendererObj, server, waveformRect(resolution.getScaledWidth(), resolution.getScaledHeight()), false);
         }
     }
 
@@ -72,7 +72,7 @@ public class DGLabCraftHUD extends Gui {
                 drawCentered(font, "DGLab 状态", centerX, 7, YELLOW);
                 if (!server.isConnected()) {
                     drawCentered(font, "未连接", centerX, 23, RED);
-                    drawCentered(font, "按 " + ClientModEvents.OPEN_SETTINGS_KEY.getDisplayName() + " 打开设置", centerX, 39, MUTED);
+                    drawCentered(font, "按 " + net.minecraft.client.settings.GameSettings.getKeyDisplayString(ClientModEvents.OPEN_SETTINGS_KEY.getKeyCode()) + " 打开设置", centerX, 39, MUTED);
                     return;
                 }
                 drawCentered(font, "已连接", centerX, 21, GREEN);

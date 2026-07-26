@@ -1,17 +1,22 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net/' }
-        maven { url = 'https://files.minecraftforge.net/maven' }
         mavenCentral()
-        jcenter()
+        maven { url = 'https://libraries.minecraft.net/' }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
     }
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'maven-publish'
+apply plugin: 'forge'
+
+// The legacy S3 endpoints hardcoded in ForgeGradle 1.2 are dead; point the
+// download tasks at the current Mojang CDN (URLs from the official version manifest).
+import net.minecraftforge.gradle.delayed.DelayedString
+tasks.downloadClient { url = new DelayedString(project, 'https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar') }
+tasks.downloadServer { url = new DelayedString(project, 'https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar') }
+tasks.getAssetsIndex { url = new DelayedString(project, 'https://launchermeta.mojang.com/v1/packages/1863782e33ce7b584fc45b037325a1964e095d3e/1.7.10.json') }
 
 version = mod_version
 group = 'com.lumoren.dglabcraft'
@@ -21,13 +26,12 @@ sourceCompatibility = targetCompatibility = '1.8'
 compileJava.options.encoding = 'UTF-8'
 
 minecraft {
-    version = "${minecraft_version}-${forge_version}"
+    version = "${minecraft_version}-${forge_version}-${minecraft_version}"
     runDir = "run"
     mappings = "${mapping_channel}_${mapping_version}"
 }
 
 repositories {
-    maven { url = 'https://files.minecraftforge.net/maven' }
     maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
 }
@@ -38,19 +42,11 @@ configurations {
 }
 
 dependencies {
-    // Java-WebSocket 1.4+ depends on SLF4J, which Forge 1.12's LaunchClassLoader
+    // Java-WebSocket 1.4+ depends on SLF4J, which the legacy LaunchClassLoader
     // does not reliably load from a shaded mod jar.
     shade 'org.java-websocket:Java-WebSocket:1.3.9'
     shade('com.google.zxing:core:3.5.1') {
         exclude group: 'commons-logging', module: 'commons-logging'
-    }
-    testCompile 'junit:junit:4.13.2'
-}
-
-sourceSets {
-    test {
-        java.srcDirs = []
-        resources.srcDirs = []
     }
 }
 
@@ -67,19 +63,26 @@ processResources {
         include 'mcmod.info'
         include 'pack.mcmeta'
         expand([
-            version: project.version,
-            mcversion: minecraft_version,
-            mod_id: mod_id,
-            mod_name: mod_name,
-            mod_description: mod_description,
-            mod_authors: mod_authors,
-            mod_license: mod_license
+                version        : project.version,
+                mcversion      : minecraft_version,
+                mod_id         : mod_id,
+                mod_name       : mod_name,
+                mod_description: mod_description,
+                mod_authors    : mod_authors,
+                mod_license    : mod_license
         ])
     }
 
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
         exclude 'pack.mcmeta'
+    }
+}
+
+sourceSets {
+    test {
+        java.srcDirs = []
+        resources.srcDirs = []
     }
 }
 
@@ -92,32 +95,12 @@ jar {
     exclude 'META-INF/versions/**', 'module-info.class'
     manifest {
         attributes([
-            'Specification-Title': mod_id,
-            'Specification-Vendor': mod_authors,
-            'Specification-Version': '1',
-            'Implementation-Title': project.name,
-            'Implementation-Version': project.version,
-            'Implementation-Vendor': mod_authors
+                'Specification-Title'    : mod_id,
+                'Specification-Vendor'   : mod_authors,
+                'Specification-Version'  : '1',
+                'Implementation-Title'   : project.name,
+                'Implementation-Version' : project.version,
+                'Implementation-Vendor'  : mod_authors
         ])
-    }
-}
-
-reobf {
-    jar {}
-}
-
-sourceJar.enabled = false
-build.dependsOn reobfJar
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
     }
 }

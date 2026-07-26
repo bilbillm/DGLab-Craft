@@ -3,27 +3,27 @@ package com.lumoren.dglabcraft.events;
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 public class DamageHandler {
     @SubscribeEvent
-    public void onLivingDamage(LivingDamageEvent event) {
+    public void onLivingHurt(LivingHurtEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
-        if (!(event.getEntityLiving() instanceof EntityPlayer) || mc.player == null || mc.world == null) {
+        if (!(event.entityLiving instanceof EntityPlayer) || mc.thePlayer == null || mc.theWorld == null) {
             return;
         }
-        EntityPlayer player = (EntityPlayer) event.getEntityLiving();
-        if (!player.getUniqueID().equals(mc.player.getUniqueID())) {
+        EntityPlayer player = (EntityPlayer) event.entityLiving;
+        if (!player.getUniqueID().equals(mc.thePlayer.getUniqueID())) {
             return;
         }
 
-        DamageSource source = event.getSource();
+        DamageSource source = event.source;
         String msgId = normalizeDamageType(source.getDamageType());
-        float damage = event.getAmount();
+        float damage = event.ammount;
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         String waveform = WaveformManager.getWaveformIdForDamage(msgId);
         double multiplier = getMultiplierForDamage(msgId);

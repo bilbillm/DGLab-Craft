@@ -4,8 +4,8 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class HeartbeatHandler {
     private int tickCounter = 0;
@@ -18,11 +18,11 @@ public class HeartbeatHandler {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !event.player.world.isRemote) {
+        if (event.phase != TickEvent.Phase.END || !event.player.worldObj.isRemote) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.player == null || !event.player.getUniqueID().equals(mc.player.getUniqueID())) {
+        if (mc.thePlayer == null || !event.player.getUniqueID().equals(mc.thePlayer.getUniqueID())) {
             return;
         }
         EntityPlayer player = event.player;

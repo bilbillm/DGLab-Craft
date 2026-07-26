@@ -5,7 +5,6 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
-import java.io.IOException;
 
 public class MainScreen extends GuiScreen {
     private static final int BTN_SETTINGS = 1;
@@ -36,7 +35,7 @@ public class MainScreen extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button.id == BTN_SETTINGS) {
             mc.displayGuiScreen(new DGLabCraftScreen(this));
         } else if (button.id == BTN_CONNECTION) {
@@ -61,10 +60,10 @@ public class MainScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRenderer, "DGLab Craft", width / 2, 30, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "DGLab Craft", width / 2, 30, 0xFFFFFF);
         WebSocketServerManager server = WebSocketServerManager.getInstance();
-        drawCenteredString(fontRenderer, server.isConnected() ? "已连接" : "正在等待连接", width / 2, 50, server.isConnected() ? 0x55FF88 : 0xFFFF55);
-        drawCenteredString(fontRenderer, server.resolveConnectionHost() + ":" + server.getPort(), width / 2, height - 20, 0x888888);
+        drawCenteredString(fontRendererObj, server.isConnected() ? "已连接" : "正在等待连接", width / 2, 50, server.isConnected() ? 0x55FF88 : 0xFFFF55);
+        drawCenteredString(fontRendererObj, server.resolveConnectionHost() + ":" + server.getPort(), width / 2, height - 20, 0x888888);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 

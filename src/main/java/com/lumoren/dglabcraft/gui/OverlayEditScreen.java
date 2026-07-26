@@ -5,7 +5,6 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
-import java.io.IOException;
 
 public class OverlayEditScreen extends GuiScreen {
     private static final int BTN_RESET = 1;
@@ -33,7 +32,7 @@ public class OverlayEditScreen extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button.id == BTN_RESET) {
             ModConfig.HUD_X_RATIO.set(-1.0D);
             ModConfig.HUD_Y_RATIO.set(-1.0D);
@@ -49,7 +48,7 @@ public class OverlayEditScreen extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (waveformRect.contains(mouseX, mouseY)) {
             beginDrag("waveform", waveformRect, mouseX, mouseY);
@@ -110,10 +109,10 @@ public class OverlayEditScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRenderer, "拖动叠加层，拖边框调整大小", width / 2, 18, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "拖动叠加层，拖边框调整大小", width / 2, 18, 0xFFFFFF);
         WebSocketServerManager server = WebSocketServerManager.getInstance();
-        DGLabCraftHUD.renderHudPanel(fontRenderer, server, hudRect, true);
-        DGLabCraftHUD.renderWaveformPanel(fontRenderer, server, waveformRect, true);
+        DGLabCraftHUD.renderHudPanel(fontRendererObj, server, hudRect, true);
+        DGLabCraftHUD.renderWaveformPanel(fontRendererObj, server, waveformRect, true);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 }

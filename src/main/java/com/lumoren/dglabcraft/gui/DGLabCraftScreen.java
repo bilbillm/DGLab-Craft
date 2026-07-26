@@ -6,7 +6,6 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +15,7 @@ public class DGLabCraftScreen extends GuiScreen {
     private static final int BTN_DONE = 1002;
     private final GuiScreen parent;
     private final List<Slider> sliders = new ArrayList<Slider>();
+    private GuiButton draggedButton;
     private int scroll;
 
     public DGLabCraftScreen(GuiScreen parent) {
@@ -77,7 +77,7 @@ public class DGLabCraftScreen extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button.id == BTN_SYNC) {
             ModConfig.SYNC_CHANNELS.set(!ModConfig.SYNC_CHANNELS.get());
             ModConfig.save();
@@ -92,7 +92,7 @@ public class DGLabCraftScreen extends GuiScreen {
     }
 
     @Override
-    public void handleMouseInput() throws IOException {
+    public void handleMouseInput() {
         super.handleMouseInput();
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         if (wheel != 0) {
@@ -104,40 +104,42 @@ public class DGLabCraftScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRenderer, "强度设置", width / 2, 18, 0xFFFFFF);
+        drawCenteredString(fontRendererObj, "强度设置", width / 2, 18, 0xFFFFFF);
         WebSocketServerManager ws = WebSocketServerManager.getInstance();
         String strength = ws.isConnected()
             ? "App 上限 A=" + ws.getAppAMaxStrength() + " B=" + ws.getAppBMaxStrength()
             : "App 未连接";
-        drawCenteredString(fontRenderer, strength + " | 心跳触发: " + heartbeatTriggerHealth(), width / 2, 34, 0xCCCCCC);
+        drawCenteredString(fontRendererObj, strength + " | 心跳触发: " + heartbeatTriggerHealth(), width / 2, 34, 0xCCCCCC);
 
-        for (GuiButton button : buttonList) {
+        for (Object obj : buttonList) {
+            GuiButton button = (GuiButton) obj;
             if (button instanceof Slider) {
-                button.y -= scroll;
+                button.yPosition -= scroll;
                 boolean oldVisible = button.visible;
-                button.visible = button.y >= 70 && button.y <= height - 42;
-                button.drawButton(mc, mouseX, mouseY, partialTicks);
+                button.visible = button.yPosition >= 70 && button.yPosition <= height - 42;
+                button.drawButton(mc, mouseX, mouseY);
                 button.visible = oldVisible;
-                button.y += scroll;
+                button.yPosition += scroll;
             } else {
-                button.drawButton(mc, mouseX, mouseY, partialTicks);
+                button.drawButton(mc, mouseX, mouseY);
             }
         }
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        for (GuiButton button : buttonList) {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        for (Object obj : buttonList) {
+            GuiButton button = (GuiButton) obj;
             if (button instanceof Slider) {
-                button.y -= scroll;
+                button.yPosition -= scroll;
                 if (button.mousePressed(mc, mouseX, mouseY)) {
-                    selectedButton = button;
+                    draggedButton = button;
                     button.playPressSound(mc.getSoundHandler());
                     actionPerformed(button);
                 }
-                button.y += scroll;
+                button.yPosition += scroll;
             } else if (button.mousePressed(mc, mouseX, mouseY)) {
-                selectedButton = button;
+                draggedButton = button;
                 button.playPressSound(mc.getSoundHandler());
                 actionPerformed(button);
             }
@@ -146,11 +148,11 @@ public class DGLabCraftScreen extends GuiScreen {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
-        if (selectedButton != null) {
-            selectedButton.y -= selectedButton instanceof Slider ? scroll : 0;
-            selectedButton.mouseReleased(mouseX, mouseY);
-            selectedButton.y += selectedButton instanceof Slider ? scroll : 0;
-            selectedButton = null;
+        if (draggedButton != null) {
+            draggedButton.yPosition -= draggedButton instanceof Slider ? scroll : 0;
+            draggedButton.mouseReleased(mouseX, mouseY);
+            draggedButton.yPosition += draggedButton instanceof Slider ? scroll : 0;
+            draggedButton = null;
         }
     }
 

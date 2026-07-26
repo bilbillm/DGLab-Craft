@@ -9,15 +9,17 @@ import com.lumoren.dglabcraft.events.StatusEffectHandler;
 import com.lumoren.dglabcraft.gui.DGLabCraftHUD;
 import com.lumoren.dglabcraft.gui.MainScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-@Mod(modid = DGLabCraft.MODID, name = DGLabCraft.NAME, version = DGLabCraft.VERSION, clientSideOnly = true)
+@Mod(modid = DGLabCraft.MODID, name = DGLabCraft.NAME, version = DGLabCraft.VERSION, acceptableRemoteVersions = "*")
 public class DGLabCraft {
     public static final String MODID = "dglabcraft";
     public static final String NAME = "DGLab Craft";
@@ -25,18 +27,24 @@ public class DGLabCraft {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        if (event.getSide() != Side.CLIENT) {
+            return;
+        }
         ModConfig.init(event.getSuggestedConfigurationFile());
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        if (event.getSide() != Side.CLIENT) {
+            return;
+        }
         ClientModEvents.registerKeyBindings();
-        MinecraftForge.EVENT_BUS.register(this);
+        FMLCommonHandler.instance().bus().register(this);
+        FMLCommonHandler.instance().bus().register(new StatusEffectHandler());
+        FMLCommonHandler.instance().bus().register(new EnvironmentHandler());
+        FMLCommonHandler.instance().bus().register(new HeartbeatHandler());
+        FMLCommonHandler.instance().bus().register(new FadeManager());
         MinecraftForge.EVENT_BUS.register(new DamageHandler());
-        MinecraftForge.EVENT_BUS.register(new StatusEffectHandler());
-        MinecraftForge.EVENT_BUS.register(new EnvironmentHandler());
-        MinecraftForge.EVENT_BUS.register(new HeartbeatHandler());
-        MinecraftForge.EVENT_BUS.register(new FadeManager());
         MinecraftForge.EVENT_BUS.register(new DGLabCraftHUD());
         WebSocketServerManager.getInstance().start();
     }

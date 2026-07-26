@@ -2,12 +2,12 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraft.util.MathHelper;
 
 public class EnvironmentHandler {
     private int tickCounter = 0;
@@ -17,11 +17,11 @@ public class EnvironmentHandler {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !event.player.world.isRemote) {
+        if (event.phase != TickEvent.Phase.END || !event.player.worldObj.isRemote) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.player == null || !event.player.getUniqueID().equals(mc.player.getUniqueID())) {
+        if (mc.thePlayer == null || !event.player.getUniqueID().equals(mc.thePlayer.getUniqueID())) {
             return;
         }
         handleClientEnvironment(event.player);
@@ -49,8 +49,10 @@ public class EnvironmentHandler {
         }
         wasInEnd = inEnd;
 
-        BlockPos pos = new BlockPos(player.posX, player.posY, player.posZ);
-        boolean inPortal = player.world.getBlockState(pos).getBlock() == Blocks.PORTAL;
+        int blockX = MathHelper.floor_double(player.posX);
+        int blockY = MathHelper.floor_double(player.posY);
+        int blockZ = MathHelper.floor_double(player.posZ);
+        boolean inPortal = player.worldObj.getBlock(blockX, blockY, blockZ) == Blocks.portal;
         if (inPortal && tickCounter % 30 == 0) {
             sendEnvironment(ws, "pinch_intensify", maxIntensityA, maxIntensityB, ModConfig.PORTAL_MULTIPLIER.get(), "portal");
         } else if (wasInPortal && !inPortal) {
