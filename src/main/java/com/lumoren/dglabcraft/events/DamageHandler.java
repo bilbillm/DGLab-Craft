@@ -11,7 +11,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -185,7 +185,7 @@ public class DamageHandler {
         if (player.getFoodData().getFoodLevel() <= 0) {
             return "starve";
         }
-        if (player.hasEffect(MobEffects.POISON) || player.hasEffect(MobEffects.HARM)) {
+        if (player.hasEffect(MobEffects.POISON)) {
             return "magic";
         }
         if (player.fallDistance > 3.0f) {
@@ -307,7 +307,7 @@ public class DamageHandler {
         int maxCramming = 24;
         try {
             if (mc.getSingleplayerServer() != null) {
-                maxCramming = mc.getSingleplayerServer().getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+                maxCramming = mc.getSingleplayerServer().getWorldData().getGameRules().get(GameRules.MAX_ENTITY_CRAMMING);
             }
         } catch (Exception ignored) {
             // fall through to default

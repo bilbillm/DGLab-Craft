@@ -5,6 +5,7 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 public class OverlayEditScreen extends Screen {
@@ -63,8 +64,10 @@ public class OverlayEditScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        if (event.button() == 0) {
             OverlayLayout.Rect waveformRect = DGLabCraftHUD.waveformRect(this.width, this.height);
             OverlayLayout.Rect hudRect = DGLabCraftHUD.hudRect(this.width, this.height);
             if (waveformRect.contains(mouseX, mouseY)) {
@@ -76,29 +79,29 @@ public class OverlayEditScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (button == 0 && this.dragTarget != DragTarget.NONE) {
-            saveDraggedPosition(mouseX, mouseY);
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (event.button() == 0 && this.dragTarget != DragTarget.NONE) {
+            saveDraggedPosition(event.x(), event.y());
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && this.dragTarget != DragTarget.NONE) {
-            saveDraggedPosition(mouseX, mouseY);
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0 && this.dragTarget != DragTarget.NONE) {
+            saveDraggedPosition(event.x(), event.y());
             this.dragTarget = DragTarget.NONE;
             this.resizeHandle = OverlayLayout.ResizeHandle.NONE;
             this.dragStartRect = null;
             DGLabConfig.save();
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override

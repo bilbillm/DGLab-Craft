@@ -16,7 +16,7 @@ class ConnectionScreenSourceTest {
         String source = Files.readString(SOURCE).replaceAll("\\s+", " ");
 
         assertTrue(source.contains(
-            "guiGraphics.blit(RenderType::guiTextured, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(), "
+            "guiGraphics.blit(RenderPipelines.GUI_TEXTURED, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(), "
                 + "0.0F, 0.0F, layout.qrImage().width(), layout.qrImage().height(), "
                 + "qrTextureWidth, qrTextureHeight);"
         ));

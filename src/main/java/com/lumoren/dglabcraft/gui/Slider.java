@@ -1,6 +1,7 @@
 package com.lumoren.dglabcraft.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -133,8 +134,8 @@ public class Slider extends AbstractSliderButton {
      * 触发回调保存配置
      */
     @Override
-    public void onRelease(double mouseX, double mouseY) {
-        super.onRelease(mouseX, mouseY);
+    public void onRelease(MouseButtonEvent event) {
+        super.onRelease(event);
         commitCurrentValue();
     }
 

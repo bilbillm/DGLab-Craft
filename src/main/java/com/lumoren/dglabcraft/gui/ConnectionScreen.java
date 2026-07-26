@@ -11,9 +11,9 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.io.File;
@@ -38,7 +38,7 @@ public class ConnectionScreen extends Screen {
     private Button doneButton;
     private EditBox manualIpInput;
     private boolean manualIpInvalid = false;
-    private ResourceLocation qrTextureLocation;
+    private Identifier qrTextureLocation;
     private long qrTextureModifiedAt = -1L;
     private int qrTextureWidth = 0;
     private int qrTextureHeight = 0;
@@ -91,7 +91,7 @@ public class ConnectionScreen extends Screen {
         this.openQrButton = Button.builder(Component.translatable("button.dglabcraft.open_qr_image"), button -> {
             File qrFile = getQrCodeFile();
             if (qrFile.isFile()) {
-                net.minecraft.Util.getPlatform().openFile(qrFile);
+                net.minecraft.util.Util.getPlatform().openFile(qrFile);
             }
         }).bounds(
             layout.controlButtons().get(1).x(),
@@ -105,7 +105,7 @@ public class ConnectionScreen extends Screen {
             File qrFile = getQrCodeFile();
             File qrFolder = qrFile.getParentFile();
             if (qrFolder != null && qrFolder.isDirectory()) {
-                net.minecraft.Util.getPlatform().openFile(qrFolder);
+                net.minecraft.util.Util.getPlatform().openFile(qrFolder);
             }
         }).bounds(
             layout.controlButtons().get(2).x(),
@@ -256,7 +256,7 @@ public class ConnectionScreen extends Screen {
         guiGraphics.fill(panel.x(), panel.y(), panel.right(), panel.bottom(), 0xFFFFFFFF);
 
         if (qrFile.isFile() && loadQrTexture(qrFile)) {
-            guiGraphics.blit(RenderType::guiTextured, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(),
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, qrTextureLocation, layout.qrImage().x(), layout.qrImage().y(),
                 0.0F, 0.0F, layout.qrImage().width(), layout.qrImage().height(),
                 qrTextureWidth, qrTextureHeight);
         } else {
@@ -347,8 +347,8 @@ public class ConnectionScreen extends Screen {
             NativeImage image = NativeImage.read(input);
             qrTextureWidth = image.getWidth();
             qrTextureHeight = image.getHeight();
-            qrTextureLocation = ResourceLocation.fromNamespaceAndPath("dglabcraft", "qrcode");
-            this.minecraft.getTextureManager().register(qrTextureLocation, new DynamicTexture(image));
+            qrTextureLocation = Identifier.fromNamespaceAndPath("dglabcraft", "qrcode");
+            this.minecraft.getTextureManager().register(qrTextureLocation, new DynamicTexture(() -> "dglabcraft_qrcode", image));
             qrTextureModifiedAt = modifiedAt;
             return true;
         } catch (IOException e) {
