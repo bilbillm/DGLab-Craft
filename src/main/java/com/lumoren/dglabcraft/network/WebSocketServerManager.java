@@ -466,6 +466,145 @@ public class WebSocketServerManager {
     }
 
     /**
+     * 带优先级与租约仲裁的单通道效果请求 (与 Fabric 分支对齐)
+     */
+    public void requestEffect(EffectSource source, String detail, String channel, String waveId, double intensity) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        int value = (int) intensity;
+        String normalizedChannel = "A".equalsIgnoreCase(channel) ? "A" : "B";
+        ChannelRuntime state = "A".equals(normalizedChannel) ? channelAState : channelBState;
+        int newPriority = priorityOf(source);
+        boolean currentOwnerValid = isChannelStateActive(state);
+
+        LOGGER.info("请求效果 source={} detail={} channel={} waveform={} intensity={}", source, detail, normalizedChannel, waveId, value);
+
+        if (currentOwnerValid && state.priority > newPriority && !sameWaveform(state, source, waveId)) {
+            LOGGER.info("调度决策 channel={} action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                    normalizedChannel, source, detail, waveId, state.source, state.waveformId);
+            return;
+        }
+
+        if (sameWaveform(state, source, waveId)) {
+            resendSingleChannel(normalizedChannel, waveId, intensity, source, detail);
+            LOGGER.info("调度决策 channel={} action=refresh source={} detail={} waveform={} reason=same-waveform", normalizedChannel, source, detail, waveId);
+        } else {
+            sendWaveformDataSingleChannel(normalizedChannel, waveId, intensity);
+            updateChannelState(state, source, detail, waveId, value);
+            LOGGER.info("调度决策 channel={} action=replace source={} detail={} waveform={} reason=priority-ok", normalizedChannel, source, detail, waveId);
+        }
+    }
+
+    /**
+     * 带优先级与租约仲裁的双通道同步效果请求 (与 Fabric 分支对齐)
+     */
+    public void requestSyncedEffect(EffectSource source, String detail, String waveId, double intensityA, double intensityB) {
+        if (connectedClient == null || !connectedClient.isOpen()) {
+            return;
+        }
+
+        int valueA = (int) intensityA;
+        int valueB = (int) intensityB;
+        int newPriority = priorityOf(source);
+        boolean syncOwnerValid = isSyncStateActive();
+
+        LOGGER.info("请求效果 source={} detail={} channel=AB waveform={} intensityA={} intensityB={} sync=true", source, detail, waveId, valueA, valueB);
+
+        if (syncOwnerValid && priorityOf(syncSource) > newPriority && !(syncSource == source && waveId.equals(syncWaveform))) {
+            LOGGER.info("调度决策 syncGroup=AB action=ignore source={} detail={} waveform={} reason=lower-priority-than-current currentSource={} currentWaveform={}",
+                    source, detail, waveId, syncSource, syncWaveform);
+            return;
+        }
+
+        if (syncOwnerValid && syncSource == source && waveId.equals(syncWaveform)) {
+            resendSyncedChannels(waveId, intensityA, intensityB, source, detail);
+            LOGGER.info("调度决策 syncGroup=AB action=refresh source={} detail={} waveform={} reason=same-waveform", source, detail, waveId);
+        } else {
+            sendWaveformDataDualChannelWithDifferentIntensity(waveId, intensityA, intensityB);
+            updateChannelState(channelAState, source, detail, waveId, valueA);
+            updateChannelState(channelBState, source, detail, waveId, valueB);
+            syncEffectActive = true;
+            syncSource = source;
+            syncDetail = detail;
+            syncWaveform = waveId;
+            syncLeaseUntilAt = computeLeaseUntil(source, detail);
+            LOGGER.info("调度决策 syncGroup=AB action=replace source={} detail={} waveform={} reason=priority-ok", source, detail, waveId);
+        }
+    }
+
+    /**
+     * 单通道续播 (同波形刷新, 不发 clear)
+     */
+    private void resendSingleChannel(String channel, String waveId, double intensity, EffectSource source, String detail) {
+        try {
+            int channelNum = "A".equalsIgnoreCase(channel) ? 1 : 2;
+            String channelStr = "A".equalsIgnoreCase(channel) ? "A" : "B";
+            int value = (int) intensity;
+
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+            for (List<String> chunk : chunks) {
+                sendPulseMessage(channelStr, chunk);
+            }
+            sendMessage("strength-" + channelNum + "+2+" + value);
+
+            if (channelNum == 1) {
+                channelAIntensity = intensity;
+                channelAStatus = waveId;
+            } else {
+                channelBIntensity = intensity;
+                channelBStatus = waveId;
+            }
+            recordPulsePreview(channelStr, waveId);
+
+            updateChannelState("A".equals(channel) ? channelAState : channelBState, source, detail, waveId, value);
+            LOGGER.info("协议发送 channel={} clear=none pulse={} chunks={} strength={} refresh=true", channel, waveId, chunks.size(), value);
+        } catch (Exception e) {
+            LOGGER.error("续播单通道波形失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 双通道续播 (同波形刷新, 不发 clear)
+     */
+    private void resendSyncedChannels(String waveId, double intensityA, double intensityB, EffectSource source, String detail) {
+        try {
+            int valueA = (int) intensityA;
+            int valueB = (int) intensityB;
+            var chunks = WaveformManager.getInstance().getWaveformChunks(waveId, 100);
+
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("A", chunk);
+            }
+            for (List<String> chunk : chunks) {
+                sendPulseMessage("B", chunk);
+            }
+
+            sendMessage("strength-1+2+" + valueA);
+            sendMessage("strength-2+2+" + valueB);
+
+            channelAIntensity = intensityA;
+            channelAStatus = waveId;
+            channelBIntensity = intensityB;
+            channelBStatus = waveId;
+            recordPulsePreview("A", waveId);
+            recordPulsePreview("B", waveId);
+            updateChannelState(channelAState, source, detail, waveId, valueA);
+            updateChannelState(channelBState, source, detail, waveId, valueB);
+            syncEffectActive = true;
+            syncSource = source;
+            syncDetail = detail;
+            syncWaveform = waveId;
+            syncLeaseUntilAt = computeLeaseUntil(source, detail);
+
+            LOGGER.info("协议发送 sync=AB clear=none pulse={} chunksA={} chunksB={} strengthA={} strengthB={} refresh=true", waveId, chunks.size(), chunks.size(), valueA, valueB);
+        } catch (Exception e) {
+            LOGGER.error("续播双通道波形失败: {}", e.getMessage());
+        }
+    }
+
+    /**
      * 单通道发送 (原有逻辑)
      */
     private void sendWaveformDataSingleChannel(String channel, String waveId, double intensity) {

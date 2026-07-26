@@ -81,14 +81,14 @@ public class HeartbeatHandler {
                     intensityA = Math.max(1, Math.min(intensityA, maxIntensityA));
                     int intensityB = (int)(maxIntensityB * percentage * multiplier);
                     intensityB = Math.max(1, Math.min(intensityB, maxIntensityB));
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "heartbeat", intensityA, intensityB);
                     // 更新 FadeManager
                     FadeManager.updateHeartbeat(intensityA, intensityB);
                 } else {
                     // 非同步模式：只用 B 通道
                     int intensity = (int)(maxIntensityB * percentage * multiplier);
                     intensity = Math.max(1, Math.min(intensity, maxIntensityB));
-                    ws.sendWaveformData("B", "heartbeat", intensity);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "B", "heartbeat", intensity);
                     // 更新 FadeManager（B通道用intensity，A通道用0）
                     FadeManager.updateHeartbeat(0, intensity);
                 }

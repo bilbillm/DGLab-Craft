@@ -4,53 +4,126 @@ import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 伤害事件处理
- * 根据 DamageSource.getMsgId() 映射到对应的倍率配置
+ * 主检测: 客户端血量差轮询 (单人/联机均有效)
+ * 来源识别: LivingDamageEvent 缓存 + 位置启发式兜底
  */
 public class DamageHandler {
 
-    @SubscribeEvent
-    public void onLivingDamage(LivingDamageEvent event) {
-        // 只处理客户端玩家自身
-        Minecraft mc = Minecraft.getInstance();
+    private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-DamageHandler");
+    private static final float MIN_DAMAGE_DELTA = 0.01f;
+    private static final int DAMAGE_DEBOUNCE_TICKS = 6;
+    private static final int EVENT_SOURCE_MAX_AGE_TICKS = 40;
 
-        if (!(event.getEntity() instanceof Player)) return;
+    private float lastHealth = -1.0f;
+    private int tickCounter = 0;
+    private int lastDamageTriggerTick = -DAMAGE_DEBOUNCE_TICKS;
+    private String lastDamageSourceId;
+    private int lastDamageSourceTick = Integer.MIN_VALUE;
+    private String pendingFallingBlockSource;
+    private int pendingFallingBlockTick = Integer.MIN_VALUE;
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
+    }
+
+    public void onClientTick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
 
-        // UUID 比较判断是否是本地玩家
-        Player eventPlayer = (Player) event.getEntity();
-        if (!eventPlayer.getUUID().equals(mc.player.getUUID())) {
+        tickCounter++;
+        updatePendingFallingBlockSource(mc.player, mc);
+
+        Player player = mc.player;
+        float currentHealth = player.getHealth();
+
+        if (lastHealth < 0.0f) {
+            lastHealth = currentHealth;
             return;
         }
 
-        Player player = eventPlayer;
+        float healthDelta = lastHealth - currentHealth;
+        lastHealth = currentHealth;
 
-        DamageSource source = event.getSource();
-        float damage = event.getAmount();
-        String msgId = source.getMsgId();
+        if (healthDelta <= MIN_DAMAGE_DELTA) {
+            expireStaleDamageSource();
+            return;
+        }
 
-        System.out.println("[DGLabCraft] 伤害来源: " + msgId + ", 伤害值: " + damage);
+        if (tickCounter - lastDamageTriggerTick < DAMAGE_DEBOUNCE_TICKS) {
+            expireStaleDamageSource();
+            return;
+        }
 
-        // 获取 WebSocket 管理器
-        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+        lastDamageTriggerTick = tickCounter;
+        triggerDamageFeedback(player, healthDelta, mc);
+    }
 
-        // 获取玩家最大生命值
-        float maxHealth = player.getMaxHealth();
+    /**
+     * LivingDamageEvent 在逻辑服务端触发 (单人/局域网主机有效),
+     * 仅用于缓存伤害来源以提升波形分类准确度
+     */
+    @SubscribeEvent
+    public void onLivingDamage(LivingDamageEvent event) {
+        if (!(event.getEntityLiving() instanceof Player)) {
+            return;
+        }
+        cacheDamageSource((Player) event.getEntityLiving(), event.getSource());
+    }
 
-        // 获取波形
+    public void cacheDamageSource(Player player, DamageSource source) {
+        if (player == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!player.getUUID().equals(mc.player.getUUID())) return;
+        if (source == null) return;
+
+        String normalizedSource = normalizeDamageSourceId(source.getMsgId());
+        String pendingSource = peekPendingFallingBlockSource();
+
+        if (pendingSource != null && shouldOverrideWithPendingSource(normalizedSource)) {
+            lastDamageSourceId = pendingSource;
+        } else {
+            lastDamageSourceId = source.getMsgId();
+        }
+        lastDamageSourceTick = tickCounter;
+        LOGGER.debug("原始伤害事件 source.getMsgId(): {}", lastDamageSourceId);
+    }
+
+    private void triggerDamageFeedback(Player player, float damage, Minecraft mc) {
+        String msgId = normalizeDamageSourceId(resolveDamageSourceId(player, mc));
         String waveform = WaveformManager.getWaveformIdForDamage(msgId);
+        if ("default".equals(waveform)) {
+            waveform = "beat";
+        }
 
-        // 获取倍率
+        LOGGER.debug("伤害来源: {}, 伤害值: {}", msgId, damage);
+
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+        float maxHealth = Math.max(player.getMaxHealth(), 1.0f);
         double multiplier = getMultiplierForDamage(msgId);
         float healthRatio = damage / maxHealth;
 
-        // 同步模式：分别计算 A/B 通道强度
         if (ModConfig.SYNC_CHANNELS.get()) {
             int appMaxStrengthA = ws.getAppAMaxStrength();
             int appMaxStrengthB = ws.getAppBMaxStrength();
@@ -63,33 +136,249 @@ public class DamageHandler {
             int strengthB = (int)(effectiveMaxB * healthRatio * 2 * multiplier);
             strengthB = Math.max(1, Math.min(strengthB, effectiveMaxB));
 
-            System.out.println("[DGLabCraft] 计算强度: A=" + strengthA + "(上限" + effectiveMaxA + "), B=" + strengthB + "(上限" + effectiveMaxB + ")");
-            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+            LOGGER.debug("计算强度: A={}(上限{}), B={}(上限{}), WebSocket已连接: {}",
+                    strengthA, effectiveMaxA, strengthB, effectiveMaxB, ws.isConnected());
 
-            ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
-            // 更新 FadeManager
+            ws.requestSyncedEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, waveform, strengthA, strengthB);
             FadeManager.updateDamage(strengthA, strengthB);
         } else {
-            // 非同步模式：只用 A 通道
             int appMaxStrength = ws.getAppAMaxStrength();
             int effectiveMaxIntensity = ModConfig.getEffectiveMaxIntensity(appMaxStrength);
 
             int strength = (int)(effectiveMaxIntensity * healthRatio * 2 * multiplier);
             strength = Math.max(1, Math.min(strength, effectiveMaxIntensity));
 
-            System.out.println("[DGLabCraft] 计算强度: " + strength + ", 有效上限: " + effectiveMaxIntensity + ", 通道: A");
-            System.out.println("[DGLabCraft] WebSocket已连接: " + ws.isConnected());
+            LOGGER.debug("计算强度: {}, 有效上限: {}, 通道: A, WebSocket已连接: {}", strength, effectiveMaxIntensity, ws.isConnected());
 
-            ws.sendWaveformData("A", waveform, strength);
-            // 更新 FadeManager（A通道用strength，B通道用0）
+            ws.requestEffect(WebSocketServerManager.EffectSource.DAMAGE, msgId, "A", waveform, strength);
             FadeManager.updateDamage(strength, 0);
         }
+    }
+
+    private String resolveDamageSourceId(Player player, Minecraft mc) {
+        String cachedSource = peekRecentDamageSource();
+        if (cachedSource != null && !cachedSource.isEmpty()) {
+            return cachedSource;
+        }
+
+        if (player.isInLava()) {
+            return "lava";
+        }
+        if (isOnHotFloor(player, mc)) {
+            return "hotFloor";
+        }
+        if (player.isOnFire()) {
+            return "onFire";
+        }
+        if (player.getTicksFrozen() > 0) {
+            return "freeze";
+        }
+        if (player.getAirSupply() <= 0) {
+            return "drown";
+        }
+        String positionalOrEntitySource = getPositionalOrEntityDamageSource(player, mc);
+        if (positionalOrEntitySource != null) {
+            return positionalOrEntitySource;
+        }
+        if (player.hasEffect(MobEffects.WITHER)) {
+            return "wither";
+        }
+        if (player.getFoodData().getFoodLevel() <= 0) {
+            return "starve";
+        }
+        if (player.hasEffect(MobEffects.POISON) || player.hasEffect(MobEffects.HARM)) {
+            return "magic";
+        }
+        if (player.fallDistance > 3.0f) {
+            return "fall";
+        }
+
+        String blockDamageSource = getTouchingBlockDamageSource(player, mc);
+        if (blockDamageSource != null) {
+            return blockDamageSource;
+        }
+
+        return "mob";
+    }
+
+    // package-private for testing
+    String normalizeDamageSourceId(String rawId) {
+        if (rawId == null || rawId.isEmpty()) {
+            return "mob";
+        }
+
+        String id = rawId.trim();
+        String lower = id.toLowerCase();
+
+        if (lower.contains(".")) {
+            lower = lower.split("\\.")[0];
+        }
+
+        return switch (lower) {
+            case "sweet_berry_bush" -> "sweetberrybush";
+            case "hot_floor" -> "hotFloor";
+            case "in_wall" -> "inWall";
+            case "falling_block" -> "fallingBlock";
+            case "dragon_breath" -> "dragonBreath";
+            case "fly_into_wall" -> "flyIntoWall";
+            case "mob_attack", "mobattack" -> "mob";
+            case "player_attack", "playerattack" -> "player";
+            case "indirect_magic", "indirectmagic" -> "magic";
+            case "onfire" -> "onFire";
+            case "infire" -> "inFire";
+            case "hotfloor" -> "hotFloor";
+            case "inwall" -> "inWall";
+            case "fallingblock" -> "fallingBlock";
+            case "dragonbreath" -> "dragonBreath";
+            case "flyintowall" -> "flyIntoWall";
+            default -> lower;
+        };
+    }
+
+    private String peekRecentDamageSource() {
+        if (lastDamageSourceId == null) {
+            return null;
+        }
+        if (tickCounter - lastDamageSourceTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            lastDamageSourceId = null;
+            return null;
+        }
+
+        return lastDamageSourceId;
+    }
+
+    private void expireStaleDamageSource() {
+        if (lastDamageSourceId != null && tickCounter - lastDamageSourceTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            lastDamageSourceId = null;
+        }
+
+        if (pendingFallingBlockSource != null && tickCounter - pendingFallingBlockTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            pendingFallingBlockSource = null;
+        }
+    }
+
+    private String getTouchingBlockDamageSource(Player player, Minecraft mc) {
+        if (mc.level == null) {
+            return null;
+        }
+
+        BlockPos pos = player.blockPosition();
+        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
+        Block blockAtBody = mc.level.getBlockState(pos).getBlock();
+        Block blockAtHead = mc.level.getBlockState(pos.above()).getBlock();
+
+        if (blockAtFeet == Blocks.CACTUS || blockAtBody == Blocks.CACTUS || blockAtHead == Blocks.CACTUS) {
+            return "cactus";
+        }
+        if (blockAtFeet == Blocks.SWEET_BERRY_BUSH || blockAtBody == Blocks.SWEET_BERRY_BUSH || blockAtHead == Blocks.SWEET_BERRY_BUSH) {
+            return "sweetberrybush";
+        }
+
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            Block adjacentBlock = mc.level.getBlockState(pos.relative(direction)).getBlock();
+            Block adjacentUpperBlock = mc.level.getBlockState(pos.above().relative(direction)).getBlock();
+            if (adjacentBlock == Blocks.CACTUS || adjacentUpperBlock == Blocks.CACTUS) {
+                return "cactus";
+            }
+            if (adjacentBlock == Blocks.SWEET_BERRY_BUSH || adjacentUpperBlock == Blocks.SWEET_BERRY_BUSH) {
+                return "sweetberrybush";
+            }
+        }
+
+        return null;
+    }
+
+    private String getPositionalOrEntityDamageSource(Player player, Minecraft mc) {
+        if (mc.level == null) {
+            return null;
+        }
+
+        BlockPos pos = player.blockPosition();
+        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
+        Block blockAtBody = mc.level.getBlockState(pos).getBlock();
+
+        if (blockAtFeet == Blocks.POINTED_DRIPSTONE || blockAtBody == Blocks.POINTED_DRIPSTONE) {
+            return "stalagmite";
+        }
+
+        if (player.isInWall()) {
+            return "inWall";
+        }
+
+        int maxCramming = mc.level.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+        if (maxCramming > 0) {
+            java.util.List<Entity> nearbyEntities = mc.level.getEntities(player, player.getBoundingBox().inflate(0.2D));
+            if (nearbyEntities.size() >= maxCramming) {
+                return "cramming";
+            }
+        }
+
+        java.util.List<FallingBlockEntity> fallingBlocks = mc.level.getEntitiesOfClass(FallingBlockEntity.class, player.getBoundingBox().inflate(1.0D, 2.0D, 1.0D));
+        for (FallingBlockEntity entity : fallingBlocks) {
+            Block fallingBlock = entity.getBlockState().getBlock();
+            if (isAnvilBlock(fallingBlock)) {
+                return "anvil";
+            }
+            return "fallingBlock";
+        }
+
+        return null;
+    }
+
+    private void updatePendingFallingBlockSource(Player player, Minecraft mc) {
+        if (mc.level == null) {
+            return;
+        }
+
+        java.util.List<FallingBlockEntity> fallingBlocks = mc.level.getEntitiesOfClass(FallingBlockEntity.class, player.getBoundingBox().inflate(1.0D, 2.0D, 1.0D));
+        for (FallingBlockEntity entity : fallingBlocks) {
+            Block fallingBlock = entity.getBlockState().getBlock();
+            pendingFallingBlockSource = isAnvilBlock(fallingBlock) ? "anvil" : "fallingBlock";
+            pendingFallingBlockTick = tickCounter;
+            return;
+        }
+    }
+
+    private String peekPendingFallingBlockSource() {
+        if (pendingFallingBlockSource == null) {
+            return null;
+        }
+        if (tickCounter - pendingFallingBlockTick > EVENT_SOURCE_MAX_AGE_TICKS) {
+            pendingFallingBlockSource = null;
+            return null;
+        }
+        return pendingFallingBlockSource;
+    }
+
+    private boolean shouldOverrideWithPendingSource(String normalizedSource) {
+        return normalizedSource == null
+                || normalizedSource.isEmpty()
+                || "mob".equals(normalizedSource)
+                || "player".equals(normalizedSource)
+                || "fallingBlock".equals(normalizedSource)
+                || "anvil".equals(normalizedSource);
+    }
+
+    private boolean isAnvilBlock(Block block) {
+        return block == Blocks.ANVIL || block == Blocks.CHIPPED_ANVIL || block == Blocks.DAMAGED_ANVIL;
+    }
+
+    private boolean isOnHotFloor(Player player, Minecraft mc) {
+        if (mc.level == null) {
+            return false;
+        }
+
+        BlockPos pos = player.blockPosition();
+        Block blockAtFeet = mc.level.getBlockState(pos.below()).getBlock();
+        return blockAtFeet == Blocks.MAGMA_BLOCK;
     }
 
     /**
      * 根据伤害来源 ID 获取对应的倍率配置
      */
     private double getMultiplierForDamage(String msgId) {
+        msgId = normalizeDamageSourceId(msgId);
+
         switch (msgId) {
             // 锐器与穿刺 (fast_pinch)
             case "cactus":
