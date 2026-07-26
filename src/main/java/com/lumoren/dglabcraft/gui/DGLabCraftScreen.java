@@ -651,18 +651,8 @@ public class DGLabCraftScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPosition() {
-            return this.width - 10;
-        }
-
-        @Override
         public int getRowWidth() {
             return 400;
-        }
-
-        @Override
-        protected boolean isSelectedItem(int pIndex) {
-            return false;
         }
 
         /**
@@ -697,7 +687,12 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+                int left = this.getContentX();
+                int top = this.getContentY();
+                int entryWidth = this.getContentWidth();
+                int entryHeight = this.getContentHeight();
+
                 // 渲染深色背景条
                 guiGraphics.fill(left + 10, top, left + entryWidth - 10, top + entryHeight, 0x4D000000);
 
@@ -737,13 +732,13 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染标签文本
                 guiGraphics.drawString(
                     net.minecraft.client.Minecraft.getInstance().font,
                     text,
-                    left + 15,
-                    top + 5,
+                    this.getContentX() + 15,
+                    this.getContentY() + 5,
                     0xFFFFFF);
             }
 
@@ -776,7 +771,10 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void render(GuiGraphics guiGraphics, int entryIdx, int top, int left, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+                int left = this.getContentX();
+                int top = this.getContentY();
+                int entryWidth = this.getContentWidth();
                 int gap = 15;
                 int widgetWidth = (entryWidth - gap - 20) / 2;
 

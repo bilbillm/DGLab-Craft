@@ -15,8 +15,8 @@ import net.minecraft.network.chat.Component;
 import java.io.File;
 
 /**
- * DGLab Craft 连接设置界面
- * 显示连接状态和二维码
+ * DGLab Craft 杩炴帴璁剧疆鐣岄潰
+ * 鏄剧ず杩炴帴鐘舵€佸拰浜岀淮鐮?
  */
 public class ConnectionScreen extends Screen {
     private static final int BUTTON_HEIGHT = 20;
@@ -65,7 +65,7 @@ public class ConnectionScreen extends Screen {
             ensureQrCodeGenerated();
         }
 
-        // 刷新二维码按钮
+        // 鍒锋柊浜岀淮鐮佹寜閽?
         this.refreshQrButton = Button.builder(Component.translatable("button.dglabcraft.refresh_qr"), button -> {
             if (commitManualIpInput()) {
                 ensureQrCodeGenerated();
@@ -73,11 +73,11 @@ public class ConnectionScreen extends Screen {
         }).bounds(centerX - buttonWidth / 2, getQrButtonY(0, qrButtonStartY), buttonWidth, BUTTON_HEIGHT).build();
         this.addRenderableWidget(this.refreshQrButton);
 
-        // 打开二维码按钮
+        // 鎵撳紑浜岀淮鐮佹寜閽?
         this.openQrButton = Button.builder(Component.translatable("button.dglabcraft.open_qr_image"), button -> {
             File qrFile = getQrCodeFile();
             if (qrFile.isFile()) {
-                net.minecraft.Util.getPlatform().openFile(qrFile);
+                net.minecraft.util.Util.getPlatform().openFile(qrFile);
             }
         }).bounds(centerX - buttonWidth / 2, getQrButtonY(1, qrButtonStartY), buttonWidth, BUTTON_HEIGHT).build();
         this.addRenderableWidget(this.openQrButton);
@@ -86,12 +86,12 @@ public class ConnectionScreen extends Screen {
             File qrFile = getQrCodeFile();
             File qrFolder = qrFile.getParentFile();
             if (qrFolder != null && qrFolder.isDirectory()) {
-                net.minecraft.Util.getPlatform().openFile(qrFolder);
+                net.minecraft.util.Util.getPlatform().openFile(qrFolder);
             }
         }).bounds(centerX - buttonWidth / 2, getQrButtonY(2, qrButtonStartY), buttonWidth, BUTTON_HEIGHT).build();
         this.addRenderableWidget(this.openQrFolderButton);
 
-        // 完成按钮
+        // 瀹屾垚鎸夐挳
         this.doneButton = Button.builder(Component.translatable("button.dglabcraft.done"), button -> this.onClose())
             .bounds(centerX - buttonWidth / 2, doneButtonY, buttonWidth, BUTTON_HEIGHT).build();
         this.addRenderableWidget(this.doneButton);
@@ -157,7 +157,7 @@ public class ConnectionScreen extends Screen {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         boolean isConnected = server.isConnected();
 
-        // 已连接时隐藏二维码按钮
+        // 宸茶繛鎺ユ椂闅愯棌浜岀淮鐮佹寜閽?
         if (this.refreshQrButton != null) {
             this.refreshQrButton.visible = !isConnected;
         }

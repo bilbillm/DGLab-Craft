@@ -248,11 +248,11 @@ public class DGLabCraftHUD {
 
     private static void renderScaled(GuiGraphics guiGraphics, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
         float scale = (float) Math.max(0.01D, rect.width() / (double) baseWidth);
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(rect.x(), rect.y(), 0.0D);
-        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate((float) rect.x(), (float) rect.y());
+        guiGraphics.pose().scale(scale, scale);
         draw.run();
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
     }
 
     private static String formatSeconds(long millis) {

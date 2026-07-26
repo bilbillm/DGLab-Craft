@@ -2,10 +2,6 @@ package com.lumoren.dglabcraft.util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +12,7 @@ import java.util.*;
  * 波形管理器 - 数据驱动的波形加载系统
  * 从资源目录加载 JSON 波形文件
  */
-public class WaveformManager implements ResourceManagerReloadListener {
+public class WaveformManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("DGLabCraft-WaveformManager");
     private static WaveformManager instance;
 
@@ -39,63 +35,6 @@ public class WaveformManager implements ResourceManagerReloadListener {
             instance = new WaveformManager();
         }
         return instance;
-    }
-
-    /**
-     * 初始化波形池 - 从资源目录加载
-     */
-    public void init(ResourceManager resourceManager) {
-        if (initialized) {
-            LOGGER.info("波形管理器已初始化，跳过");
-            return;
-        }
-
-        LOGGER.info("开始初始化波形管理器...");
-
-        Gson gson = new Gson();
-        Type listType = new TypeToken<List<String>>(){}.getType();
-
-        // 遍历 waveforms 目录下的所有 JSON 文件
-        Map<ResourceLocation, Resource> resources = resourceManager.listResources("assets/dglabcraft/waveforms",
-            path -> path.getPath().endsWith(".json"));
-
-        LOGGER.info("找到 {} 个波形资源文件", resources.size());
-
-        for (Map.Entry<ResourceLocation, Resource> entry : resources.entrySet()) {
-            try {
-                ResourceLocation path = entry.getKey();
-                String pathString = path.toString();
-                LOGGER.info("处理波形文件: {}", pathString);
-
-                // 提取文件名作为波形 ID (去除 .json 后缀)
-                String fileName = pathString.replace("assets/dglabcraft/waveforms/", "").replace(".json", "");
-                LOGGER.info("提取波形ID: {}", fileName);
-
-                // 读取资源
-                Resource resource = entry.getValue();
-                String jsonContent = new String(resource.open().readAllBytes());
-                LOGGER.info("JSON内容: {}", jsonContent);
-                List<String> waveformData = gson.fromJson(jsonContent, listType);
-
-                if (waveformData != null && !waveformData.isEmpty()) {
-                    waveformPool.put(fileName, waveformData);
-                    LOGGER.info("加载波形: {} ({} 个数据块)", fileName, waveformData.size());
-                }
-            } catch (Exception e) {
-                LOGGER.error("加载波形文件失败: {} - {}", entry.getKey(), e.getMessage());
-            }
-        }
-
-        // 输出所有已加载的波形
-        LOGGER.info("已加载波形列表: {}", waveformPool.keySet());
-
-        // 确保默认波形存在
-        if (!waveformPool.containsKey("default")) {
-            waveformPool.put("default", DEFAULT_WAVEFORM);
-        }
-
-        initialized = true;
-        LOGGER.info("波形管理器初始化完成, 共加载 {} 个波形", waveformPool.size());
     }
 
     /**
@@ -298,12 +237,5 @@ public class WaveformManager implements ResourceManagerReloadListener {
         DAMAGE_WAVEFORM_MAP.put("player_attack", "beat");
         DAMAGE_WAVEFORM_MAP.put("playerattack", "beat");
         DAMAGE_WAVEFORM_MAP.put("indirect_magic", "tide");
-    }
-
-    @Override
-    public void onResourceManagerReload(ResourceManager resourceManager) {
-        // 重新加载波形
-        initialized = false;
-        init(resourceManager);
     }
 }
