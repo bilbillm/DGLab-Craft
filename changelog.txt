@@ -1,5 +1,12 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-07-28
+
+### Fixed
+- Corrected the Fabric API dependency metadata for Minecraft 1.16.5 and 1.17.1.
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 ### Added
