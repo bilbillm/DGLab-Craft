@@ -2,14 +2,14 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.142'
 }
 
 version = mod_version
 group = 'com.lumoren.dglabcraft'
 
 neoForge {
-    version = "21.11.44"
+    version = "${neoforge_version}"
 }
 
 base {
@@ -17,7 +17,7 @@ base {
 }
 
 // Java 17
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 

@@ -54,8 +54,8 @@ public class DGLabCraft
     public void onClientTick(ClientTickEvent.Post event) {
         if (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen == null) {
-                mc.setScreen(new MainScreen());
+            if (mc.gui.screen() == null) {
+                mc.gui.setScreen(new MainScreen());
             }
         }
     }

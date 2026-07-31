@@ -2,7 +2,7 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -38,17 +38,17 @@ public class MainScreen extends Screen {
         int startY = this.height / 2 - 40;
 
         this.settingsButton = Button.builder(Component.translatable("button.dglabcraft.strength_settings"), button -> {
-            this.minecraft.setScreen(new DGLabCraftScreen(this));
+            this.minecraft.gui.setScreen(new DGLabCraftScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.settingsButton);
 
         this.connectionButton = Button.builder(Component.translatable("button.dglabcraft.connection_settings"), button -> {
-            this.minecraft.setScreen(new ConnectionScreen(this));
+            this.minecraft.gui.setScreen(new ConnectionScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY + spacing, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.connectionButton);
 
         this.diagnosticButton = Button.builder(Component.translatable("button.dglabcraft.diagnostics"), button -> {
-            this.minecraft.setScreen(new DiagnosticScreen(this));
+            this.minecraft.gui.setScreen(new DiagnosticScreen(this));
         }).bounds(centerX - buttonWidth / 2, startY + spacing * 2, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(this.diagnosticButton);
 
@@ -78,7 +78,7 @@ public class MainScreen extends Screen {
         this.addRenderableWidget(this.waveformOverlayButton);
 
         this.editOverlaysButton = Button.builder(Component.translatable("button.dglabcraft.edit_overlays"), button -> {
-            this.minecraft.setScreen(new OverlayEditScreen(this));
+            this.minecraft.gui.setScreen(new OverlayEditScreen(this));
         }).bounds(startX, startY + spacing * 5, btnWidth, buttonHeight).build();
         this.addRenderableWidget(this.editOverlaysButton);
 
@@ -98,12 +98,12 @@ public class MainScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
-        guiGraphics.drawCenteredString(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         Component statusText;
@@ -115,10 +115,10 @@ public class MainScreen extends Screen {
             statusText = Component.translatable("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
-        guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
+        guiGraphics.centeredText(this.font, statusText, centerX, 50, statusColor);
 
         String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
-        guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
+        guiGraphics.centeredText(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
     }
 
     @Override
@@ -128,6 +128,6 @@ public class MainScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(null);
+        this.minecraft.gui.setScreen(null);
     }
 }

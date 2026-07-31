@@ -8,7 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -125,7 +125,7 @@ public class ConnectionScreen extends Screen {
     @Override
     public void onClose() {
         commitManualIpInput();
-        this.minecraft.setScreen(this.parent);
+        this.minecraft.gui.setScreen(this.parent);
     }
 
     private boolean commitManualIpInput() {
@@ -176,8 +176,8 @@ public class ConnectionScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
         ConnectionLayout.Layout layout = ConnectionLayout.calculate(this.width, this.height);
@@ -196,9 +196,9 @@ public class ConnectionScreen extends Screen {
             this.openQrFolderButton.visible = !isConnected && hasQrFolder();
         }
 
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.connection_settings"),
+        guiGraphics.centeredText(this.font, Component.translatable("screen.dglabcraft.connection_settings"),
             centerX, ConnectionLayout.HEADER_TITLE_Y, 0xFFFFFF);
 
         Component statusText;
@@ -210,9 +210,9 @@ public class ConnectionScreen extends Screen {
             statusText = Component.translatable("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
-        guiGraphics.drawCenteredString(this.font, statusText, centerX, ConnectionLayout.HEADER_STATUS_Y, statusColor);
+        guiGraphics.centeredText(this.font, statusText, centerX, ConnectionLayout.HEADER_STATUS_Y, statusColor);
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.address",
+        guiGraphics.centeredText(this.font, Component.translatable("label.dglabcraft.address",
             server.resolveConnectionHost(), server.getPort()), centerX, ConnectionLayout.HEADER_ADDRESS_Y, 0xAAAAAA);
 
         if (!isConnected) {
@@ -227,7 +227,7 @@ public class ConnectionScreen extends Screen {
         if (isConnected) {
             String clientId = server.getConnectedClientId();
             if (clientId != null) {
-                guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
+                guiGraphics.centeredText(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
             }
         }
     }
@@ -249,7 +249,7 @@ public class ConnectionScreen extends Screen {
         return qrFolder != null && qrFolder.isDirectory();
     }
 
-    private void renderQrPanel(GuiGraphics guiGraphics, ConnectionLayout.Layout layout, File qrFile) {
+    private void renderQrPanel(GuiGraphicsExtractor guiGraphics, ConnectionLayout.Layout layout, File qrFile) {
         ConnectionLayout.Rect panel = layout.qrPanel();
         ConnectionLayout.Rect qr = layout.qrImage();
         guiGraphics.fill(panel.x() - 2, panel.y() - 2, panel.right() + 2, panel.bottom() + 2, 0xFF111111);
@@ -260,18 +260,18 @@ public class ConnectionScreen extends Screen {
                 0.0F, 0.0F, layout.qrImage().width(), layout.qrImage().height(),
                 qrTextureWidth, qrTextureHeight);
         } else {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.scan_qr"),
+            guiGraphics.centeredText(this.font, Component.translatable("message.dglabcraft.scan_qr"),
                 qr.x() + qr.width() / 2, qr.y() + qr.height() / 2 - 4, 0x555555);
         }
     }
 
-    private void renderConnectionHelp(GuiGraphics guiGraphics, ConnectionLayout.Layout layout) {
+    private void renderConnectionHelp(GuiGraphicsExtractor guiGraphics, ConnectionLayout.Layout layout) {
         ConnectionLayout.Rect controls = layout.controls();
         Component manualLabel = manualIpInvalid
             ? Component.translatable("error.dglabcraft.invalid_manual_ip")
             : Component.translatable("label.dglabcraft.manual_lan_ip");
         int manualLabelColor = manualIpInvalid ? 0xFF5555 : 0xAAAAAA;
-        guiGraphics.drawCenteredString(this.font, manualLabel,
+        guiGraphics.centeredText(this.font, manualLabel,
             controls.x() + controls.width() / 2, layout.manualLabelY(), manualLabelColor);
 
         ConnectionLayout.Rect viewport = layout.helpViewport();
@@ -291,7 +291,7 @@ public class ConnectionScreen extends Screen {
         guiGraphics.enableScissor(viewport.x(), viewport.y(), viewport.right(), viewport.bottom());
         for (HelpLine line : lines) {
             if (line.text() != null && y + line.height() > viewport.y() && y < viewport.bottom()) {
-                guiGraphics.drawCenteredString(this.font, line.text(), centerX, y, line.color());
+                guiGraphics.centeredText(this.font, line.text(), centerX, y, line.color());
             }
             y += line.height();
         }
@@ -322,7 +322,7 @@ public class ConnectionScreen extends Screen {
         }
     }
 
-    private void renderHelpScrollBar(GuiGraphics guiGraphics, ConnectionLayout.Rect viewport, int contentHeight) {
+    private void renderHelpScrollBar(GuiGraphicsExtractor guiGraphics, ConnectionLayout.Rect viewport, int contentHeight) {
         if (this.maxHelpScroll <= 0 || viewport.height() <= 0) {
             return;
         }
