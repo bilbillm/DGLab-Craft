@@ -5,7 +5,7 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.IssueReportBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -71,8 +71,8 @@ public class DiagnosticScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         int centerX = this.width / 2;
@@ -93,18 +93,18 @@ public class DiagnosticScreen extends Screen {
         this.regenerateQrButton.active = server.isRunning() && !server.isConnected();
         this.silenceButton.active = server.isConnected() && server.hasLiveOutput();
 
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.diagnostics"), centerX, 20, 0xFFFFFF);
-        guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.diagnostics_summary"), centerX, 38, 0xAAAAAA);
+        guiGraphics.centeredText(this.font, Component.translatable("screen.dglabcraft.diagnostics"), centerX, 20, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, Component.translatable("message.dglabcraft.diagnostics_summary"), centerX, 38, 0xAAAAAA);
         if (!copyStatus.getString().isEmpty()) {
-            guiGraphics.drawCenteredString(this.font, copyStatus, centerX, 58, 0x55FF55);
+            guiGraphics.centeredText(this.font, copyStatus, centerX, 58, 0x55FF55);
         }
 
         int lineY = viewportTop - this.scrollOffset;
         for (RenderLine line : lines) {
             if (line.text != null && DiagnosticLayout.isLineFullyVisible(lineY, line.height, viewportTop, viewportBottom)) {
-                guiGraphics.drawString(this.font, line.text, contentX, lineY, line.color, false);
+                guiGraphics.text(this.font, line.text, contentX, lineY, line.color, false);
             }
             lineY += line.height;
         }
@@ -302,7 +302,7 @@ public class DiagnosticScreen extends Screen {
         renderLines.add(new RenderLine(null, 0, SECTION_GAP));
     }
 
-    private void renderScrollBar(GuiGraphics guiGraphics, int x, int top, int bottom, int contentHeight) {
+    private void renderScrollBar(GuiGraphicsExtractor guiGraphics, int x, int top, int bottom, int contentHeight) {
         int viewportHeight = bottom - top;
         if (this.maxScroll <= 0 || viewportHeight <= 0) {
             return;

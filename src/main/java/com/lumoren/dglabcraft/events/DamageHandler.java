@@ -307,7 +307,7 @@ public class DamageHandler {
         int maxCramming = 24;
         try {
             if (mc.getSingleplayerServer() != null) {
-                maxCramming = mc.getSingleplayerServer().getWorldData().getGameRules().get(GameRules.MAX_ENTITY_CRAMMING);
+                maxCramming = mc.getSingleplayerServer().getGlobalGameRules().get(GameRules.MAX_ENTITY_CRAMMING);
             }
         } catch (Exception ignored) {
             // fall through to default

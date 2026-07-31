@@ -2,7 +2,7 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -98,12 +98,12 @@ public class MainScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
-        guiGraphics.drawCenteredString(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, Component.literal("DGLab Craft"), centerX, 30, 0xFFFFFF);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         Component statusText;
@@ -115,10 +115,10 @@ public class MainScreen extends Screen {
             statusText = Component.translatable("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
-        guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
+        guiGraphics.centeredText(this.font, statusText, centerX, 50, statusColor);
 
         String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
-        guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
+        guiGraphics.centeredText(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
     }
 
     @Override
