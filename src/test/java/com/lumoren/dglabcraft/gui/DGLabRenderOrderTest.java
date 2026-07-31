@@ -14,18 +14,18 @@ class DGLabRenderOrderTest {
 
     @Test
     void plainMainScreenTextRendersAfterSuperRender() throws IOException {
-        assertDrawsAfterSuper("MainScreen.java", "drawCenteredString");
+        assertDrawsAfterSuper("MainScreen.java", "centeredText");
     }
 
     @Test
     void connectionTextRendersAfterWidgetRender() throws IOException {
-        assertDrawsAfterSuper("ConnectionScreen.java", "drawCenteredString");
+        assertDrawsAfterSuper("ConnectionScreen.java", "centeredText");
     }
 
     @Test
     void diagnosticsTextRendersAfterWidgetRender() throws IOException {
-        assertDrawsAfterSuper("DiagnosticScreen.java", "drawCenteredString");
-        assertDrawsAfterSuper("DiagnosticScreen.java", "drawString");
+        assertDrawsAfterSuper("DiagnosticScreen.java", "centeredText");
+        assertDrawsAfterSuper("DiagnosticScreen.java", "guiGraphics.text(");
     }
 
     @Test
@@ -40,12 +40,13 @@ class DGLabRenderOrderTest {
 
         assertTrue(source.contains("this.addRenderableWidget(this.list);"));
         assertFalse(source.contains("this.list.render(guiGraphics"));
-        assertDrawsAfterSuper("DGLabCraftScreen.java", "drawCenteredString");
+        assertFalse(source.contains("this.list.extractRenderState(guiGraphics"));
+        assertDrawsAfterSuper("DGLabCraftScreen.java", "centeredText");
     }
 
     private void assertDrawsAfterSuper(String file, String marker) throws IOException {
         String source = Files.readString(GUI_DIR.resolve(file));
-        int superRender = source.indexOf("super.render(guiGraphics");
+        int superRender = source.indexOf("super.extractRenderState(guiGraphics");
         int markerIndex = source.indexOf(marker);
 
         assertTrue(superRender >= 0, file + " must call super.render");

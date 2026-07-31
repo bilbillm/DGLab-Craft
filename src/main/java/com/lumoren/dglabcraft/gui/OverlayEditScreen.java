@@ -2,7 +2,7 @@ package com.lumoren.dglabcraft.gui;
 
 import com.lumoren.dglabcraft.config.DGLabConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -48,14 +48,14 @@ public class OverlayEditScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.fill(0, 0, this.width, this.height, 0x66000000);
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
-        guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.drag_overlay_hint"),
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 16, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, Component.translatable("message.dglabcraft.drag_overlay_hint"),
             this.width / 2, 32, 0xCCCCCC);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();

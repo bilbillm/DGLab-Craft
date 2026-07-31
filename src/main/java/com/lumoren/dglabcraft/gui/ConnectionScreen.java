@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -150,8 +150,8 @@ public class ConnectionScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
         WebSocketServerManager server = WebSocketServerManager.getInstance();
@@ -168,9 +168,9 @@ public class ConnectionScreen extends Screen {
             this.openQrFolderButton.visible = !isConnected && hasQrFolder();
         }
 
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, Component.translatable("screen.dglabcraft.connection_settings"), centerX, 30, 0xFFFFFF);
 
         Component statusText;
         int statusColor;
@@ -181,13 +181,13 @@ public class ConnectionScreen extends Screen {
             statusText = Component.translatable("status.dglabcraft.waiting_connection");
             statusColor = 0xFFFF00;
         }
-        guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
+        guiGraphics.centeredText(this.font, statusText, centerX, 50, statusColor);
 
-        guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.address",
+        guiGraphics.centeredText(this.font, Component.translatable("label.dglabcraft.address",
             server.resolveConnectionHost(), server.getPort()), centerX, 70, 0xAAAAAA);
 
         if (!isConnected) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
+            guiGraphics.centeredText(this.font, Component.translatable("message.dglabcraft.scan_qr"), centerX, 82, 0xAAAAAA);
 
             File qrFile = getQrCodeFile();
             if (qrFile.isFile()) {
@@ -196,13 +196,13 @@ public class ConnectionScreen extends Screen {
         }
 
         if (manualIpInvalid) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"), centerX, getManualInputY() - 12, 0xFF5555);
+            guiGraphics.centeredText(this.font, Component.translatable("error.dglabcraft.invalid_manual_ip"), centerX, getManualInputY() - 12, 0xFF5555);
         }
 
         if (isConnected) {
             String clientId = server.getConnectedClientId();
             if (clientId != null) {
-                guiGraphics.drawCenteredString(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
+                guiGraphics.centeredText(this.font, Component.translatable("label.dglabcraft.device", clientId), centerX, 90, 0xAAAAAA);
             }
         }
     }
@@ -246,12 +246,12 @@ public class ConnectionScreen extends Screen {
         return QR_BUTTON_COUNT * BUTTON_HEIGHT + (QR_BUTTON_COUNT - 1) * BUTTON_VERTICAL_SPACING;
     }
 
-    private void renderQrPath(GuiGraphics guiGraphics, int centerX, int startY, File qrFile) {
+    private void renderQrPath(GuiGraphicsExtractor guiGraphics, int centerX, int startY, File qrFile) {
         Font font = this.font;
         int maxTextWidth = Math.max(120, this.width - 40);
 
-        guiGraphics.drawCenteredString(font, Component.translatable("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
-        guiGraphics.drawCenteredString(font, Component.literal(fitTextToWidth(qrFile.getAbsolutePath(), maxTextWidth)), centerX, startY + 12, 0xAAAAAA);
+        guiGraphics.centeredText(font, Component.translatable("label.dglabcraft.qr_file"), centerX, startY, 0xAAAAAA);
+        guiGraphics.centeredText(font, Component.literal(fitTextToWidth(qrFile.getAbsolutePath(), maxTextWidth)), centerX, startY + 12, 0xAAAAAA);
     }
 
     private String fitTextToWidth(String text, int maxWidth) {

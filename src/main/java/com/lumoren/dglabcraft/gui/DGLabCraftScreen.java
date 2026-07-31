@@ -9,7 +9,7 @@ import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -540,17 +540,17 @@ public class DGLabCraftScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
 
         // 渲染列表和底部按钮
-        super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
+        super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         // 渲染标题
-        guiGraphics.drawCenteredString(this.font, t("screen.dglabcraft.strength_settings"), this.width / 2, 20, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, t("screen.dglabcraft.strength_settings"), this.width / 2, 20, 0xFFFFFF);
     }
 
     /**
@@ -687,7 +687,7 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 int left = this.getContentX();
                 int top = this.getContentY();
                 int entryWidth = this.getContentWidth();
@@ -698,7 +698,7 @@ public class DGLabCraftScreen extends Screen {
 
                 // 渲染居中标题文本（带阴影）
                 int textWidth = this.minecraft.font.width(this.title);
-                guiGraphics.drawString(this.minecraft.font, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
+                guiGraphics.text(this.minecraft.font, this.title, left + (entryWidth - textWidth) / 2, top + 7, 0xFFFFFFFF);
             }
 
             @Override
@@ -732,9 +732,9 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 // 渲染标签文本
-                guiGraphics.drawString(
+                guiGraphics.text(
                     net.minecraft.client.Minecraft.getInstance().font,
                     text,
                     this.getContentX() + 15,
@@ -771,7 +771,7 @@ public class DGLabCraftScreen extends Screen {
             }
 
             @Override
-            public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
+            public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean isHovered, float partialTick) {
                 int left = this.getContentX();
                 int top = this.getContentY();
                 int entryWidth = this.getContentWidth();
@@ -783,7 +783,7 @@ public class DGLabCraftScreen extends Screen {
                     leftWidget.setX(left + 10);
                     leftWidget.setY(top + 2);
                     leftWidget.setWidth(widgetWidth);
-                    leftWidget.render(guiGraphics, mouseX, mouseY, partialTick);
+                    leftWidget.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
                 }
 
                 // 渲染右侧 Widget
@@ -791,7 +791,7 @@ public class DGLabCraftScreen extends Screen {
                     rightWidget.setX(left + 10 + widgetWidth + gap);
                     rightWidget.setY(top + 2);
                     rightWidget.setWidth(widgetWidth);
-                    rightWidget.render(guiGraphics, mouseX, mouseY, partialTick);
+                    rightWidget.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
                 }
             }
 

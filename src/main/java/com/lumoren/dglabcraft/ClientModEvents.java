@@ -1,7 +1,7 @@
 package com.lumoren.dglabcraft;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -28,7 +28,7 @@ public class ClientModEvents {
 
     public static void register() {
         if (!registered) {
-            KeyBindingHelper.registerKeyBinding(OPEN_SETTINGS_KEY_INSTANCE);
+            KeyMappingHelper.registerKeyMapping(OPEN_SETTINGS_KEY_INSTANCE);
             registered = true;
         }
     }
