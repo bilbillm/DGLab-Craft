@@ -85,17 +85,24 @@ jobs:
           fi
           java_version="$(sed -n 's/.*JavaLanguageVersion\.of(\([0-9][0-9]*\)).*/\1/p' build.gradle | head -n 1 | tr -d '\r')"
           if [ -z "${java_version}" ]; then
-            if [ "${loader}" = "NeoForge" ]; then
+            if [ "${loader},Client" = "NeoForge" ]; then
               java_version="21"
             else
               java_version="17"
             fi
           fi
 
-          minecraft_minor="${minecraft_version%.*}"
-          game_versions="Minecraft ${minecraft_minor}:${minecraft_version},Java ${java_version},${loader}"
+          if [[ "${minecraft_version}" == 26.1* ]]; then
+            version_type="Minecraft 26.1"
+          elif [[ "${minecraft_version}" == 26.2* ]]; then
+            version_type="Minecraft 26.2"
+          else
+            minecraft_minor="${minecraft_version%.*}"
+            version_type="Minecraft ${minecraft_minor}"
+          fi
+          game_versions="${version_type}:${minecraft_version},Java ${java_version},${loader},Client"
           artifact_suffix=""
-          if [ "${loader}" = "Fabric" ]; then
+          if [ "${loader},Client" = "Fabric" ]; then
             artifact_suffix="-Fabric"
           fi
           artifact="build/libs/DGLabCraft-${minecraft_version}-${mod_version}${artifact_suffix}.jar"
@@ -116,7 +123,7 @@ jobs:
           {
             echo "minecraft_version=${minecraft_version}"
             echo "mod_version=${mod_version}"
-            echo "loader=${loader}"
+            echo "loader=${loader},Client"
             echo "java_version=${java_version}"
             echo "game_versions=${game_versions}"
             echo "artifact=${artifact}"
