@@ -284,7 +284,7 @@ public class DamageHandler {
 
         int maxCramming = 24;
         if (mc.getSingleplayerServer() != null) {
-            maxCramming = mc.getSingleplayerServer().getWorldData().getGameRules().get(GameRules.MAX_ENTITY_CRAMMING);
+            maxCramming = mc.getSingleplayerServer().getGlobalGameRules().get(GameRules.MAX_ENTITY_CRAMMING);
         }
         if (maxCramming > 0) {
             java.util.List<Entity> nearbyEntities = mc.level.getEntities(player, player.getBoundingBox().inflate(0.2D));

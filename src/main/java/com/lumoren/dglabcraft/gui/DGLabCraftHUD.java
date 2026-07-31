@@ -6,7 +6,7 @@ import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -30,9 +30,9 @@ public class DGLabCraftHUD {
     private static final int TIMELINE_LIMIT = 96;
     private static final Map<String, ChannelTimeline> WAVEFORM_TIMELINES = new HashMap<>();
 
-    public static void render(GuiGraphics guiGraphics) {
+    public static void render(GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null || mc.screen != null) return;
+        if (mc.level == null || mc.player == null || mc.gui.screen() != null) return;
 
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
@@ -79,7 +79,7 @@ public class DGLabCraftHUD {
             OverlayLayout.WAVEFORM_WIDTH, OverlayLayout.WAVEFORM_HEIGHT, DGLabConfig.WAVEFORM_SCALE.get(), screenWidth, screenHeight);
     }
 
-    static void renderHudPanel(GuiGraphics guiGraphics, Font font, WebSocketServerManager server,
+    static void renderHudPanel(GuiGraphicsExtractor guiGraphics, Font font, WebSocketServerManager server,
                                OverlayLayout.Rect rect, boolean editing) {
         drawPanel(guiGraphics, rect, editing);
         renderScaled(guiGraphics, rect, OverlayLayout.HUD_WIDTH, () -> {
@@ -101,13 +101,13 @@ public class DGLabCraftHUD {
         });
     }
 
-    static void renderWaveformPanel(GuiGraphics guiGraphics, Font font, WebSocketServerManager server,
+    static void renderWaveformPanel(GuiGraphicsExtractor guiGraphics, Font font, WebSocketServerManager server,
                                     OverlayLayout.Rect rect, boolean editing) {
         drawPanel(guiGraphics, rect, editing);
         renderScaled(guiGraphics, rect, OverlayLayout.WAVEFORM_WIDTH, () -> {
             int x = 8;
             int y = 6;
-            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.waveform_title"), x, y, YELLOW, false);
+            guiGraphics.text(font, Component.translatable("overlay.dglabcraft.waveform_title"), x, y, YELLOW, false);
 
             ChannelPreview channelA = channelPreview(server, "A");
             ChannelPreview channelB = channelPreview(server, "B");
@@ -117,9 +117,9 @@ public class DGLabCraftHUD {
         });
     }
 
-    private static void renderChannelWaveform(GuiGraphics guiGraphics, Font font, ChannelPreview preview,
+    private static void renderChannelWaveform(GuiGraphicsExtractor guiGraphics, Font font, ChannelPreview preview,
                                               int x, int y, int width, String channel, long animationTime) {
-        guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.channel_label", channel), x, y, TEXT, false);
+        guiGraphics.text(font, Component.translatable("overlay.dglabcraft.channel_label", channel), x, y, TEXT, false);
         int waveX = x + 18;
         int waveY = y + 11;
         int waveWidth = width - 18;
@@ -128,7 +128,7 @@ public class DGLabCraftHUD {
 
         if (!preview.active()) {
             updateTimeline(channel, preview, animationTime);
-            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.idle"), waveX + 4, y, MUTED, false);
+            guiGraphics.text(font, Component.translatable("overlay.dglabcraft.idle"), waveX + 4, y, MUTED, false);
             renderPulseBars(guiGraphics, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
             return;
         }
@@ -136,7 +136,7 @@ public class DGLabCraftHUD {
         List<Integer> samples = preview.samples();
         if (samples.isEmpty()) {
             updateTimeline(channel, preview, animationTime);
-            guiGraphics.drawString(font, Component.translatable("overlay.dglabcraft.no_waveform"), waveX + 4, y, MUTED, false);
+            guiGraphics.text(font, Component.translatable("overlay.dglabcraft.no_waveform"), waveX + 4, y, MUTED, false);
             renderPulseBars(guiGraphics, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
             return;
         }
@@ -144,7 +144,7 @@ public class DGLabCraftHUD {
 
         Component detail = Component.translatable("overlay.dglabcraft.waveform_detail",
             chineseWaveformName(preview.waveform()), formatSeconds(preview.remainingMillis()));
-        guiGraphics.drawString(font, detail, waveX + 4, y, MUTED, false);
+        guiGraphics.text(font, detail, waveX + 4, y, MUTED, false);
         renderPulseBars(guiGraphics, timelineFor(channel).history(), waveX, waveY, waveWidth, waveHeight, animationTime);
     }
 
@@ -173,7 +173,7 @@ public class DGLabCraftHUD {
         return WaveformPreview.amplitudes(WaveformManager.getInstance().getWaveform(waveform), 96);
     }
 
-    private static void drawPanel(GuiGraphics guiGraphics, OverlayLayout.Rect rect, boolean editing) {
+    private static void drawPanel(GuiGraphicsExtractor guiGraphics, OverlayLayout.Rect rect, boolean editing) {
         guiGraphics.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BG);
         guiGraphics.fill(rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + 1, PANEL_BORDER);
         guiGraphics.fill(rect.x(), rect.y() + rect.height() - 1, rect.x() + rect.width(), rect.y() + rect.height(), PANEL_BORDER);
@@ -190,13 +190,13 @@ public class DGLabCraftHUD {
         }
     }
 
-    private static void drawWaveTrack(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+    private static void drawWaveTrack(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height) {
         guiGraphics.fill(x, y, x + width, y + height, WAVE_TRACK_BG);
         guiGraphics.fill(x, y + height - 2, x + width, y + height, WAVE_TRACK_SHADOW);
         guiGraphics.fill(x, y, x + width, y + 1, 0x332A2A2E);
     }
 
-    private static void renderPulseBars(GuiGraphics guiGraphics, List<Integer> samples, int x, int y,
+    private static void renderPulseBars(GuiGraphicsExtractor guiGraphics, List<Integer> samples, int x, int y,
                                         int width, int height, long animationTime) {
         for (WaveformPreview.PulseBar bar : WaveformPreview.pulseBars(samples, width, height, animationTime)) {
             int barX = x + bar.x();
@@ -246,7 +246,7 @@ public class DGLabCraftHUD {
         return WAVEFORM_TIMELINES.computeIfAbsent(channel, ignored -> new ChannelTimeline());
     }
 
-    private static void renderScaled(GuiGraphics guiGraphics, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
+    private static void renderScaled(GuiGraphicsExtractor guiGraphics, OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
         float scale = (float) Math.max(0.01D, rect.width() / (double) baseWidth);
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().translate((float) rect.x(), (float) rect.y());
@@ -298,8 +298,8 @@ public class DGLabCraftHUD {
         return (Math.max(0, Math.min(255, alpha)) << 24) | (rgb & 0x00FFFFFF);
     }
 
-    private static void drawCentered(GuiGraphics guiGraphics, Font font, Component text, int centerX, int y, int color) {
-        guiGraphics.drawString(font, text, centerX - font.width(text) / 2, y, color, false);
+    private static void drawCentered(GuiGraphicsExtractor guiGraphics, Font font, Component text, int centerX, int y, int color) {
+        guiGraphics.text(font, text, centerX - font.width(text) / 2, y, color, false);
     }
 
     private static final class ChannelTimeline {

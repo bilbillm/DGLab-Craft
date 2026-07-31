@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:1.17.13'
+        classpath 'net.fabricmc:fabric-loom:1.17-SNAPSHOT'
         classpath 'com.google.code.gson:gson:2.11.0'
     }
     configurations.classpath {
@@ -13,7 +13,7 @@ buildscript {
     }
 }
 
-apply plugin: 'fabric-loom'
+apply plugin: 'net.fabricmc.fabric-loom'
 apply plugin: 'maven-publish'
 
 version = mod_version
@@ -23,7 +23,7 @@ base {
     archivesName = "DGLabCraft-${minecraft_version}-Fabric"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 repositories {
     mavenCentral()
@@ -32,9 +32,9 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    // Minecraft 26.x is unobfuscated: no mappings and no remapping needed
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
     implementation 'org.java-websocket:Java-WebSocket:1.5.4'
     implementation('com.google.zxing:core:3.5.1') {
@@ -97,14 +97,14 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-tasks.named('remapJar').configure {
+tasks.matching { it.name == 'remapJar' }.configureEach {
     archiveFileName = "DGLabCraft-${minecraft_version}-${project.version}-Fabric.jar"
 }
 
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact remapJar
+            artifact jar
         }
     }
     repositories {

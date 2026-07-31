@@ -9,8 +9,9 @@ import com.lumoren.dglabcraft.gui.MainScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 
 public class DGLabCraft implements ClientModInitializer {
     public static final String MODID = "dglabcraft";
@@ -36,13 +37,14 @@ public class DGLabCraft implements ClientModInitializer {
             FadeManager.onClientTick(client);
         });
 
-        HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> DGLabCraftHUD.render(guiGraphics));
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(MODID, "hud"),
+            (guiGraphics, deltaTracker) -> DGLabCraftHUD.render(guiGraphics));
     }
 
     private void handleOpenSettings(Minecraft minecraft) {
         while (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
-            if (minecraft.screen == null) {
-                minecraft.setScreen(new MainScreen());
+            if (minecraft.gui.screen() == null) {
+                minecraft.gui.setScreen(new MainScreen());
             }
         }
     }
