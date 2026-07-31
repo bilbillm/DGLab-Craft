@@ -92,8 +92,15 @@ jobs:
             fi
           fi
 
-          minecraft_minor="${minecraft_version%.*}"
-          game_versions="Minecraft ${minecraft_minor}:${minecraft_version},Java ${java_version},${loader}"
+          if [[ "${minecraft_version}" == 26.1* ]]; then
+            version_type="Minecraft 26.1"
+          elif [[ "${minecraft_version}" == 26.2* ]]; then
+            version_type="Minecraft 26.2"
+          else
+            minecraft_minor="${minecraft_version%.*}"
+            version_type="Minecraft ${minecraft_minor}"
+          fi
+          game_versions="${version_type}:${minecraft_version},Java ${java_version},${loader}"
           artifact_suffix=""
           if [ "${loader}" = "Fabric" ]; then
             artifact_suffix="-Fabric"
