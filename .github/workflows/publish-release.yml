@@ -95,7 +95,7 @@ jobs:
           if [[ "${minecraft_version}" == 26.1* ]]; then
             version_type="Minecraft 26.1"
           elif [[ "${minecraft_version}" == 26.2* ]]; then
-            version_type="Minecraft 26.2"
+            version_type="26.2"
           else
             minecraft_minor="${minecraft_version%.*}"
             version_type="Minecraft ${minecraft_minor}"
