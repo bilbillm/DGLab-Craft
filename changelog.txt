@@ -1,5 +1,14 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-08-13
+
+### Fixed
+- Fixed Minecraft 26.x custom screens crashing with `IllegalStateException: Can only blur once per frame`.
+- Let Minecraft own screen background extraction so each frame is blurred only once.
+- Added a regression test covering every affected custom screen.
+
+---
+
 ## [1.1.1] - 2026-07-11
 
 ### Added
