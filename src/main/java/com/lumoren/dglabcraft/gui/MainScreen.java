@@ -99,7 +99,6 @@ public class MainScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
         super.extractRenderState(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         int centerX = this.width / 2;
