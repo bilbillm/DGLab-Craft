@@ -541,8 +541,6 @@ public class DGLabCraftScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
-
         // 检测强度上限变化并更新显示
         updateStrengthLabels();
 

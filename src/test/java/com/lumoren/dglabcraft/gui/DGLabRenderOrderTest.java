@@ -5,12 +5,30 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DGLabRenderOrderTest {
     private static final Path GUI_DIR = Path.of("src/main/java/com/lumoren/dglabcraft/gui");
+    private static final List<String> SCREEN_FILES = List.of(
+        "MainScreen.java",
+        "ConnectionScreen.java",
+        "DGLabCraftScreen.java",
+        "DiagnosticScreen.java",
+        "OverlayEditScreen.java"
+    );
+
+    @Test
+    void screensLeaveBackgroundExtractionToMinecraft() throws IOException {
+        for (String file : SCREEN_FILES) {
+            String source = Files.readString(GUI_DIR.resolve(file));
+
+            assertFalse(source.contains("extractBackground("),
+                file + " must not extract a second background in the same frame");
+        }
+    }
 
     @Test
     void plainMainScreenTextRendersAfterSuperRender() throws IOException {

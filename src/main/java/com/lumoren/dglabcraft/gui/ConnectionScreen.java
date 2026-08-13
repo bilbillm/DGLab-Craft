@@ -177,8 +177,6 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
-
         int centerX = this.width / 2;
         ConnectionLayout.Layout layout = ConnectionLayout.calculate(this.width, this.height);
         this.currentLayout = layout;

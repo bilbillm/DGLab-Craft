@@ -49,7 +49,6 @@ public class OverlayEditScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.fill(0, 0, this.width, this.height, 0x66000000);
 
         super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
