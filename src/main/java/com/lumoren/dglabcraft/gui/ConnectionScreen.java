@@ -151,8 +151,6 @@ public class ConnectionScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.extractBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
-
         int centerX = this.width / 2;
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         boolean isConnected = server.isConnected();
