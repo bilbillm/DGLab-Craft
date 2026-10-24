@@ -1,165 +1,75 @@
-# DGLab Craft
+# DGLab Craft — Minecraft 26.1 Fabric
 
-<p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
+[English](README_EN.md) · [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
-[English Version](./README_EN.md)
+将 Minecraft 的受伤、低血量和环境变化转换为 DG-LAB 反馈。
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-brightgreen)
-![Fabric](https://img.shields.io/badge/Fabric-0.19.3-orange)
-![Java](https://img.shields.io/badge/Java-21-red)
-![License](https://img.shields.io/badge/License-GPL_3.0-blue)
+- 分支：`26.1-Fabric`
+- 模组：`1.1.4`
+- 游戏：Minecraft `26.1` / Fabric 0.19.3 / Fabric API 0.145.1+26.1 / Java `25`
 
-DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量、环境变化等事件转换成 DGLab 设备反馈，并通过本地 WebSocket 和 DGLab App 连接。
+## 安装
 
-当前分支：`1.21.11-Fabric`
-适配版本：Minecraft `1.21.11` / Fabric Loader `0.19.3` / Fabric API `0.141.5+1.21.11` / Java `21`
+1. 下载 [本分支的 1.1.4 发布包](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1-Fabric)，选择 `DGLabCraft-26.1-1.1.4-Fabric.jar`，不要下载源码压缩包。
+2. 安装与游戏版本完全匹配的 Fabric。 将 Fabric API `0.145.1+26.1` 一并放入 `mods`。
+3. 将模组放入该游戏实例的 `mods` 文件夹。不同 MC 版本和加载器的 JAR 不可混装；删除旧版重复包。
+4. 启动游戏、进入世界，在控制设置中确认“打开 DGLab Craft 设置”的绑定（默认 `K`）。
 
-> 提醒：请优先选择与你 MC 版本完全一致的 jar；不要混装不同 Minecraft、Forge 或 NeoForge 版本。
+模组安装在客户端；普通联机服务器无需安装设备控制模块。远程联机按客户端实际掉血触发；原版不向客户端同步的精确伤害来源会使用本地状态推断，不能保证所有模组伤害都被精确分类。
 
-下载页面：
+## 设备与 App
 
-- [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases)
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
+| 项目 | 当前兼容情况 |
+| --- | --- |
+| DG-LAB 主机 3.0 + DGLab App 3.x SOCKET 控制 | 当前支持路线 |
+| DGLab App 4.0 | 尚未适配；不可把扫码失败直接归因于 Java |
+| 郊狼 2.0、其他品牌设备 | 未验证，不承诺兼容 |
+| 基岩版、网易版 | 不支持此 Java 模组 |
+| Android 上的 FCL/Pojav Java 启动器 | 社区有可用反馈；未完成移动端兼容验证 |
 
-## 第一部分：我只是想安装使用
+## 连接
 
-### 1. 先确认你的 MC 版本
+1. 手机与运行游戏的电脑连接同一局域网。游戏服务器的公网地址、樱花 FRP 地址不是设备连接地址。
+2. 进入世界后按 `K`，打开“连接设置”，手机 DGLab App 3.x 使用 SOCKET 控制扫描游戏内二维码。
+3. 无法扫描时可刷新、打开二维码图片或打开图片目录。存在虚拟网卡时填写电脑真实的局域网 IPv4 地址，再刷新二维码。
+4. 默认 WebSocket 端口为 `8877`。检查 Java 的防火墙放行和该端口占用；公司/校园 Wi-Fi 的设备隔离也可能阻止手机访问电脑。
 
-这个分支只适合：
+按键无反应时先检查加载器/API/JAR 是否匹配，再检查控制设置的冲突和输入法。模组会记录 `Registered key binding`；冲突会记录 `Key binding conflict` 并在进入世界后提示。报告问题时附 `latest.log`、启动器、MC/加载器/Java/模组版本、单人或联机及 App 版本。不要为所有版本统一降到 Java 17，应使用上表的游戏 Java。
 
-- Minecraft `1.21.11`
-- Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11`
-- Java `21`
+## 反馈设置
 
-如果你的 Minecraft 版本不一样，请先在下面表格里找对应分支，不要混装不同 MC 版本的 jar。
+- 支持按伤害类型设置倍率、A/B 通道同步或分开、低血量心跳、环境反馈及 HUD/波形显示。
+- 关闭心跳请将心跳阈值设为 `0`；仅受伤模式还需将下界、末地、传送门及细雪相关环境倍率设为 `0`。
+- 波形预览已经提供；自定义波形编辑/导入界面尚未实现。
 
-| MC 版本 | 加载器 | 分支 | 最新 release |
+## 版本与加载器
+
+| Minecraft | Forge | NeoForge | Fabric |
 | --- | --- | --- | --- |
-| 26.1 | Fabric Loader 0.19.x | `26.1-Fabric` | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1-Fabric) |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |
-| 1.21.11 | Fabric Loader 0.19.x | `1.21.11-Fabric` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.11-Fabric) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.4-NeoForge) |
+| 1.7.10 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.7.10-Forge) | — | — |
+| 1.8.9 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.8.9-Forge) beta | — | — |
+| 1.12.2 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.12.2-Forge) | — | — |
+| 1.16.5 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.16.5-Forge) | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) |
+| 1.17.1 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.17.1-Fabric) |
+| 1.18.2 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.18.2-Forge) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.18.2-Fabric) |
+| 1.19.2 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.19.2-Fabric) |
+| 1.20.1 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.20.1-Fabric) |
+| 1.21.1 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.1-Forge) | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.1-Fabric) |
+| 1.21.4 | — | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.4-Fabric) |
+| 1.21.8 | — | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.8-Fabric) |
+| 1.21.11 | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.11-NeoForge) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.11-Fabric) |
+| 26.1 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1-Fabric) |
+| 26.1.1 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1.1-Fabric) |
+| 26.1.2 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1.2-Fabric) |
+| 26.2 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.2-Fabric) |
 
-### 2. 在 GitHub 下载 Mod
 
-1. 打开这个版本的 release：[`DGLabCraft-1.21.11-1.1.0-Fabric.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.11-Fabric)
-2. 在页面下方找到 **Assets**。
-3. 下载 `DGLabCraft-1.21.11-1.1.0-Fabric.jar`。
-4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
+## 构建
 
-也可以从项目的 [Releases 页面](https://github.com/bilbillm/DGLab-Craft/releases) 进入，按自己的 Minecraft 版本选择 release。
-
-### 3. 安装到 Minecraft
-
-1. 用启动器创建或选择一个 Minecraft `1.21.11` 实例。
-2. 给这个实例安装 Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11`。
-3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
-4. 把刚下载的 `DGLabCraft-1.21.11-1.1.0-Fabric.jar` 放进去。
-5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
-
-如果你不知道实例目录在哪：在启动器里通常可以右键实例，选择“打开文件夹”或“打开游戏目录”。
-
-### 4. 第一次连接 DGLab App
-
-1. 进入单人世界或服务器。
-2. 按默认快捷键 `K` 打开 DGLab Craft 主界面。
-3. 打开连接界面，生成二维码。
-4. 手机打开 DGLab App，使用 SOCKET 控制/扫码连接。
-5. 手机和电脑必须在同一个局域网里，通常就是连同一个 Wi-Fi。
-
-连不上时先检查这几件事：
-
-- 手机和电脑是不是同一个 Wi-Fi。
-- Windows 防火墙有没有拦截 Java 或 Minecraft。
-- README 或界面里显示的 IP 是否像 `192.168.x.x`、`10.x.x.x`、`172.16-31.x.x` 这样的局域网地址。
-- 如果显示的是虚拟网卡地址，可以在配置里手动填写电脑真实局域网 IP。
-
-### 5. 它会反馈哪些内容
-
-- 低血量心跳反馈
-- 受伤反馈，并按伤害来源选择不同波形
-- 下界、末地、传送门、细雪等环境反馈
-- A/B 通道同步或独立控制
-- 反馈结束后的强度淡出
-- 游戏内 HUD 和连接状态显示
-
-## 第二部分：开发者和维护者
-
-### 分支目标
-
-当前分支维护：
-
-- Minecraft `1.21.11`
-- Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11`
-- Java `21`
-- Mod 版本 `1.1.0`
-
-维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
-
-### 构建
-
-```bash
-git clone -b 1.21.11-Fabric https://github.com/bilbillm/DGLab-Craft.git
+```powershell
+git clone -b 26.1-Fabric https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
 ./gradlew build
 ```
 
-构建产物在：`build/libs/`
-
-发布 release 时，通常上传不带 `-slim` 的完整 jar。
-
-发布前后检查：
-
-```bash
-pwsh scripts/release-check.ps1 -Tag v1.1.0-1.21.11-Fabric -SkipGitHubReleaseCheck
-pwsh scripts/release-postcheck.ps1 -Tag v1.1.0-1.21.11-Fabric
-```
-
-GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证发布元数据，不创建 GitHub Release，也不会上传 CurseForge。
-
-### 维护分支一览
-
-| MC 版本 | 加载器 | 分支 | 最新 release |
-| --- | --- | --- | --- |
-| 26.1 | Fabric Loader 0.19.x | `26.1-Fabric` | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1-Fabric) |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |
-| 1.21.11 | Fabric Loader 0.19.x | `1.21.11-Fabric` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.11-Fabric) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.4-NeoForge) |
-
-### 报 bug 时需要的信息
-
-请尽量让用户附上：
-
-- 诊断页一键复制反馈信息的完整内容
-- Minecraft 版本
-- Forge / NeoForge 版本
-- DGLab Craft 版本
-- Java 版本
-- 单人、联机还是整合包
-- DGLab App 是 iOS 还是 Android
-- `latest.log`
-- 如果是连接问题，请附上界面里显示的 IP 和端口
-
-### 常见维护点
-
-- `gradle.properties` 里的 MC、加载器和 mod 版本要和 release 对齐。
-- `META-INF/mods.toml` 或 NeoForge 对应 metadata 里的版本范围要和分支一致。
-- README 的下载链接和 jar 文件名要跟最新 release 同步。
-- 连接问题优先看 WebSocket 是否启动、二维码 IP 是否是可访问的局域网地址。
-
-## 许可证
-
-GPL 3.0
-
-## 致谢
-
-- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
-- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
-
-## 作者
-
-Lumoren
+构建启动 JDK：`25`。产物在 `build/libs/`，选择完整可安装 JAR。发布前执行 `scripts/release-check.ps1 -Tag v1.1.4-26.1-Fabric -RequireBuiltJar -SkipGitHubReleaseCheck`；发布后执行 `scripts/release-postcheck.ps1`。源码许可为 GPL-3.0。

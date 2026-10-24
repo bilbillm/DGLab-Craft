@@ -156,5 +156,17 @@
   "setting.dglabcraft.starve": "Faim",
   "setting.dglabcraft.nether": "Nether",
   "setting.dglabcraft.end": "End",
-  "setting.dglabcraft.portal": "Portail"
+  "setting.dglabcraft.portal": "Portail",
+  "section.dglabcraft.connection_guide": "--- Guide de connexion ---",
+  "guide.dglabcraft.connection.step1": "1. Ouvrez l'application DG-LAB (3.0+, 4.0 non prise en charge)",
+  "guide.dglabcraft.connection.step2": "2. Touchez \"SOCKET Control\"",
+  "guide.dglabcraft.connection.step3": "3. Touchez \"Connect Server\"",
+  "guide.dglabcraft.connection.step4": "4. Touchez \"Scan\" et scannez le QR code ci-dessus",
+  "guide.dglabcraft.connection.step5": "5. Après connexion, réglez les limites A/B au-dessus des valeurs du jeu",
+  "section.dglabcraft.connection_troubleshooting": "--- Dépannage de connexion ---",
+  "troubleshoot.dglabcraft.connection.same_wifi": "· Vérifiez que le téléphone et le PC sont sur le même WiFi",
+  "troubleshoot.dglabcraft.connection.firewall": "· Vérifiez que le pare-feu du PC ne bloque pas la connexion",
+  "troubleshoot.dglabcraft.connection.manual_ip": "· Essayez de saisir manuellement l'IP LAN du PC",
+  "troubleshoot.dglabcraft.connection.port": "· Si le port est occupé, fermez l'application qui le bloque puis actualisez le QR code",
+  "message.dglabcraft.key_conflict": "DGLab Craft shares a key with %s. Change it in Controls."
 }
