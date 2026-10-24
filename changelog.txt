@@ -4,6 +4,7 @@
 
 ### Added
 - Added a Fabric build for Minecraft 1.21.4.
+- Render the generated connection QR code directly in the in-game connection screen.
 
 ### Fixed
 - Adapted the settings list scrollbar and damage detection to the Minecraft 1.21.4 client API.
