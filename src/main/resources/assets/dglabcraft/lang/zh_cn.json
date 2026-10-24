@@ -156,5 +156,6 @@
   "setting.dglabcraft.starve": "饥饿",
   "setting.dglabcraft.nether": "下界",
   "setting.dglabcraft.end": "末地",
-  "setting.dglabcraft.portal": "传送门"
+  "setting.dglabcraft.portal": "传送门",
+  "message.dglabcraft.key_conflict": "DGLab Craft 快捷键与 %s 冲突，请在控制设置中更改。"
 }

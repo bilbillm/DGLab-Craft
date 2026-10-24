@@ -1,163 +1,61 @@
-# DGLab Craft
+# DGLab Craft — Minecraft 1.21.11 Fabric
 
-<p align="center"><img src="docs/logo.jpg" alt="DGLab Craft" width="200"></p>
+[中文](README.md) · [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
 
-[中文说明](./README.md)
+Haptic feedback for damage, low health and environmental events.
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-brightgreen)
-![Fabric](https://img.shields.io/badge/Fabric-0.19.3-orange)
-![Java](https://img.shields.io/badge/Java-21-red)
-![License](https://img.shields.io/badge/License-GPL_3.0-blue)
+- Branch: `1.21.11-Fabric`; mod version: `1.1.4`.
+- Runtime: Minecraft `1.21.11`, Fabric 0.19.3 / Fabric API 0.141.5+1.21.11, Java `21`.
+- Download: [DGLabCraft-1.21.11-1.1.4-Fabric.jar](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.11-Fabric). Download the JAR, not a source archive.
 
-DGLab Craft is a Minecraft mod that converts in-game damage, low-health states, and environment changes into DGLab device feedback. It connects to the DGLab mobile app through a local WebSocket server.
+## Installation and connection
 
-Current branch: `1.21.11-Fabric`
-Target version: Minecraft `1.21.11` / Fabric Loader `0.19.3` / Fabric API `0.141.5+1.21.11` / Java `21`
+1. Install the exact Minecraft and Fabric version above. Install Fabric API `0.141.5+1.21.11` as well.
+2. Put `DGLabCraft-1.21.11-1.1.4-Fabric.jar` in the selected instance's `mods` directory. Remove duplicate old versions.
+3. Enter a world and open DGLab Craft with its configured key (default `K`). Only the client needs the device-control mod; a normal multiplayer server does not.
+4. Keep the phone and game client on the same LAN. Scan the in-game QR code using SOCKET control in DGLab App 3.x. The public game-server/FRP address is not the device endpoint.
+5. For connection failures, check Java firewall access, port `8877`, network isolation, and virtual adapters. Set the client's real LAN IPv4 in connection settings when necessary. Opening the QR image/folder remains available as a fallback.
 
-> Note: use the jar that exactly matches your Minecraft version and loader. Do not mix Minecraft, Forge, or NeoForge builds.
+## Compatibility
 
-Download pages:
+| Target | Status |
+| --- | --- |
+| DG-LAB 3.0 hardware with DGLab App 3.x SOCKET control | Supported route |
+| DGLab App 4.0 | Not implemented |
+| DG-LAB 2.0 / other hardware brands | Unverified |
+| Bedrock / NetEase editions | Unsupported |
+| Android FCL/Pojav Java launchers | Community reports only; no full mobile validation |
 
-- [GitHub Releases](https://github.com/bilbillm/DGLab-Craft/releases)
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/dglab-craft)
+Remote damage feedback observes actual client health changes. Exact damage types that are not synchronized by the server are inferred locally; arbitrary modded sources may fall back to a generic waveform.
 
-## Part 1: Install and Play
+## Troubleshooting
 
-### 1. Check your Minecraft version first
+Check Controls for key conflicts, the selected instance's loader/API, and duplicate JARs. `latest.log` records `Registered key binding`; conflicts record `Key binding conflict` and display a warning after entering a world. Include MC, loader, mod, Java and App versions, launcher, game mode and `latest.log` when reporting problems. Use the runtime Java listed above rather than downgrading all versions to Java 17.
 
-This branch only targets:
+Set the heartbeat threshold to `0` to disable heartbeat. Disable the corresponding environment multipliers for damage-only feedback. Waveform preview is available; the custom waveform editor/import UI is still pending.
 
-- Minecraft `1.21.11`
-- Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11`
-- Java `21`
+## Versions
 
-If your Minecraft version is different, use the matching branch and release below. Do not mix jars built for different Minecraft versions.
-
-| Minecraft | Loader | Branch | Latest release |
+| Minecraft | Forge | NeoForge | Fabric |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
-| 1.21.11 | Fabric Loader 0.19.x | `1.21.11-Fabric` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.11-Fabric) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
+| 1.7.10 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.7.10-Forge) | — | — |
+| 1.8.9 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.8.9-Forge) beta | — | — |
+| 1.12.2 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.12.2-Forge) | — | — |
+| 1.16.5 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.16.5-Forge) | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) |
+| 1.17.1 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.17.1-Fabric) |
+| 1.18.2 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.18.2-Forge) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.18.2-Fabric) |
+| 1.19.2 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.19.2-Fabric) |
+| 1.20.1 | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.20.1-Fabric) |
+| 1.21.1 | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.1-Forge) | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.1-Fabric) |
+| 1.21.4 | — | [1.1.1](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.4-Fabric) |
+| 1.21.8 | — | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.8-Fabric) |
+| 1.21.11 | — | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.11-NeoForge) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-1.21.11-Fabric) |
+| 26.1 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1-Fabric) |
+| 26.1.1 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1.1-Fabric) |
+| 26.1.2 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.1.2-Fabric) |
+| 26.2 | — | [1.1.2](https://github.com/bilbillm/DGLab-Craft/releases) | [1.1.4](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.4-26.2-Fabric) |
 
-### 2. Download the Mod from GitHub
 
-1. Open this release: [`DGLabCraft-1.21.11-1.1.0-Fabric.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.11-Fabric)
-2. Scroll to **Assets**.
-3. Download `DGLabCraft-1.21.11-1.1.0-Fabric.jar`.
-4. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
+## Build
 
-You can also start from the project [Releases page](https://github.com/bilbillm/DGLab-Craft/releases) and choose the release that matches your Minecraft version.
-
-### 3. Install it into Minecraft
-
-1. Create or select a Minecraft `1.21.11` instance in your launcher.
-2. Install Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11` for that instance.
-3. Open the instance's `mods` folder. A common path is `.minecraft/mods`.
-4. Put `DGLabCraft-1.21.11-1.1.0-Fabric.jar` into that folder.
-5. Start the game and check the Mods screen for `DGLab Craft`.
-
-If you cannot find the instance folder, most launchers provide an “Open Folder” or “Open Game Directory” action for each instance.
-
-### 4. Connect the DGLab App for the first time
-
-1. Enter a single-player world or server.
-2. Press `K` to open the DGLab Craft screen.
-3. Open the connection screen and generate the QR code.
-4. Open the DGLab mobile app and use SOCKET / QR connection.
-5. Your phone and PC must be on the same LAN, usually the same Wi-Fi.
-
-If connection fails, check these first:
-
-- The phone and PC are on the same Wi-Fi.
-- Windows Firewall is not blocking Java or Minecraft.
-- The shown IP looks like a LAN address, such as `192.168.x.x`, `10.x.x.x`, or `172.16-31.x.x`.
-- If a virtual-adapter IP is shown, manually set the PC's real LAN IP in the config.
-
-### 5. What the mod reacts to
-
-- Low-health heartbeat feedback
-- Damage feedback with waveform mapping by damage source
-- Nether, End, portal, powder snow, and other environment feedback
-- A/B channel sync or split control
-- Fade-out after feedback ends
-- In-game HUD and connection state display
-
-## Part 2: Developers and Maintainers
-
-### Branch target
-
-This branch maintains:
-
-- Minecraft `1.21.11`
-- Fabric Loader `0.19.3+` / Fabric API `0.141.5+1.21.11`
-- Java `21`
-- Mod version `1.0.8`
-
-When maintaining multiple versions, put fixes on the matching Minecraft branch first. Do not blindly copy Forge and NeoForge code between branches because their events, registration APIs, and build flows differ.
-
-### Build
-
-```bash
-git clone -b 1.21.11-Fabric https://github.com/bilbillm/DGLab-Craft.git
-cd DGLab-Craft
-./gradlew build
-```
-
-Artifacts are generated in `build/libs/`.
-
-For release uploads, use the full jar, normally the one without `-slim` in its filename.
-
-Release checks:
-
-```bash
-pwsh scripts/release-check.ps1 -Tag v1.0.8-1.21.11-Fabric -SkipGitHubReleaseCheck
-pwsh scripts/release-postcheck.ps1 -Tag v1.0.8-1.21.11-Fabric
-```
-
-You can manually run the `Release Rehearsal` GitHub Action to validate release metadata and build output without creating a GitHub Release or uploading to CurseForge.
-
-### Maintained branches
-
-| Minecraft | Loader | Branch | Latest release |
-| --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
-| 1.21.11 | Fabric Loader 0.19.x | `1.21.11-Fabric` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.11-Fabric) |
-| 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
-
-### Useful bug report details
-
-Ask users to include:
-
-- the full text from the diagnostics page Copy issue info button
-- Minecraft version
-- Forge / NeoForge version
-- DGLab Craft version
-- Java version
-- single-player, multiplayer, or modpack environment
-- iOS or Android DGLab App
-- `latest.log`
-- for connection issues, the IP and port shown by the connection screen
-
-### Common maintenance checks
-
-- Keep `gradle.properties` Minecraft, loader, and mod versions aligned with the release.
-- Keep `META-INF/mods.toml` or NeoForge metadata version ranges aligned with the branch.
-- Keep README download links and jar filenames aligned with the latest release.
-- For connection bugs, first check whether WebSocket started and whether the QR code uses a reachable LAN IP.
-
-## License
-
-GPL 3.0
-
-## Credits
-
-- [CaiJi-ikun/DG_LAB](https://github.com/CaiJi-ikun/DG_LAB)
-- [DG-LAB-OPENSOURCE](https://github.com/DG-LAB-OPENSOURCE/DG-LAB-OPENSOURCE)
-
-## Author
-
-Lumoren
+Use JDK `21` to launch Gradle, then run `./gradlew build`. Installable artifacts are in `build/libs/`. This branch is licensed under GPL-3.0.
