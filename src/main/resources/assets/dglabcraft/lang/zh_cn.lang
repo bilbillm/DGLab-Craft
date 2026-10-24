@@ -1,2 +1,4 @@
 key.categories.dglabcraft=DGLab Craft
 key.dglabcraft.open_settings=打开 DGLab Craft 设置
+
+message.dglabcraft.key_conflict=DGLab Craft 快捷键与 %s 冲突，请在控制设置中更改。

@@ -23,7 +23,7 @@ import net.minecraftforge.common.MinecraftForge;
 public class DGLabCraft {
     public static final String MODID = "dglabcraft";
     public static final String NAME = "DGLab Craft";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.4";
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -44,7 +44,9 @@ public class DGLabCraft {
         FMLCommonHandler.instance().bus().register(new EnvironmentHandler());
         FMLCommonHandler.instance().bus().register(new HeartbeatHandler());
         FMLCommonHandler.instance().bus().register(new FadeManager());
-        MinecraftForge.EVENT_BUS.register(new DamageHandler());
+        DamageHandler damageHandler = new DamageHandler();
+        MinecraftForge.EVENT_BUS.register(damageHandler);
+        FMLCommonHandler.instance().bus().register(damageHandler);
         MinecraftForge.EVENT_BUS.register(new DGLabCraftHUD());
         WebSocketServerManager.getInstance().start();
     }
@@ -54,6 +56,7 @@ public class DGLabCraft {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
+        KeyBindingDiagnostics.check(Minecraft.getMinecraft(), ClientModEvents.OPEN_SETTINGS_KEY);
         if (ClientModEvents.OPEN_SETTINGS_KEY.isPressed()) {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc.currentScreen == null) {

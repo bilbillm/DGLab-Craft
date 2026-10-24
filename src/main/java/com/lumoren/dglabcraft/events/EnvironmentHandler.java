@@ -34,7 +34,7 @@ public class EnvironmentHandler {
         int maxIntensityB = ModConfig.getEffectiveMaxIntensity(ws.getAppBMaxStrength());
 
         boolean inNether = player.dimension == -1;
-        if (inNether && tickCounter % 60 == 0) {
+        if (inNether && tickCounter % 40 == 0) {
             sendEnvironment(ws, "breath", maxIntensityA, maxIntensityB, ModConfig.NETHER_MULTIPLIER.get(), "nether");
         } else if (wasInNether && !inNether) {
             FadeManager.stopEnvironment();
@@ -42,7 +42,7 @@ public class EnvironmentHandler {
         wasInNether = inNether;
 
         boolean inEnd = player.dimension == 1;
-        if (inEnd && tickCounter % 60 == 0) {
+        if (inEnd && tickCounter % 40 == 0) {
             sendEnvironment(ws, "tide", maxIntensityA, maxIntensityB, ModConfig.END_MULTIPLIER.get(), "end");
         } else if (wasInEnd && !inEnd) {
             FadeManager.stopEnvironment();
@@ -62,15 +62,13 @@ public class EnvironmentHandler {
     }
 
     private void sendEnvironment(WebSocketServerManager ws, String waveform, int maxA, int maxB, double percent, String detail) {
-        int intensityA = Math.max(1, Math.min(maxA, (int) (maxA * percent / 100.0D)));
-        int intensityB = Math.max(1, Math.min(maxB, (int) (maxB * percent / 100.0D)));
+        int intensityA = Math.max(0, Math.min(maxA, (int) (maxA * percent / 100.0D)));
+        int intensityB = Math.max(0, Math.min(maxB, (int) (maxB * percent / 100.0D)));
         if (ModConfig.SYNC_CHANNELS.get()) {
-            ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, intensityA, intensityB);
-            ws.noteSyncRuntime(WebSocketServerManager.EffectSource.ENVIRONMENT, detail, waveform, Math.max(intensityA, intensityB));
+            ws.requestSyncedEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, detail, waveform, intensityA, intensityB);
             FadeManager.updateEnvironment(intensityA, intensityB);
         } else {
-            ws.sendWaveformData("B", waveform, intensityB);
-            ws.noteChannelRuntime("B", WebSocketServerManager.EffectSource.ENVIRONMENT, detail, waveform, intensityB);
+            ws.requestEffect(WebSocketServerManager.EffectSource.ENVIRONMENT, detail, "B", waveform, intensityB);
             FadeManager.updateEnvironment(0, intensityB);
         }
     }
