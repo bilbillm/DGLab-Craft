@@ -282,7 +282,13 @@ public class DamageHandler {
             return "inWall";
         }
 
-        int maxCramming = mc.level.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+        // 1.21.2 起 ClientLevel 不再暴露游戏规则，联机时只有服务端知道 cramming 上限，
+        // 拿不到就退回原版默认值 24。
+        int maxCramming = 24;
+        var levelServer = mc.level.getServer();
+        if (levelServer != null) {
+            maxCramming = levelServer.getGameRules().getInt(GameRules.RULE_MAX_ENTITY_CRAMMING);
+        }
         if (maxCramming > 0) {
             java.util.List<Entity> nearbyEntities = mc.level.getEntities(player, player.getBoundingBox().inflate(0.2D));
             if (nearbyEntities.size() >= maxCramming) {

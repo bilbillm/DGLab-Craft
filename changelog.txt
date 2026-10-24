@@ -1,5 +1,15 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-10-24
+
+### Added
+- Added a Fabric build for Minecraft 1.21.4.
+
+### Fixed
+- Adapted the settings list scrollbar and damage detection to the Minecraft 1.21.4 client API.
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 ### Added
