@@ -167,5 +167,6 @@
   "setting.dglabcraft.starve": "空腹",
   "setting.dglabcraft.nether": "ネザー",
   "setting.dglabcraft.end": "エンド",
-  "setting.dglabcraft.portal": "ポータル"
+  "setting.dglabcraft.portal": "ポータル",
+  "message.dglabcraft.key_conflict": "DGLab Craft shares a key with %s. Change it in Controls."
 }

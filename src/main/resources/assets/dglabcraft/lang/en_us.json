@@ -167,5 +167,6 @@
   "setting.dglabcraft.starve": "Starvation",
   "setting.dglabcraft.nether": "Nether",
   "setting.dglabcraft.end": "The End",
-  "setting.dglabcraft.portal": "Portal"
+  "setting.dglabcraft.portal": "Portal",
+  "message.dglabcraft.key_conflict": "DGLab Craft shares a key with %s. Change it in Controls."
 }
