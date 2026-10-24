@@ -14,10 +14,9 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 伤害事件处理
@@ -39,19 +38,19 @@ public class DamageHandler {
 
     @SubscribeEvent
     @SuppressWarnings("deprecation")
-    public void onLivingDamage(LivingDamageEvent.Post event) {
+    public void onLivingDamage(LivingDamageEvent event) {
         cacheDamageSource(event);
     }
 
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!event.getEntity().level().isClientSide()) return;
+        if (!event.player.level().isClientSide()) return;
 
         Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.player instanceof Player)) return;
         if (mc.player == null || mc.level == null) return;
 
-        Player eventPlayer = (Player) event.getEntity();
+        Player eventPlayer = (Player) event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
         tickCounter++;
@@ -83,7 +82,7 @@ public class DamageHandler {
     }
 
     @SuppressWarnings("deprecation")
-    private void cacheDamageSource(LivingDamageEvent.Post event) {
+    private void cacheDamageSource(LivingDamageEvent event) {
         if (!event.getEntity().level().isClientSide()) return;
 
         Minecraft mc = Minecraft.getInstance();

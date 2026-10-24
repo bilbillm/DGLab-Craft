@@ -10,7 +10,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,8 +208,8 @@ public class DiagnosticScreen extends Screen {
         IssueReportBuilder.EnvironmentInfo environment = new IssueReportBuilder.EnvironmentInfo(
             modVersion("dglabcraft"),
             SharedConstants.getCurrentVersion().getName(),
-            "NeoForge",
-            modVersion("neoforge"),
+            "Forge",
+            modVersion("forge"),
             System.getProperty("java.version", "unknown"),
             System.getProperty("os.name", "unknown"),
             System.getProperty("os.version", "unknown"),

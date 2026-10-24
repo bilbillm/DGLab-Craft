@@ -8,8 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /**
  * 环境反馈处理
@@ -27,17 +27,17 @@ public class EnvironmentHandler {
 
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!event.getEntity().level().isClientSide()) return;
+        if (!event.player.level().isClientSide()) return;
 
         Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.player instanceof Player)) return;
         if (mc.player == null) return;
 
         // 使用 UUID 比较
-        Player eventPlayer = (Player) event.getEntity();
+        Player eventPlayer = (Player) event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
-        Player player = (Player) event.getEntity();
+        Player player = (Player) event.player;
         handleClientEnvironment(player, mc);
     }
 

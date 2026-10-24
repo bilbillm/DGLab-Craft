@@ -3,9 +3,10 @@ package com.lumoren.dglabcraft.events;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 
 /**
  * 安全归零管理器
@@ -13,7 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * 该类不再负责复杂的来源渐变仲裁，
  * 只在 heartbeat / damage / environment 全部静默时统一执行安全归零。
  */
-@EventBusSubscriber
+@Mod.EventBusSubscriber(modid = "dglabcraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FadeManager {
 
     private static int tickCounter = 0;
@@ -22,13 +23,13 @@ public class FadeManager {
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!event.getEntity().level().isClientSide()) return;
+        if (!event.player.level().isClientSide()) return;
 
         Minecraft mc = Minecraft.getInstance();
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.player instanceof Player)) return;
         if (mc.player == null) return;
 
-        Player eventPlayer = (Player) event.getEntity();
+        Player eventPlayer = (Player) event.player;
         if (!eventPlayer.getUUID().equals(mc.player.getUUID())) return;
 
         tickCounter++;

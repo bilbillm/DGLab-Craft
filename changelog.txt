@@ -1,5 +1,15 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-10-24
+
+### Added
+- Added the `1.21.1-Forge` branch: a Minecraft 1.21.1 Forge port of the existing 1.21.1 NeoForge code base.
+
+### Changed
+- Reworked the mod entry point, event bus, HUD layer registration, config spec and mod metadata for Forge 1.21.1.
+
+---
+
 ## [1.1.1] - 2026-07-11
 
 ### Added

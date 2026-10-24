@@ -8,11 +8,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.AddGuiOverlayLayersEvent;
+import net.minecraftforge.client.gui.overlay.ForgeLayeredDraw;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@EventBusSubscriber(modid = "dglabcraft", bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "dglabcraft", bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class DGLabCraftHUD {
     private static final int PANEL_BG = 0xCC101014;
     private static final int PANEL_BORDER = 0xAAE8D57A;
@@ -37,13 +38,17 @@ public class DGLabCraftHUD {
     private static final Map<String, ChannelTimeline> WAVEFORM_TIMELINES = new HashMap<>();
 
     @SubscribeEvent
-    public static void onRenderGuiOverlay(RenderGuiLayerEvent.Post event) {
-        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
+    public static void onAddGuiOverlayLayers(AddGuiOverlayLayersEvent event) {
+        event.getLayeredDraw().addAbove(
+            ForgeLayeredDraw.HOTBAR,
+            ResourceLocation.fromNamespaceAndPath("dglabcraft", "hud"),
+            (guiGraphics, deltaTracker) -> renderOverlays(guiGraphics));
+    }
 
+    private static void renderOverlays(GuiGraphics guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || mc.screen != null) return;
 
-        GuiGraphics guiGraphics = event.getGuiGraphics();
         int screenWidth = guiGraphics.guiWidth();
         int screenHeight = guiGraphics.guiHeight();
         WebSocketServerManager server = WebSocketServerManager.getInstance();

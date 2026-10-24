@@ -106,7 +106,7 @@ public class WebSocketServerManager {
     private WebSocketServerManager() {
         // 使用固定的 sessionId（参考 DG_LAB）
         sessionId = FIXED_CLIENT_ID;
-        // 端口号延迟到 start() 时读取 — NeoForge 在 FMLCommonSetupEvent 期间配置尚未就绪
+        // 端口号延迟到 start() 时读取 — Forge 在 FMLCommonSetupEvent 期间配置尚未就绪
         port = DEFAULT_WS_PORT;
     }
 
@@ -126,7 +126,7 @@ public class WebSocketServerManager {
             return;
         }
 
-        // 从配置读取端口（NeoForge: 配置在 FMLCommonSetupEvent 期间可能尚未加载，fallback 8877）
+        // 从配置读取端口（Forge: 配置在 FMLCommonSetupEvent 期间可能尚未加载，fallback 8877）
         try {
             port = DGLabConfig.WS_PORT.get();
         } catch (Exception e) {
