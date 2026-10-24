@@ -3,11 +3,11 @@
 ## [1.1.2] - 2026-10-24
 
 ### Added
-- Added a Fabric build for Minecraft 1.21.4.
+- Added a Fabric build for Minecraft 1.21.8.
 - Render the generated connection QR code directly in the in-game connection screen.
 
 ### Fixed
-- Adapted the settings list scrollbar and damage detection to the Minecraft 1.21.4 client API.
+- Adapted the HUD matrix stack, instant damage effect and version string to the Minecraft 1.21.8 client API.
 
 ---
 

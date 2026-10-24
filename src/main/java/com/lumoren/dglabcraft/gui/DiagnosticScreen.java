@@ -207,7 +207,7 @@ public class DiagnosticScreen extends Screen {
     private String buildIssueReport(WebSocketServerManager server) {
         IssueReportBuilder.EnvironmentInfo environment = new IssueReportBuilder.EnvironmentInfo(
             modVersion("dglabcraft"),
-            SharedConstants.getCurrentVersion().getName(),
+            SharedConstants.getCurrentVersion().name(),
             "Fabric",
             modVersion("fabricloader"),
             System.getProperty("java.version", "unknown"),

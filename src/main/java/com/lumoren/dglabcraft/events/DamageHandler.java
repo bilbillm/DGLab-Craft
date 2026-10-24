@@ -163,7 +163,7 @@ public class DamageHandler {
         if (player.getFoodData().getFoodLevel() <= 0) {
             return "starve";
         }
-        if (player.hasEffect(MobEffects.POISON) || player.hasEffect(MobEffects.HARM)) {
+        if (player.hasEffect(MobEffects.POISON) || player.hasEffect(MobEffects.INSTANT_DAMAGE)) {
             return "magic";
         }
         if (player.fallDistance > 3.0f) {
