@@ -156,5 +156,16 @@
   "setting.dglabcraft.starve": "Hunger",
   "setting.dglabcraft.nether": "Nether",
   "setting.dglabcraft.end": "Das Ende",
-  "setting.dglabcraft.portal": "Portal"
+  "setting.dglabcraft.portal": "Portal",
+  "section.dglabcraft.connection_guide": "--- Verbindungsanleitung ---",
+  "guide.dglabcraft.connection.step1": "1. DG-LAB-App öffnen (3.0+, 4.0 nicht unterstützt)",
+  "guide.dglabcraft.connection.step2": "2. \"SOCKET-Steuerung\" antippen",
+  "guide.dglabcraft.connection.step3": "3. \"Server verbinden\" antippen",
+  "guide.dglabcraft.connection.step4": "4. \"Scannen\" antippen und den QR-Code oben scannen",
+  "guide.dglabcraft.connection.step5": "5. Nach dem Verbinden A/B-Kanallimits über die Spielwerte setzen",
+  "section.dglabcraft.connection_troubleshooting": "--- Verbindungsfehler prüfen ---",
+  "troubleshoot.dglabcraft.connection.same_wifi": "· Smartphone und PC müssen im selben WiFi sein",
+  "troubleshoot.dglabcraft.connection.firewall": "· Prüfe, ob die PC-Firewall die Verbindung blockiert",
+  "troubleshoot.dglabcraft.connection.manual_ip": "· Versuche, die LAN-IP des PCs manuell einzugeben",
+  "troubleshoot.dglabcraft.connection.port": "· Wenn der Port belegt ist, schließe die blockierende App und aktualisiere den QR-Code"
 }

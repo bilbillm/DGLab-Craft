@@ -108,7 +108,7 @@ else {
 
     if (-not [string]::IsNullOrWhiteSpace($minecraftVersion) -and -not [string]::IsNullOrWhiteSpace($modVersion)) {
         $isFabric = $properties.ContainsKey('fabric_loader_version') -or (Test-Path -LiteralPath 'src/main/resources/fabric.mod.json')
-        $expectedTags = @("v$modVersion-$minecraftVersion")
+        $expectedTags = @("v$modVersion-$minecraftVersion", "v$modVersion-$minecraftVersion-Forge")
         if ($isFabric) {
             $expectedTags += "v$modVersion-$minecraftVersion-Fabric"
         }

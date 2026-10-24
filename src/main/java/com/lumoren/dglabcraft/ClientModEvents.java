@@ -44,7 +44,7 @@ public class ClientModEvents {
      * “按 K 没反应”多数是快捷键冲突或按键被改过，这里写日志并在游戏内提示一次。
      */
     public static void checkKeyConflicts(Minecraft minecraft) {
-        if (conflictChecked || minecraft.options == null) {
+        if (conflictChecked || minecraft.options == null || minecraft.player == null) {
             return;
         }
         conflictChecked = true;
