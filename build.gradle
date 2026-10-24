@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:1.17-SNAPSHOT'
+        classpath 'net.fabricmc:fabric-loom:1.17.13'
         classpath 'com.google.code.gson:gson:2.11.0'
     }
     configurations.classpath {
