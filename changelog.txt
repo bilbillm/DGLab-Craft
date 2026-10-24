@@ -5,6 +5,9 @@
 ### Added
 - Render the generated connection QR code directly in the in-game connection screen.
 
+### Changed
+- Lower the Fabric Loader requirement to 0.15.11 so 1.20.1 modpacks on older loaders can install the mod.
+
 ---
 
 ## [1.1.0] - 2026-07-08
