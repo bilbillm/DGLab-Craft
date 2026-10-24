@@ -1,3 +1,9 @@
+## [1.1.4] - 2026-10-24
+
+- Complete in-game QR connection screens and accurate installation guides.
+- Defer key-conflict warnings until entering a world.
+- Reset damage history across disconnects, world changes and respawns.
+
 # DGLab Craft Changelog
 
 ## [1.1.2] - 2026-10-24
