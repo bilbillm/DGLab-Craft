@@ -1,10 +1,16 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-10-24
+
+### Added
+- Render the generated connection QR code directly in the in-game connection screen.
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 ### Added
 - Added draggable and resizable in-game overlay panels for the HUD and waveform preview.
-- Render the generated connection QR code directly in the in-game connection screen.
 - Added a DG-LAB style scrolling waveform preview that follows sent pulse data.
 - Added the updated centered HUD layout with Chinese waveform names.
 
