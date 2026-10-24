@@ -1,6 +1,7 @@
 {
   "key.categories.dglabcraft": "DGLab Craft",
   "key.dglabcraft.open_settings": "Open Settings",
+  "message.dglabcraft.key_conflict": "Key conflict: %s is also bound to this key. Rebind it in Options -> Controls, or remove the conflicting mod.",
   "screen.dglabcraft.connection_settings": "Connection Settings",
   "screen.dglabcraft.strength_settings": "DGLab Strength and Multiplier Settings",
   "screen.dglabcraft.diagnostics": "Connection Diagnostics",

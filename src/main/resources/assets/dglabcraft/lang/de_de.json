@@ -1,6 +1,7 @@
 {
   "key.categories.dglabcraft": "DGLab Craft",
   "key.dglabcraft.open_settings": "Einstellungen öffnen",
+  "message.dglabcraft.key_conflict": "Tastenkonflikt: %s belegt ebenfalls diese Taste. Aendere die Belegung unter Optionen -> Steuerung.",
   "screen.dglabcraft.connection_settings": "Verbindungseinstellungen",
   "screen.dglabcraft.strength_settings": "DGLab Stärke- und Multiplikator-Einstellungen",
   "screen.dglabcraft.diagnostics": "Verbindungsdiagnose",

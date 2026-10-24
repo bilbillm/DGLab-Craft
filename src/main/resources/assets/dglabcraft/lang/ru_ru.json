@@ -1,6 +1,7 @@
 {
   "key.categories.dglabcraft": "DGLab Craft",
   "key.dglabcraft.open_settings": "Открыть настройки",
+  "message.dglabcraft.key_conflict": "Konflikt klavish: %s takzhe naznachena na etu klavishu. Izmenite upravlenie v Nastrojki -> Upravlenie.",
   "screen.dglabcraft.connection_settings": "Настройки подключения",
   "screen.dglabcraft.strength_settings": "Настройки силы и множителей DGLab",
   "screen.dglabcraft.diagnostics": "Диагностика подключения",

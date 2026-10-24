@@ -1,6 +1,7 @@
 {
   "key.categories.dglabcraft": "DGLab Craft",
   "key.dglabcraft.open_settings": "打开设置",
+  "message.dglabcraft.key_conflict": "快捷键冲突：%s 也绑定了这个按键。可以在「选项 -> 控制」里重新绑定，或先移除冲突的模组。",
   "screen.dglabcraft.connection_settings": "连接设置",
   "screen.dglabcraft.strength_settings": "DGLab 强度与倍率设置",
   "screen.dglabcraft.diagnostics": "连接诊断",

@@ -1,6 +1,7 @@
 {
   "key.categories.dglabcraft": "DGLab Craft",
   "key.dglabcraft.open_settings": "設定を開く",
+  "message.dglabcraft.key_conflict": "キー競合：%s も同じキーを使用しています。オプション -> 操作で変更してください。",
   "screen.dglabcraft.connection_settings": "接続設定",
   "screen.dglabcraft.strength_settings": "DGLab 強度と倍率設定",
   "screen.dglabcraft.diagnostics": "接続診断",

@@ -1,5 +1,16 @@
 # DGLab Craft Changelog
 
+## [1.1.3] - 2026-10-24
+
+### Added
+- Log key binding registration and report key conflicts in-game, so "pressing K does nothing" can be diagnosed from `latest.log`.
+- Document the supported Minecraft, Fabric and Java combination together with the full release matrix in the README.
+
+### Fixed
+- Corrected the README, which still described the 1.18.2 Forge branch instead of this 1.17.1 Fabric branch.
+
+---
+
 ## [1.1.2] - 2026-07-28
 
 ### Fixed
