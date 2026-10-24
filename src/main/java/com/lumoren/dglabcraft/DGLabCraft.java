@@ -53,6 +53,7 @@ public class DGLabCraft
      */
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent.Post event) {
+        KeyBindingDiagnostics.check(Minecraft.getInstance(), ClientModEvents.OPEN_SETTINGS_KEY.get());
         if (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.screen == null) {
