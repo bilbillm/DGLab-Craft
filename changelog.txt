@@ -1,5 +1,15 @@
 # DGLab Craft Changelog
 
+## [Unreleased]
+
+### Fixed
+- Detect damage locally from health changes so damage feedback also works in multiplayer and modpacks where `LivingDamageEvent` never fires on the client.
+- Infer the damage source from local player and world state (fall, fire, lava, drowning, suffocation, entity cramming, falling blocks, cactus, sweet berry bush, starvation, poison and wither) when no damage event is available.
+- Debounce repeated damage triggers and keep `LivingDamageEvent` only as a source hint, avoiding duplicate pulses.
+- Route damage feedback through the effect priority and lease arbiter so heartbeat and environment effects are not interrupted incorrectly.
+
+---
+
 ## [1.1.1] - 2026-07-11
 
 ### Added
