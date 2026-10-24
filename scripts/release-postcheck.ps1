@@ -76,6 +76,9 @@ if ($errors.Count -eq 0) {
     if ($properties.ContainsKey('neoforge_version')) {
         $expectedTags += "v$modVersion-$minecraftVersion-NeoForge"
     }
+    if ($properties.ContainsKey('forge_version')) {
+        $expectedTags += "v$modVersion-$minecraftVersion-Forge"
+    }
     if ($expectedTags -notcontains $Tag) {
         Add-Error "Tag '$Tag' does not match this branch. Expected one of: $($expectedTags -join ', ')."
     }

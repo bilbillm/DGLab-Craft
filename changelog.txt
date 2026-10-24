@@ -1,6 +1,6 @@
 # DGLab Craft Changelog
 
-## [Unreleased]
+## [1.1.2] - 2026-10-24
 
 ### Fixed
 - Detect damage locally from health changes so damage feedback also works in multiplayer and modpacks where `LivingDamageEvent` never fires on the client.
