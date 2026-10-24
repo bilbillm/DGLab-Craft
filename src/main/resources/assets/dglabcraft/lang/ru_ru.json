@@ -155,5 +155,17 @@
   "setting.dglabcraft.starve": "Голод",
   "setting.dglabcraft.nether": "Нижний мир",
   "setting.dglabcraft.end": "Край",
-  "setting.dglabcraft.portal": "Портал"
+  "setting.dglabcraft.portal": "Портал",
+  "section.dglabcraft.connection_guide": "--- Инструкция подключения ---",
+  "guide.dglabcraft.connection.step1": "1. Откройте приложение DG-LAB (3.0+, 4.0 не поддерживается)",
+  "guide.dglabcraft.connection.step2": "2. Нажмите \"SOCKET Control\"",
+  "guide.dglabcraft.connection.step3": "3. Нажмите \"Connect Server\"",
+  "guide.dglabcraft.connection.step4": "4. Нажмите \"Scan\" и отсканируйте QR-код выше",
+  "guide.dglabcraft.connection.step5": "5. После подключения задайте лимиты A/B выше значений игры",
+  "section.dglabcraft.connection_troubleshooting": "--- Проверка сбоя подключения ---",
+  "troubleshoot.dglabcraft.connection.same_wifi": "· Убедитесь, что телефон и ПК в одной WiFi-сети",
+  "troubleshoot.dglabcraft.connection.firewall": "· Проверьте, не блокирует ли подключение брандмауэр ПК",
+  "troubleshoot.dglabcraft.connection.manual_ip": "· Попробуйте вручную ввести LAN IP компьютера",
+  "troubleshoot.dglabcraft.connection.port": "· Если порт занят, закройте блокирующую программу и обновите QR-код",
+  "message.dglabcraft.key_conflict": "DGLab Craft shares a key with %s. Change it in Options > Controls."
 }

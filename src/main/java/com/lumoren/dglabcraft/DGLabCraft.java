@@ -40,6 +40,7 @@ public class DGLabCraft implements ClientModInitializer {
     }
 
     private void handleOpenSettings(Minecraft minecraft) {
+        KeyBindingDiagnostics.check(minecraft, ClientModEvents.OPEN_SETTINGS_KEY.get());
         while (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
             if (minecraft.screen == null) {
                 minecraft.setScreen(new MainScreen());
