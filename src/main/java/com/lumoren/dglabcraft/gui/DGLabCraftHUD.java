@@ -8,9 +8,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.opengl.GL11;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -191,11 +191,11 @@ public class DGLabCraftHUD extends Gui {
 
     private static void renderScaled(OverlayLayout.Rect rect, int baseWidth, Runnable draw) {
         float scale = (float) Math.max(0.01D, rect.width() / (double) baseWidth);
-        GL11.glPushMatrix();
-        GL11.glTranslatef(rect.x(), rect.y(), 0.0F);
-        GL11.glScalef(scale, scale, 1.0F);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate((float) rect.x(), (float) rect.y(), 0.0F);
+        GlStateManager.scale(scale, scale, 1.0F);
         draw.run();
-        GL11.glPopMatrix();
+        GlStateManager.popMatrix();
     }
 
     private static void drawCentered(FontRenderer font, String text, int centerX, int y, int color) {

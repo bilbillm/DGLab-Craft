@@ -48,7 +48,7 @@ public class OverlayEditScreen extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws java.io.IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (waveformRect.contains(mouseX, mouseY)) {
             beginDrag("waveform", waveformRect, mouseX, mouseY);

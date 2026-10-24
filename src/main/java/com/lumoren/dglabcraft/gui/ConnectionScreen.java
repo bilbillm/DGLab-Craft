@@ -27,7 +27,7 @@ public class ConnectionScreen extends GuiScreen {
         buttonList.clear();
         int centerX = width / 2;
         String currentHost = ModConfig.WS_HOST.get();
-        hostField = new GuiTextField(fontRendererObj, centerX - 100, 92, 200, 20);
+        hostField = new GuiTextField(0, fontRendererObj, centerX - 100, 92, 200, 20);
         hostField.setMaxStringLength(128);
         hostField.setText(currentHost == null ? "" : currentHost);
         buttonList.add(new GuiButton(BTN_REFRESH, centerX - 100, 120, 200, 20, "刷新二维码"));
@@ -66,7 +66,7 @@ public class ConnectionScreen extends GuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) {
+    protected void keyTyped(char typedChar, int keyCode) throws java.io.IOException {
         if (hostField.textboxKeyTyped(typedChar, keyCode)) {
             return;
         }
@@ -74,7 +74,7 @@ public class ConnectionScreen extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws java.io.IOException {
         hostField.mouseClicked(mouseX, mouseY, mouseButton);
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }

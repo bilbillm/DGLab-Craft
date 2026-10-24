@@ -42,7 +42,7 @@ public class DiagnosticScreen extends GuiScreen {
     }
 
     @Override
-    public void handleMouseInput() {
+    public void handleMouseInput() throws java.io.IOException {
         super.handleMouseInput();
         int wheel = org.lwjgl.input.Mouse.getEventDWheel();
         if (wheel != 0) {
@@ -69,8 +69,8 @@ public class DiagnosticScreen extends GuiScreen {
     private List<String> buildLines() {
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         List<String> lines = new ArrayList<String>();
-        lines.add("Minecraft: 1.7.10");
-        lines.add("Forge: 10.13.4.1614");
+        lines.add("Minecraft: 1.8.9");
+        lines.add("Forge: 11.15.0.1659");
         lines.add("Java: " + System.getProperty("java.version"));
         lines.add("OS: " + System.getProperty("os.name") + " " + System.getProperty("os.version"));
         lines.add("WebSocket: " + server.resolveConnectionHost() + ":" + server.getPort());

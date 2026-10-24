@@ -5,18 +5,22 @@ buildscript {
         maven { url = 'https://libraries.minecraft.net/' }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        // ForgeGradle 1.2 refuses Forge 1.8.9: ForgeUserPlugin hard-fails with
+        // "ForgeGradle 1.2 only supports Forge 1.8 before 11.14.3.1503".
+        // Forge 11.14.3+ (i.e. 1.8.8/1.8.9) switched to the merged-srg userdev
+        // layout, which is handled by ForgeGradle 2.x - the official 1.8.9 toolchain.
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
 
-apply plugin: 'forge'
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-// The legacy S3 endpoints hardcoded in ForgeGradle 1.2 are dead; point the
-// download tasks at the current Mojang CDN (URLs from the official version manifest).
-import net.minecraftforge.gradle.delayed.DelayedString
-tasks.downloadClient { url = new DelayedString(project, 'https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar') }
-tasks.downloadServer { url = new DelayedString(project, 'https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar') }
-tasks.getAssetsIndex { url = new DelayedString(project, 'https://launchermeta.mojang.com/v1/packages/1863782e33ce7b584fc45b037325a1964e095d3e/1.7.10.json') }
+// The legacy S3 endpoints ForgeGradle points at by default are dead; redirect the
+// download tasks to the current Mojang CDN (URLs from the official 1.8.9 version manifest).
+tasks.downloadClient { url = 'https://launcher.mojang.com/v1/objects/3870888a6c3d349d3771a3e9d16c9bf5e076b908/client.jar' }
+tasks.downloadServer { url = 'https://launcher.mojang.com/v1/objects/b58b2ceb36e01bcd8dbf49c8fb66c55a9f0676cd/server.jar' }
+tasks.getVersionJson { url = 'https://piston-meta.mojang.com/v1/packages/d546f1707a3f2b7d034eece5ea2e311eda875787/1.8.9.json' }
+tasks.getAssetIndex { url = 'https://launchermeta.mojang.com/v1/packages/f6ad102bcaa53b1a58358f16e376d548d44933ec/1.8.json' }
 
 version = mod_version
 group = 'com.lumoren.dglabcraft'
@@ -26,7 +30,9 @@ sourceCompatibility = targetCompatibility = '1.8'
 compileJava.options.encoding = 'UTF-8'
 
 minecraft {
-    version = "${minecraft_version}-${forge_version}-${minecraft_version}"
+    // ForgeGradle 2.x takes "<mcVersion>-<forgeVersion>" and appends "<mcVersion>"
+    // itself when resolving net.minecraftforge:forge:<ver>:userdev.
+    version = "${minecraft_version}-${forge_version}"
     runDir = "run"
     mappings = "${mapping_channel}_${mapping_version}"
 }

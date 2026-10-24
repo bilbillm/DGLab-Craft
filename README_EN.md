@@ -4,15 +4,15 @@
 
 [中文说明](./README.md)
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-brightgreen)
-![Forge](https://img.shields.io/badge/Forge-40.2.21-orange)
-![Java](https://img.shields.io/badge/Java-17-red)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.8.9-brightgreen)
+![Forge](https://img.shields.io/badge/Forge-11.15.0.1659-orange)
+![Java](https://img.shields.io/badge/Java-8-red)
 ![License](https://img.shields.io/badge/License-GPL_3.0-blue)
 
 DGLab Craft is a Minecraft mod that converts in-game damage, low-health states, and environment changes into DGLab device feedback. It connects to the DGLab mobile app through a local WebSocket server.
 
-Current branch: `1.18.2`
-Target version: Minecraft `1.18.2` / Forge `40.2.21` / Java `17`
+Current branch: `1.8.9-Forge`
+Target version: Minecraft `1.8.9` / Forge `11.15.0.1659` / Java `8`
 
 > Note: use the jar that exactly matches your Minecraft version and loader. Do not mix Minecraft, Forge, or NeoForge builds.
 
@@ -27,35 +27,33 @@ Download pages:
 
 This branch only targets:
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.8.9`
+- Forge `11.15.0.1659`
+- Java `8`
 
 If your Minecraft version is different, use the matching branch and release below. Do not mix jars built for different Minecraft versions.
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.8.9 | Forge 11.15.0.1659 | `1.8.9-Forge` | local build (no release yet) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |
 | 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.21.1-NeoForge) |
 | 1.21.4 | NeoForge 21.4.x | `1.21.4-NeoForge` | [v1.0.8](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.8-1.21.4-NeoForge) |
 
-### 2. Download the Mod from GitHub
+### 2. Get the Mod jar
 
-1. Open this release: [`DGLabCraft-1.18.2-1.0.7.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2)
-2. Scroll to **Assets**.
-3. Download `DGLabCraft-1.18.2-1.0.7.jar`.
-4. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
-
-You can also start from the project [Releases page](https://github.com/bilbillm/DGLab-Craft/releases) and choose the release that matches your Minecraft version.
+1. There is no release for 1.8.9 yet, so build it locally with the steps in Part 2; the artifact is `build/libs/DGLabCraft-1.8.9-1.1.0.jar`.
+2. If a 1.8.9 release is published later, you can also pick it from the project [Releases page](https://github.com/bilbillm/DGLab-Craft/releases).
+3. Do not download `Source code.zip` or `Source code.tar.gz` for normal play. Those are source packages for developers and will not work as a mod jar.
 
 ### 3. Install it into Minecraft
 
-1. Create or select a Minecraft `1.18.2` instance in your launcher.
-2. Install Forge `40.2.21` for that instance.
+1. Create or select a Minecraft `1.8.9` instance in your launcher.
+2. Install Forge `11.15.0.1659` for that instance.
 3. Open the instance's `mods` folder. A common path is `.minecraft/mods`.
-4. Put `DGLabCraft-1.18.2-1.0.7.jar` into that folder.
+4. Put `DGLabCraft-1.8.9-1.1.0.jar` into that folder.
 5. Start the game and check the Mods screen for `DGLab Craft`.
 
 If you cannot find the instance folder, most launchers provide an “Open Folder” or “Open Game Directory” action for each instance.
@@ -90,9 +88,9 @@ If connection fails, check these first:
 
 This branch maintains:
 
-- Minecraft `1.18.2`
-- Forge `40.2.21`
-- Java `17`
+- Minecraft `1.8.9`
+- Forge `11.15.0.1659`
+- Java `8`
 - Mod version `1.0.7`
 
 When maintaining multiple versions, put fixes on the matching Minecraft branch first. Do not blindly copy Forge and NeoForge code between branches because their events, registration APIs, and build flows differ.
@@ -100,20 +98,22 @@ When maintaining multiple versions, put fixes on the matching Minecraft branch f
 ### Build
 
 ```bash
-git clone -b 1.18.2 https://github.com/bilbillm/DGLab-Craft.git
+git clone -b 1.8.9-Forge https://github.com/bilbillm/DGLab-Craft.git
 cd DGLab-Craft
 ./gradlew build
 ```
 
 Artifacts are generated in `build/libs/`.
 
+The 1.8.9 branch is built with ForgeGradle 2.1 + Gradle 4.4.1 + Java 8. Do not switch back to ForgeGradle 1.2: it rejects 1.8.9 outright with `ForgeGradle 1.2 only supports Forge 1.8 before 11.14.3.1503`.
+
 For release uploads, use the full jar, normally the one without `-slim` in its filename.
 
 Release checks:
 
 ```bash
-pwsh scripts/release-check.ps1 -Tag v1.0.7-1.18.2 -SkipGitHubReleaseCheck
-pwsh scripts/release-postcheck.ps1 -Tag v1.0.7-1.18.2
+pwsh scripts/release-check.ps1 -Tag v1.1.0-1.8.9 -SkipGitHubReleaseCheck
+pwsh scripts/release-postcheck.ps1 -Tag v1.1.0-1.8.9
 ```
 
 You can manually run the `Release Rehearsal` GitHub Action to validate release metadata and build output without creating a GitHub Release or uploading to CurseForge.
@@ -122,6 +122,7 @@ You can manually run the `Release Rehearsal` GitHub Action to validate release m
 
 | Minecraft | Loader | Branch | Latest release |
 | --- | --- | --- | --- |
+| 1.8.9 | Forge 11.15.0.1659 | `1.8.9-Forge` | local build (no release yet) |
 | 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.18.2) |
 | 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.0.7](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.7-1.19.2) |
 | 1.20.1 | Forge 47.x | `1.20.1` | [v1.0.11](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.0.11-1.20.1) |

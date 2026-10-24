@@ -2,12 +2,12 @@ package com.lumoren.dglabcraft.events;
 
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.BlockPos;
 
 public class EnvironmentHandler {
     private int tickCounter = 0;
@@ -49,10 +49,8 @@ public class EnvironmentHandler {
         }
         wasInEnd = inEnd;
 
-        int blockX = MathHelper.floor_double(player.posX);
-        int blockY = MathHelper.floor_double(player.posY);
-        int blockZ = MathHelper.floor_double(player.posZ);
-        boolean inPortal = player.worldObj.getBlock(blockX, blockY, blockZ) == Blocks.portal;
+        BlockPos playerPos = new BlockPos(player.posX, player.posY, player.posZ);
+        boolean inPortal = player.worldObj.getBlockState(playerPos).getBlock() == Blocks.portal;
         if (inPortal && tickCounter % 30 == 0) {
             sendEnvironment(ws, "pinch_intensify", maxIntensityA, maxIntensityB, ModConfig.PORTAL_MULTIPLIER.get(), "portal");
         } else if (wasInPortal && !inPortal) {
