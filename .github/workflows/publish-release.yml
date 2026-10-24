@@ -103,7 +103,7 @@ jobs:
             version_type="Minecraft ${minecraft_minor}"
           fi
           game_versions="${version_type}:${minecraft_version},Java ${java_version},${loader},Client"
-          artifact_suffix=""
+          artifact_suffix="-Forge"
           if [ "${loader}" = "Fabric" ]; then
             artifact_suffix="-Fabric"
           fi

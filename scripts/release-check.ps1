@@ -122,7 +122,7 @@ else {
             Write-Check "Tag matches gradle.properties."
         }
 
-        $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion.jar"
+        $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion-Forge.jar"
         $expectedJarPath = Join-Path 'build/libs' $expectedJar
         Write-Check "Expected release jar name: $expectedJarPath"
 

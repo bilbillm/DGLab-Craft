@@ -166,5 +166,6 @@
   "setting.dglabcraft.starve": "Голод",
   "setting.dglabcraft.nether": "Нижний мир",
   "setting.dglabcraft.end": "Край",
-  "setting.dglabcraft.portal": "Портал"
+  "setting.dglabcraft.portal": "Портал",
+  "message.dglabcraft.key_conflict": "DGLab Craft shares a key with %s. Change it in Options > Controls."
 }

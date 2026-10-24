@@ -88,7 +88,7 @@ if ($errors.Count -eq 0) {
 }
 
 if ($errors.Count -eq 0) {
-    $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion.jar"
+    $expectedJar = "DGLabCraft-$minecraftVersion-$modVersion-Forge.jar"
     $release = Invoke-GhJson -Arguments @('release', 'view', $Tag, '--json', 'tagName,url,assets,isDraft')
     if ($null -eq $release) {
         Add-Error "GitHub Release '$Tag' was not found."

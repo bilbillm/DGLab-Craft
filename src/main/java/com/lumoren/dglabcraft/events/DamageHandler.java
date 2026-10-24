@@ -36,6 +36,22 @@ public class DamageHandler {
     private static final int DAMAGE_DEBOUNCE_TICKS = 6;
     private static final int EVENT_SOURCE_MAX_AGE_TICKS = 40;
 
+    boolean updateSession(Object player, Object world) {
+        if (player != null && world != null && sessionPlayer == player && sessionWorld == world) return false;
+        sessionPlayer = player;
+        sessionWorld = world;
+        lastHealth = -1.0f;
+        tickCounter = 0;
+        lastDamageTriggerTick = -DAMAGE_DEBOUNCE_TICKS;
+        lastDamageSourceId = null;
+        lastDamageSourceTick = Integer.MIN_VALUE;
+        pendingFallingBlockSource = null;
+        pendingFallingBlockTick = Integer.MIN_VALUE;
+        return true;
+    }
+
+    private Object sessionPlayer;
+    private Object sessionWorld;
     private float lastHealth = -1.0f;
     private int tickCounter = 0;
     private int lastDamageTriggerTick = -DAMAGE_DEBOUNCE_TICKS;
@@ -56,8 +72,10 @@ public class DamageHandler {
     // package-private for testing
     void onClientTick(Minecraft mc) {
         if (mc == null || mc.player == null || mc.level == null) {
+            updateSession(null, null);
             return;
         }
+        updateSession(mc.player, mc.level);
 
         PlayerEntity player = mc.player;
         tickCounter++;
