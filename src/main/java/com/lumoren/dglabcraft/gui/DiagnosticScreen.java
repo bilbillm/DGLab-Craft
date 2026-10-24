@@ -72,7 +72,6 @@ public class DiagnosticScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-        this.renderBackground(guiGraphics, pMouseX, pMouseY, pPartialTick);
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
         int centerX = this.width / 2;
