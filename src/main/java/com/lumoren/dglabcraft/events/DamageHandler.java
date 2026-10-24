@@ -1,60 +1,79 @@
 package com.lumoren.dglabcraft.events;
-
 import com.lumoren.dglabcraft.config.ModConfig;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import com.lumoren.dglabcraft.util.WaveformManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraft.init.Blocks;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 
 public class DamageHandler {
-    @SubscribeEvent
-    public void onLivingDamage(LivingDamageEvent event) {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (!(event.getEntityLiving() instanceof EntityPlayer) || mc.player == null || mc.world == null) {
-            return;
-        }
-        EntityPlayer player = (EntityPlayer) event.getEntityLiving();
-        if (!player.getUniqueID().equals(mc.player.getUniqueID())) {
-            return;
-        }
-
-        DamageSource source = event.getSource();
-        String msgId = normalizeDamageType(source.getDamageType());
-        float damage = event.getAmount();
-        WebSocketServerManager ws = WebSocketServerManager.getInstance();
-        String waveform = WaveformManager.getWaveformIdForDamage(msgId);
-        double multiplier = getMultiplierForDamage(msgId);
-        float healthRatio = damage / Math.max(1.0F, player.getMaxHealth());
-
-        if (ModConfig.SYNC_CHANNELS.get()) {
-            int effectiveMaxA = ModConfig.getEffectiveMaxIntensity(ws.getAppAMaxStrength());
-            int effectiveMaxB = ModConfig.getEffectiveMaxIntensity(ws.getAppBMaxStrength());
-            int strengthA = clamp((int) (effectiveMaxA * healthRatio * 2 * multiplier), 1, effectiveMaxA);
-            int strengthB = clamp((int) (effectiveMaxB * healthRatio * 2 * multiplier), 1, effectiveMaxB);
-            ws.sendWaveformDataDualChannelWithDifferentIntensity(waveform, strengthA, strengthB);
-            ws.noteSyncRuntime(WebSocketServerManager.EffectSource.DAMAGE, msgId, waveform, Math.max(strengthA, strengthB));
-            FadeManager.updateDamage(strengthA, strengthB);
-        } else {
-            int effectiveMax = ModConfig.getEffectiveMaxIntensity(ws.getAppAMaxStrength());
-            int strength = clamp((int) (effectiveMax * healthRatio * 2 * multiplier), 1, effectiveMax);
-            ws.sendWaveformData("A", waveform, strength);
-            ws.noteChannelRuntime("A", WebSocketServerManager.EffectSource.DAMAGE, msgId, waveform, strength);
-            FadeManager.updateDamage(strength, 0);
-        }
+    private final LegacyDamageHistory history = new LegacyDamageHistory();
+    private volatile SourceHint sourceHint;
+    private float previousFallDistance;
+    private static final class SourceHint {
+        final String id; final long at;
+        SourceHint(String id) { this.id = id; this.at = System.nanoTime(); }
     }
-
+    @SubscribeEvent public void cacheSource(LivingDamageEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!(event.getEntityLiving() instanceof EntityPlayer) || mc.player == null) return;
+        if (!((EntityPlayer) event.getEntityLiving()).getUniqueID().equals(mc.player.getUniqueID())) return;
+        DamageSource source = event.getSource();
+        if (source != null) sourceHint = new SourceHint(source.getDamageType());
+    }
+    @SubscribeEvent public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayer player = mc.player;
+        if (player == null || mc.world == null) {
+            history.sample(null, null, 0); sourceHint = null; previousFallDistance = 0; return;
+        }
+        if (!history.sameSession(player, mc.world)) { sourceHint = null; previousFallDistance = 0; }
+        float damage = history.sample(player, mc.world, player.getHealth());
+        if (damage > 0) {
+            SourceHint hint = sourceHint;
+            String id = hint != null && System.nanoTime() - hint.at < 2000000000L ? hint.id : inferSource(player, mc);
+            sourceHint = null;
+            send(player, damage, normalizeDamageType(id));
+        }
+        previousFallDistance = player.fallDistance;
+    }
+    private String inferSource(EntityPlayer player, Minecraft mc) {
+        int x = (int) Math.floor(player.posX), y = (int) Math.floor(player.posY), z = (int) Math.floor(player.posZ);
+        net.minecraft.block.Block block = mc.world.getBlockState(new net.minecraft.util.math.BlockPos(x, y, z)).getBlock();
+        if (block == Blocks.CACTUS) return "cactus";
+        if (player.isInLava()) return "lava";
+        if (block == Blocks.FIRE) return "inFire";
+        if (player.isBurning()) return "onFire";
+        if (player.getAir() <= 0) return "drown";
+        if (player.isEntityInsideOpaqueBlock()) return "inWall";
+        if (player.isPotionActive(net.minecraft.init.MobEffects.POISON)) return "magic";
+        if (player.isPotionActive(net.minecraft.init.MobEffects.WITHER)) return "wither";
+        if (player.getFoodStats().getFoodLevel() == 0) return "starve";
+        if (previousFallDistance > 3 || player.fallDistance > 3) return "fall";
+        return "mob";
+    }
+    private void send(EntityPlayer player, float damage, String id) {
+        WebSocketServerManager ws = WebSocketServerManager.getInstance();
+        double ratio = damage / Math.max(1.0F, player.getMaxHealth()) * 2 * getMultiplierForDamage(id);
+        String waveform = WaveformManager.getWaveformIdForDamage(id);
+        int capA = ModConfig.getEffectiveMaxIntensity(ws.getAppAMaxStrength());
+        int capB = ModConfig.getEffectiveMaxIntensity(ws.getAppBMaxStrength());
+        int a = ratio <= 0 || capA <= 0 ? 0 : Math.min(capA, Math.max(1, (int) (capA * ratio)));
+        int b = ratio <= 0 || capB <= 0 ? 0 : Math.min(capB, Math.max(1, (int) (capB * ratio)));
+        if (ModConfig.SYNC_CHANNELS.get()) ws.requestSyncedEffect(WebSocketServerManager.EffectSource.DAMAGE, id, waveform, a, b);
+        else ws.requestEffect(WebSocketServerManager.EffectSource.DAMAGE, id, "A", waveform, a);
+        FadeManager.updateDamage(a, ModConfig.SYNC_CHANNELS.get() ? b : 0);
+    }
     private static String normalizeDamageType(String type) {
         if (type == null) {
             return "default";
         }
         return type.replace(".", "").replace("_", "").toLowerCase();
-    }
-
-    private static int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
     }
 
     private double getMultiplierForDamage(String msgId) {
@@ -81,4 +100,5 @@ public class DamageHandler {
         if ("starve".equals(msgId)) return ModConfig.STARVE_MULTIPLIER.get();
         return 1.0D;
     }
+
 }

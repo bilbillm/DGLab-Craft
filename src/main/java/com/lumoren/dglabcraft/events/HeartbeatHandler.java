@@ -44,13 +44,11 @@ public class HeartbeatHandler {
                 if (ModConfig.SYNC_CHANNELS.get()) {
                     int intensityA = clamp((int) (maxIntensityA * percentage * multiplier), 1, maxIntensityA);
                     int intensityB = clamp((int) (maxIntensityB * percentage * multiplier), 1, maxIntensityB);
-                    ws.sendWaveformDataDualChannelWithDifferentIntensity("heartbeat", intensityA, intensityB);
-                    ws.noteSyncRuntime(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "heartbeat", Math.max(intensityA, intensityB));
+                    ws.requestSyncedEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "heartbeat", intensityA, intensityB);
                     FadeManager.updateHeartbeat(intensityA, intensityB);
                 } else {
                     int intensity = clamp((int) (maxIntensityB * percentage * multiplier), 1, maxIntensityB);
-                    ws.sendWaveformData("B", "heartbeat", intensity);
-                    ws.noteChannelRuntime("B", WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "heartbeat", intensity);
+                    ws.requestEffect(WebSocketServerManager.EffectSource.HEARTBEAT, "low_health", "B", "heartbeat", intensity);
                     FadeManager.updateHeartbeat(0, intensity);
                 }
             }
