@@ -1,9 +1,15 @@
 # DGLab Craft Changelog
 
-## [1.1.2] - 2026-10-24
+## [1.1.3] - 2026-10-24
 
 ### Added
 - Render the generated connection QR code directly in the in-game connection screen.
+
+---
+
+## [1.1.2] - 2026-10-24
+
+### Added
 
 ### Fixed
 - Fixed Minecraft 1.21.11 screens crashing with `IllegalStateException: Can only blur once per frame`.

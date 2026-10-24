@@ -268,7 +268,8 @@ public class ConnectionScreen extends Screen {
 
     private void drawQrTexture(GuiGraphics guiGraphics, ConnectionLayout.Rect qr) {
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, qrTextureLocation, qr.x(), qr.y(),
-            0.0F, 0.0F, qr.width(), qr.height(), qrTextureWidth, qrTextureHeight, -1);
+            0.0F, 0.0F, qr.width(), qr.height(), qrTextureWidth, qrTextureHeight,
+            qrTextureWidth, qrTextureHeight);
     }
 
     private void renderQrFallback(GuiGraphics guiGraphics, ConnectionLayout.Rect qr) {
