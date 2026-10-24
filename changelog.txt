@@ -1,5 +1,14 @@
 # DGLab Craft Changelog
 
+## [1.1.2] - 2026-10-24
+
+### Fixed
+- Fixed Minecraft 1.21.11 screens crashing with `IllegalStateException: Can only blur once per frame`.
+- Let Minecraft draw the screen background once per frame instead of drawing it a second time.
+- Added a regression test covering every custom screen.
+
+---
+
 ## [1.1.1] - 2026-07-11
 
 ### Added

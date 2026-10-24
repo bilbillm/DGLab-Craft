@@ -30,21 +30,32 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 - NeoForge `21.11.44+`
 - Java `21`
 
-如果你的 Minecraft 版本不一样，请先在下面表格里找对应分支，不要混装不同 MC 版本的 jar。
+如果你的 Minecraft 版本不一样，请先在下面表格里找对应版本，不要混装不同 MC 版本的 jar。
 
-| MC 版本 | 加载器 | 分支 | 最新 release |
+| Minecraft | Forge | NeoForge | Fabric |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.1-NeoForge) |
-| 1.21.11 | NeoForge 21.11.x | `1.21.11-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.11-NeoForge) |
+| 1.7.10 | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.7.10-Forge) | — | — |
+| 1.12.2 | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.12.2) | — | — |
+| 1.16.5 | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1) | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-1.16.5-Fabric) |
+| 1.17.1 | [v1.1.1](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1-1.17.1-Forge) | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-1.17.1-Fabric) |
+| 1.18.2 | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) | — | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2-Fabric) |
+| 1.19.2 | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) | — | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2-Fabric) |
+| 1.20.1 | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) | — | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1-Fabric) |
+| 1.21.1 | — | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.1-NeoForge) | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.1-Fabric) |
+| 1.21.4 | — | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.4-NeoForge) | — |
+| 1.21.11 | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-1.21.11-NeoForge) | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-1.21.11-Fabric) |
+| 26.1 | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1-NeoForge) | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1-Fabric) |
+| 26.1.1 | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1.1-NeoForge) | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1.1-Fabric) |
+| 26.1.2 | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1.2-NeoForge) | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.1.2-Fabric) |
+| 26.2 | — | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.2-NeoForge) | [v1.1.2](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-26.2-Fabric) |
+
+“—”表示该版本没有对应加载器的发布包。
 
 ### 2. 在 GitHub 下载 Mod
 
-1. 打开统一 release：[`DGLabCraft-1.21.11-1.1.1.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.1)
+1. 打开这个版本的 release：[`DGLabCraft-1.21.11-1.1.2.jar`](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.2-1.21.11-NeoForge)
 2. 在页面下方找到 **Assets**。
-3. 下载 `DGLabCraft-1.21.11-1.1.1.jar`。
+3. 下载 `DGLabCraft-1.21.11-1.1.2.jar`。
 4. 不要下载 `Source code.zip` 或 `Source code.tar.gz`，那是给开发者看的源码包，直接放进游戏不会生效。
 
 也可以从项目的 [Releases 页面](https://github.com/bilbillm/DGLab-Craft/releases) 进入，按自己的 Minecraft 版本选择 release。
@@ -54,7 +65,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 1. 用启动器创建或选择一个 Minecraft `1.21.11` 实例。
 2. 给这个实例安装 NeoForge `21.11.44+`。
 3. 打开实例目录里的 `mods` 文件夹。常见路径是 `.minecraft/mods`。
-4. 把刚下载的 `DGLabCraft-1.21.11-1.1.1.jar` 放进去。
+4. 把刚下载的 `DGLabCraft-1.21.11-1.1.2.jar` 放进去。
 5. 启动游戏，进入主菜单后点“模组”列表，确认能看到 `DGLab Craft`。
 
 如果你不知道实例目录在哪：在启动器里通常可以右键实例，选择“打开文件夹”或“打开游戏目录”。
@@ -92,7 +103,7 @@ DGLab Craft 是一个 Minecraft 模组。它会把游戏里的受伤、低血量
 - Minecraft `1.21.11`
 - NeoForge `21.11.44+`
 - Java `21`
-- Mod 版本 `1.1.1`
+- Mod 版本 `1.1.2`
 
 维护多个版本时，请优先把修复放到对应 MC 版本分支。不要把 Forge 和 NeoForge 的代码直接互相覆盖，它们的事件、注册和构建方式不完全一样。
 
@@ -111,21 +122,30 @@ cd DGLab-Craft
 发布前后检查：
 
 ```bash
-pwsh scripts/release-check.ps1 -Tag v1.1.1 -SkipGitHubReleaseCheck
-pwsh scripts/release-postcheck.ps1 -Tag v1.1.1
+pwsh scripts/release-check.ps1 -Tag v1.1.2-1.21.11-NeoForge -SkipGitHubReleaseCheck
+pwsh scripts/release-postcheck.ps1 -Tag v1.1.2-1.21.11-NeoForge
 ```
 
 GitHub Actions 里可以手动运行 `Release Rehearsal`，它只构建和验证发布元数据，不创建 GitHub Release，也不会上传 CurseForge。
 
 ### 维护分支一览
 
-| MC 版本 | 加载器 | 分支 | 最新 release |
+| Minecraft | Forge | NeoForge | Fabric |
 | --- | --- | --- | --- |
-| 1.18.2 | Forge 40.2.21 | `1.18.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.18.2) |
-| 1.19.2 | Forge 43.5.0 | `1.19.2` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.19.2) |
-| 1.20.1 | Forge 47.x | `1.20.1` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.20.1) |
-| 1.21.1 | NeoForge 21.1.x | `1.21.1-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.1-NeoForge) |
-| 1.21.11 | NeoForge 21.11.x | `1.21.11-NeoForge` | [v1.1.0](https://github.com/bilbillm/DGLab-Craft/releases/tag/v1.1.0-1.21.11-NeoForge) |
+| 1.7.10 | `1.7.10-Forge` | — | — |
+| 1.12.2 | `1.12.2-Forge` | — | — |
+| 1.16.5 | `1.16.5-Forge` | — | `1.16.5-Fabric` |
+| 1.17.1 | `1.17.1-Forge` | — | `1.17.1-Fabric` |
+| 1.18.2 | `1.18.2-Forge` | — | `1.18.2-Fabric` |
+| 1.19.2 | `1.19.2-Forge` | — | `1.19.2-Fabric` |
+| 1.20.1 | `1.20.1-Forge` | — | `1.20.1-Fabric` |
+| 1.21.1 | — | `1.21.1-NeoForge` | `1.21.1-Fabric` |
+| 1.21.4 | — | `1.21.4-NeoForge` | — |
+| 1.21.11 | — | `1.21.11-NeoForge` | `1.21.11-Fabric` |
+| 26.1 | — | `26.1-NeoForge` | `26.1-Fabric` |
+| 26.1.1 | — | `26.1.1-NeoForge` | `26.1.1-Fabric` |
+| 26.1.2 | — | `26.1.2-NeoForge` | `26.1.2-Fabric` |
+| 26.2 | — | `26.2-NeoForge` | `26.2-Fabric` |
 
 ### 报 bug 时需要的信息
 
