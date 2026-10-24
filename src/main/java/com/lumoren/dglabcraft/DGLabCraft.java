@@ -23,7 +23,7 @@ import net.minecraftforge.common.MinecraftForge;
 public class DGLabCraft {
     public static final String MODID = "dglabcraft";
     public static final String NAME = "DGLab Craft";
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.1.4";
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -54,6 +54,7 @@ public class DGLabCraft {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
+        KeyBindingDiagnostics.check(Minecraft.getMinecraft(), ClientModEvents.OPEN_SETTINGS_KEY);
         if (ClientModEvents.OPEN_SETTINGS_KEY.isPressed()) {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc.currentScreen == null) {

@@ -1,2 +1,4 @@
 key.categories.dglabcraft=DGLab Craft
 key.dglabcraft.open_settings=DGLab Craft-Einstellungen öffnen
+
+message.dglabcraft.key_conflict=DGLab Craft shares a key with %s. Change it in Controls.
