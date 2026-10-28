@@ -31,6 +31,15 @@ public class QRCodeGenerator {
 
     private static File qrCodeFile = null;
 
+    /** Shared encoder for the in-game texture and the optional PNG export. No filesystem access. */
+    public static BitMatrix createMatrix(String content) throws WriterException {
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+        hints.put(EncodeHintType.MARGIN, 4);
+        return new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE, hints);
+    }
+
     /**
      * 生成二维码图片
      * @param content DGLab 连接 URL
@@ -48,7 +57,7 @@ public class QRCodeGenerator {
             hints.put(EncodeHintType.MARGIN, 2);
 
             // 生成 BitMatrix
-            BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE, hints);
+            BitMatrix bitMatrix = createMatrix(content);
 
             // 创建图片
             int width = bitMatrix.getWidth();

@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConnectionScreenSourceTest {
-    private static final Path SOURCE = Path.of("src/main/java/com/lumoren/dglabcraft/gui/ConnectionScreen.java");
+    private static final Path SOURCE = Path.of("src/main/java/com/lumoren/dglabcraft/gui/AdvancedConnectionScreen.java");
 
     @Test
     void qrTextureBlitScalesTheEntireSourceImage() throws IOException {

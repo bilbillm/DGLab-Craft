@@ -4,6 +4,7 @@ import com.lumoren.dglabcraft.events.DamageHandler;
 import com.lumoren.dglabcraft.events.EnvironmentHandler;
 import com.lumoren.dglabcraft.events.HeartbeatHandler;
 import com.lumoren.dglabcraft.gui.MainScreen;
+import com.lumoren.dglabcraft.gui.ConnectionScreen;
 import com.lumoren.dglabcraft.network.WebSocketServerManager;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
@@ -40,7 +41,7 @@ public class DGLabCraft
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         // 启动 WebSocket 服务器
-        WebSocketServerManager.getInstance().start();
+        // Pairing starts when the player opens the connection screen.
 
         // 注册 JVM 关闭钩子 — 确保游戏退出时清理 WebSocket 连接
         Runtime.getRuntime().addShutdownHook(new Thread(
@@ -59,7 +60,8 @@ public class DGLabCraft
         if (ClientModEvents.OPEN_SETTINGS_KEY.get().consumeClick()) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.screen == null) {
-                mc.setScreen(new MainScreen());
+                mc.setScreen(WebSocketServerManager.getInstance().isConnected()
+                    ? new MainScreen() : new ConnectionScreen(null));
             }
         }
     }

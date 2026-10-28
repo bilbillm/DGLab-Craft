@@ -69,8 +69,12 @@ public class WebSocketServerManager {
     }
 
     private WebSocketServer server;
-    private int port;
-    private String sessionId;
+    private volatile int port;
+    private volatile String sessionId;
+    private volatile RelayConnection relay;
+    private volatile boolean starting;
+    private volatile boolean localFailed;
+    private String generatedQrUrl = "";
     private String localIp;
     private volatile boolean isRunning = false;
 
@@ -107,16 +111,13 @@ public class WebSocketServerManager {
     /** 心跳定时器 — 单线程调度器，异常安全 */
     private ScheduledExecutorService heartbeatScheduler;
 
-    // 固定的客户端 ID（参考 DG_LAB）
-    private static final String FIXED_CLIENT_ID = "1234-123456789-12345-12345-01";
 
     private WebSocketServerManager() {
-        // 使用固定的 sessionId（参考 DG_LAB）
-        sessionId = FIXED_CLIENT_ID;
+        sessionId = UUID.randomUUID().toString();
         port = ModConfig.WS_PORT.get();
     }
 
-    public static WebSocketServerManager getInstance() {
+    public static synchronized WebSocketServerManager getInstance() {
         if (instance == null) {
             instance = new WebSocketServerManager();
         }
@@ -126,12 +127,27 @@ public class WebSocketServerManager {
     /**
      * 启动 WebSocket 服务器
      */
-    public void start() {
+    public synchronized void start() {
+        if (!ModConfig.WS_ENABLED.get() || relay != null || isRunning || starting) return;
+        if (ModConfig.WS_RELAY_ENABLED.get()) {
+            appAMaxStrength = 0; appBMaxStrength = 0;
+            RelayConnection connection = new RelayConnection(RelayConnection.OFFICIAL_ENDPOINT,
+                this::parseStrengthMessage, () -> {
+                    resetRuntimeState(); appAMaxStrength = 0; appBMaxStrength = 0;
+                });
+            relay = connection;
+            connection.start();
+        } else startLan();
+    }
+
+    private void startLan() {
         if (isRunning) {
             LOGGER.info("WebSocket 服务器已在运行");
             return;
         }
 
+        starting = true; localFailed = false;
+        sessionId = UUID.randomUUID().toString();
         // 获取本机局域网 IP
         localIp = resolveConnectionHost();
         if (localIp == null) {
@@ -142,12 +158,17 @@ public class WebSocketServerManager {
             server = new WebSocketServer(new InetSocketAddress(port)) {
                 @Override
                 public void onStart() {
-                    LOGGER.info("WebSocket 服务器已启动");
+                    if (server != this) return;
+                    port = getPort(); starting = false; isRunning = true;
+                    LOGGER.info("LAN listener ready on port {}", port);
                 }
 
                 @Override
                 public void onOpen(WebSocket conn, ClientHandshake handshake) {
-                    if (!isBound) {
+                    if (server != this || !handshake.getResourceDescriptor().equals("/" + sessionId)) {
+                        conn.close(1008, "Invalid pairing code"); return;
+                    }
+                    if (connectedClient == null) {
                         LOGGER.info("新连接: " + conn.getRemoteSocketAddress());
 
                         // 重置状态
@@ -178,8 +199,7 @@ public class WebSocketServerManager {
 
                 @Override
                 public void onMessage(WebSocket conn, String message) {
-                    LOGGER.info("Server 收到来自 {} 的消息: {}", conn.getRemoteSocketAddress(), message);
-                    handleMessage(message);
+                    if (connectedClient == conn) handleMessage(message);
                 }
 
                 @Override
@@ -192,17 +212,48 @@ public class WebSocketServerManager {
 
                 @Override
                 public void onError(WebSocket conn, Exception ex) {
-                    LOGGER.error("WebSocket 错误: " + ex.getMessage());
+                    if (conn == null) retryLan(this, ex);
+                    else LOGGER.warn("LAN connection error: {}", ex.getClass().getSimpleName());
                 }
             };
 
             server.start();
-            isRunning = true;
-            LOGGER.info("WebSocket 服务器已启动: {}:{}", localIp, port);
+
 
         } catch (Exception e) {
+            starting = false; localFailed = true;
             LOGGER.error("启动 WebSocket 服务器失败: " + e.getMessage());
         }
+    }
+
+    private void retryLan(WebSocketServer failed, Exception error) {
+        Thread retry = new Thread(() -> {
+            try { failed.stop(1000); } catch (Exception ignored) { }
+            synchronized (this) {
+                if (server != failed) return;
+                server = null; starting = false; isRunning = false;
+                if (port != 0 && error instanceof java.net.BindException) {
+                    port = 0; startLan(); // Bind directly to an OS-selected port, without a check-then-bind race.
+                } else { localFailed = true; }
+            }
+        }, "DGLabCraft-LanRetry");
+        retry.setDaemon(true); retry.start();
+    }
+
+    public synchronized void useRelay(boolean enabled) {
+        stop();
+        ModConfig.WS_RELAY_ENABLED.set(enabled); ModConfig.save();
+        port = ModConfig.WS_PORT.get(); start();
+    }
+
+    public boolean usesRelay() { return ModConfig.WS_RELAY_ENABLED.get(); }
+    public RelayConnection.State connectionState() {
+        RelayConnection current = relay;
+        if (current != null) return current.snapshot().state();
+        if (isConnected()) return RelayConnection.State.CONNECTED;
+        if (isRunning) return RelayConnection.State.WAITING_FOR_APP;
+        if (localFailed) return RelayConnection.State.IDLE;
+        return starting ? RelayConnection.State.CONNECTING : RelayConnection.State.IDLE;
     }
 
     /**
@@ -219,8 +270,8 @@ public class WebSocketServerManager {
         });
         heartbeatScheduler.scheduleAtFixedRate(() -> {
             try {
-                WebSocket client = connectedClient;
-                if (client != null && client.isOpen()) {
+                WebSocket client = conn;
+                if (client == connectedClient && client.isOpen()) {
                     Map<String, String> heartbeat = new HashMap<>();
                     heartbeat.put("type", "heartbeat");
                     heartbeat.put("message", "200");
@@ -276,18 +327,16 @@ public class WebSocketServerManager {
     /**
      * 停止服务器
      */
-    public void stop() {
+    public synchronized void stop() {
+        if (isConnected() && hasLiveOutput()) safeSilenceAll();
         stopHeartbeat();
-        if (server != null) {
-            try {
-                server.stop();
-                LOGGER.info("WebSocket 服务器已停止");
-            } catch (Exception e) {
-                LOGGER.error("停止服务器失败: " + e.getMessage());
-            }
+        RelayConnection previousRelay = relay; relay = null;
+        if (previousRelay != null) previousRelay.close();
+        WebSocketServer previousServer = server; server = null;
+        isRunning = false; starting = false; localFailed = false; generatedQrUrl = "";
+        if (previousServer != null) {
+            try { previousServer.stop(1000); } catch (Exception error) { LOGGER.warn("LAN stop failed", error); }
         }
-        server = null;
-        isRunning = false;
         clearConnectionState();
     }
 
@@ -316,19 +365,19 @@ public class WebSocketServerManager {
                 // 参考 DG_LAB 的验证逻辑：
                 // 1. message = "DGLAB"
                 // 2. type = "bind"
-                // 3. clientId = FIXED_CLIENT_ID
+                // 3. clientId = current session ID
                 // 4. targetId = 我们生成的 clientId (generatedClientId)
                 if ("DGLAB".equals(msgContent)
-                        && FIXED_CLIENT_ID.equals(appClientId)
+                        && sessionId.equals(appClientId)
                         && generatedClientId != null
                         && generatedClientId.equals(receivedTargetId)) {
 
                     // 返回 200 确认包
                     // {"type":"bind","clientId":"<PC_ID>","targetId":"<appId>","message":"200","statusCode":200}
-                    connectedClient.send("{\"type\":\"bind\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + appClientId + "\",\"message\":\"200\",\"statusCode\":200}");
+                    connectedClient.send("{\"type\":\"bind\",\"clientId\":\"" + sessionId + "\",\"targetId\":\"" + generatedClientId + "\",\"message\":\"200\",\"statusCode\":200}");
 
                     // 标记绑定成功
-                    connectedClientId = appClientId;
+                    connectedClientId = generatedClientId;
                     isBound = true;
 
                     LOGGER.info("设备绑定成功: " + appClientId);
@@ -337,13 +386,10 @@ public class WebSocketServerManager {
                             msgContent, appClientId, receivedTargetId, generatedClientId);
                 }
             } else if ("heartbeat".equals(type)) {
-                // 心跳响应 — targetId 应为 App 的 clientId（绑定后为 connectedClientId）
-                String responseTargetId = connectedClientId != null ? connectedClientId : "";
-                connectedClient.send("{\"type\":\"heartbeat\",\"clientId\":\"" + FIXED_CLIENT_ID + "\",\"targetId\":\"" + responseTargetId + "\",\"message\":\"200\"}");
-                LOGGER.info("心跳响应已发送");
+                // The server already sends heartbeats; do not echo replies indefinitely.
             } else if ("msg".equals(type)) {
                 String msgContent = json.has("message") ? json.get("message").getAsString() : null;
-                if (msgContent != null) {
+                if (isBound && msgContent != null) {
                     // 解析强度消息: 格式如 "strength-1+2+50" 或 "pulse-A:[...]"
                     parseStrengthMessage(msgContent);
                 }
@@ -409,7 +455,7 @@ public class WebSocketServerManager {
      * @param intensity 强度值
      */
     public void sendWaveformData(String channel, String waveId, double intensity) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -424,8 +470,7 @@ public class WebSocketServerManager {
     }
 
     public void requestEffect(EffectSource source, String detail, String channel, String waveId, double intensity) {
-        WebSocket client = connectedClient;
-        if (client == null || !client.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -457,8 +502,7 @@ public class WebSocketServerManager {
     }
 
     public void requestSyncedEffect(EffectSource source, String detail, String waveId, double intensityA, double intensityB) {
-        WebSocket client = connectedClient;
-        if (client == null || !client.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -495,8 +539,7 @@ public class WebSocketServerManager {
     }
 
     public void safeSilenceAll() {
-        WebSocket client = connectedClient;
-        if (client == null || !client.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -539,12 +582,13 @@ public class WebSocketServerManager {
     }
 
     public boolean hasClientSocketConnection() {
+        if (relay != null) return !relay.snapshot().qrUrl().isEmpty();
         WebSocket client = connectedClient;
         return client != null && client.isOpen();
     }
 
     public boolean isWaitingForAppBind() {
-        return hasClientSocketConnection() && !isBound;
+        return hasClientSocketConnection() && !isConnected();
     }
 
     /**
@@ -664,7 +708,7 @@ public class WebSocketServerManager {
      * @param intensityB B 通道强度
      */
     public void sendWaveformDataDualChannelWithDifferentIntensity(String waveId, double intensityA, double intensityB) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -746,7 +790,7 @@ public class WebSocketServerManager {
      * @param intensity 强度值
      */
     public void sendStrengthOnly(String channel, int intensity) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -783,7 +827,7 @@ public class WebSocketServerManager {
      * @param intensityB B通道强度值
      */
     public void sendDualChannelStrengthOnly(int intensityA, int intensityB) {
-        if (connectedClient == null || !connectedClient.isOpen()) {
+        if (!isConnected()) {
             return;
         }
 
@@ -822,6 +866,18 @@ public class WebSocketServerManager {
      * 发送消息辅助方法
      */
     private void sendMessage(String message) {
+        if (message.startsWith("strength-")) {
+            String[] parts = message.substring(9).split("\\+");
+            if (parts.length == 3 && "2".equals(parts[1])) {
+                int appLimit = "1".equals(parts[0]) ? appAMaxStrength : appBMaxStrength;
+                int cap = Math.max(0, Math.min(appLimit, ModConfig.getEffectiveMaxIntensity(appLimit)));
+                int value = Math.max(0, Math.min(Math.min(200, cap), Integer.parseInt(parts[2])));
+                message = "strength-" + parts[0] + "+2+" + value;
+            }
+        }
+        RelayConnection current = relay;
+        if (current != null) { current.send(message); return; }
+        if (!isConnected()) return;
         Map<String, String> msg = new HashMap<>();
         msg.put("type", "msg");
         msg.put("message", message);
@@ -957,16 +1013,24 @@ public class WebSocketServerManager {
     /**
      * 生成二维码 URL（参考 DG_LAB 格式）
      */
+    public String pairingUrl() {
+        RelayConnection current = relay;
+        if (current != null) return current.snapshot().qrUrl();
+        if (!isRunning) return "";
+        String host = resolveConnectionHost();
+        if (host == null || "127.0.0.1".equals(host)) return "";
+        return "https://www.dungeon-lab.com/app-download.php#DGLAB-SOCKET#"
+            + java.net.URLEncoder.encode("ws://" + host + ":" + port + "/" + sessionId,
+                java.nio.charset.StandardCharsets.UTF_8);
+    }
+
     public String generateQrUrl() {
-        // 重新获取本机 IP 地址（网络可能已变化）
-        String currentLocalIp = resolveConnectionHost();
-
-        // 使用 dungeon-lab.com 格式（参考 DG_LAB）
-        String url = String.format("https://www.dungeon-lab.com/app-download.php#DGLAB-SOCKET#ws://%s:%d/%s",
-            currentLocalIp, port, FIXED_CLIENT_ID);
-
-        // 生成二维码图片
-        QRCodeGenerator.generateQRCode(url);
+        String url = pairingUrl();
+        if (url.isEmpty()) return "";
+        if (!url.equals(generatedQrUrl)) {
+            if (QRCodeGenerator.generateQRCode(url) == null) return "";
+            generatedQrUrl = url;
+        }
         return url;
     }
 
@@ -1090,15 +1154,17 @@ public class WebSocketServerManager {
     }
 
     // Getters
-    public boolean isRunning() { return isRunning; }
+    public boolean isRunning() { RelayConnection current = relay; return current != null ? !current.snapshot().qrUrl().isEmpty() : isRunning; }
     public boolean isConnected() {
+        RelayConnection current = relay;
+        if (current != null) return current.snapshot().state() == RelayConnection.State.CONNECTED;
         WebSocket client = connectedClient;
         return isBound && client != null && client.isOpen();
     }
-    public String getSessionId() { return sessionId; }
+    public String getSessionId() { return relay != null ? "" : sessionId; }
     public String getLocalIp() { return localIp; }
     public int getPort() { return port; }
-    public String getConnectedClientId() { return connectedClientId; }
+    public String getConnectedClientId() { RelayConnection current = relay; return current != null ? current.snapshot().peerId() : connectedClientId; }
     public String getTargetId() { return targetId; }
     public String getGeneratedClientId() { return generatedClientId; }
 

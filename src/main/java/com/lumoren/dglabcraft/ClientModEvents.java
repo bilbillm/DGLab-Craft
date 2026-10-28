@@ -24,4 +24,11 @@ public class ClientModEvents {
         // 直接在此处注册，不会有 null 的问题
         event.register(OPEN_SETTINGS_KEY.get());
     }
+    @SubscribeEvent
+    public static void onClientSetup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent event) {
+        net.minecraftforge.fml.ModLoadingContext.get().registerExtensionPoint(
+            net.minecraftforge.client.ConfigScreenHandler.ConfigScreenFactory.class,
+            () -> new net.minecraftforge.client.ConfigScreenHandler.ConfigScreenFactory(
+                (minecraft, parent) -> new com.lumoren.dglabcraft.gui.ConnectionScreen(parent)));
+    }
 }

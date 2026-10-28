@@ -53,6 +53,7 @@ public class ModConfig {
     public static final ForgeConfigSpec.ConfigValue<String> WS_HOST;
     public static final ForgeConfigSpec.ConfigValue<Integer> WS_PORT;
     public static final ForgeConfigSpec.ConfigValue<Boolean> WS_ENABLED;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> WS_RELAY_ENABLED;
 
     // ========== 锐器与穿刺 (fast_pinch) ==========
     public static final ForgeConfigSpec.ConfigValue<Double> CACTUS_MULTIPLIER;
@@ -142,6 +143,8 @@ public class ModConfig {
                 .define("host", "localhost");
         WS_PORT = builder.comment("WebSocket 服务器端口")
                 .define("port", 8877);
+        WS_RELAY_ENABLED = builder.comment("Use the official DG-LAB relay for scan-to-connect; LAN is an advanced option")
+                .define("relayEnabled", true);
         WS_ENABLED = builder.comment("是否启用 WebSocket 连接")
                 .define("enabled", true);
         builder.pop();

@@ -31,9 +31,7 @@ public class MainScreen extends Screen {
         super.init();
 
         WebSocketServerManager server = WebSocketServerManager.getInstance();
-        if (!server.isConnected()) {
-            server.generateQrUrl();
-        }
+
 
         int centerX = this.width / 2;
         int buttonWidth = 200;
@@ -149,7 +147,7 @@ public class MainScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, statusText, centerX, 50, statusColor);
 
         // 服务器信息
-        String serverInfo = server.resolveConnectionHost() + ":" + server.getPort();
+        String serverInfo = server.usesRelay() ? "DG-LAB" : server.resolveConnectionHost() + ":" + server.getPort();
         guiGraphics.drawCenteredString(this.font, Component.literal(serverInfo), centerX, this.height - 20, 0x888888);
 
         super.render(guiGraphics, pMouseX, pMouseY, pPartialTick);
